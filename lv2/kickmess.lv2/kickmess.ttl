@@ -9,7 +9,7 @@
             lv2:AmplifierPlugin ;
 
     lv2:project <https://github.com/WeirdConstructor/kickmess> ;
-    doap:name "" ;
+    doap:name "Kickmess" ;
     doap:license <https://opensource.org/licenses/GPL-3.0> ;
 
     lv2:requiredFeature lv2:inPlaceBroken ;

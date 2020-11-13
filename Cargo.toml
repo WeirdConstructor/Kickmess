@@ -7,10 +7,12 @@ license = "GPL-3.0-or-later"
 description = "Kickmess - Port of LMMS Kicker Plugin for LV2"
 
 [lib]
+name="kickmessvst"
 crate-type = ["cdylib"]
 
 [dependencies]
-lv2                = { version = "0.6.0" }
+vst = { git = "https://github.com/rustaudio/vst-rs" }
+#lv2                = { version = "0.6.0" }
 wlambda            = { path = "../wlambda" }
 wctr_signal_ops    = { path = "../wctr-signal-ops" }
 
