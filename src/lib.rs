@@ -2,8 +2,10 @@
 extern crate vst;
 
 use vst::util::AtomicFloat;
+use vst::api::Events;
+use vst::event::{Event, MidiEvent};
 use vst::buffer::AudioBuffer;
-use vst::plugin::{Category, Info, Plugin, PluginParameters};
+use vst::plugin::{Category, Info, Plugin, PluginParameters, CanDo};
 
 use std::sync::Arc;
 
@@ -22,14 +24,21 @@ impl Default for Kickmess {
 impl Default for GainEffectParameters {
     fn default() -> GainEffectParameters {
         GainEffectParameters {
-            gain: AtomicFloat::new(0.5),
+            gain: AtomicFloat::new(0.0),
         }
     }
 }
 
-#[derive(Default)]
 struct Kickmess {
     params: Arc<GainEffectParameters>,
+}
+
+fn p2rng(x: f32, a: f32, b: f32) -> f32 {
+    (a * (1.0 - x)) + (b * x)
+}
+
+fn rng2p(v: f32, a: f32, b: f32) -> f32 {
+    (v - b) / (a - b)
 }
 
 impl Plugin for Kickmess {
@@ -42,7 +51,7 @@ impl Plugin for Kickmess {
             midi_inputs:  1,
             midi_outputs: 1,
             parameters:   1,
-            unique-id:    934843292,
+            unique_id:    934843292,
             version:      0001,
             category:     Category::Effect,
             ..Default::default()
@@ -52,6 +61,8 @@ impl Plugin for Kickmess {
    fn process(&mut self, buffer: &mut AudioBuffer<f32>) {
         let gain = self.params.gain.get();
 
+        let gain = p2rng(gain, 24.0, -90.0);
+
         let coef = if gain > -90.0 {
             10.0_f32.powf(gain * 0.05)
         } else {
@@ -60,8 +71,29 @@ impl Plugin for Kickmess {
 
         for (input_buffer, output_buffer) in buffer.zip() {
             for (input_sample, output_sample) in input_buffer.iter().zip(output_buffer) {
-                *output_sample = *input_sample * gain;
+                *output_sample = *input_sample * coef;
             }
+        }
+    }
+
+    fn process_events(&mut self, events: &Events) {
+        for e in events.events() {
+            match e {
+                Event::Midi(MidiEvent { data, .. }) => {
+                    println!("MIDI: {:?}", data);
+                },
+                _ => (),
+            }
+        }
+    }
+
+    fn can_do(&self, can_do: CanDo) -> vst::api::Supported {
+        use vst::api::Supported::*;
+        use vst::plugin::CanDo::*;
+
+        match can_do {
+            SendEvents | SendMidiEvent | ReceiveEvents | ReceiveMidiEvent => Yes,
+            _ => No,
         }
     }
 
@@ -88,7 +120,7 @@ impl PluginParameters for GainEffectParameters {
 
     fn get_parameter_text(&self, index: i32) -> String {
         match index {
-            0 => format!("24 >= {:.2} >= -90", self.gain.get()),
+            0 => format!("24 >= {:.2} >= -90", p2rng(self.gain.get(), 24.0, -90.0)),
             _ => "".to_string(),
         }
     }
