@@ -1,3 +1,9 @@
+mod effects;
+mod helpers;
+
+use effects::Channel;
+use effects::{p2range, ParamProvider, Param, ParamSet, Op_GainDistortion, MonoProcessor};
+
 #[macro_use]
 extern crate vst;
 
@@ -5,43 +11,55 @@ use vst::util::AtomicFloat;
 use vst::api::Events;
 use vst::event::{Event, MidiEvent};
 use vst::buffer::AudioBuffer;
-use vst::plugin::{Category, Info, Plugin, PluginParameters, CanDo};
+use vst::plugin::{HostCallback, Category, Info, Plugin, PluginParameters, CanDo};
 
 use std::sync::Arc;
 
-struct GainEffectParameters {
-    gain: AtomicFloat,
+struct AB<'a>((&'a [f32], &'a mut [f32]));
+
+
+impl<'a> AB<'a> {
+    fn from_buffers(bufs: (&'a [f32], &'a mut [f32])) -> Self {
+        Self(bufs)
+    }
 }
+
+impl<'a> Channel for AB<'a> {
+    fn process(&mut self, f: &dyn Fn(&[f32], &mut [f32])) {
+        f(self.0.0, self.0.1)
+    }
+}
+
 
 impl Default for Kickmess {
     fn default() -> Kickmess {
         Kickmess {
+            host:   HostCallback::default(),
             params: Arc::new(GainEffectParameters::default()),
-        }
-    }
-}
-
-impl Default for GainEffectParameters {
-    fn default() -> GainEffectParameters {
-        GainEffectParameters {
-            gain: AtomicFloat::new(0.0),
+            op:     Op_GainDistortion::new(),
         }
     }
 }
 
 struct Kickmess {
-    params: Arc<GainEffectParameters>,
-}
-
-fn p2rng(x: f32, a: f32, b: f32) -> f32 {
-    (a * (1.0 - x)) + (b * x)
-}
-
-fn rng2p(v: f32, a: f32, b: f32) -> f32 {
-    (v - b) / (a - b)
+    host:      HostCallback,
+    params:    Arc<GainEffectParameters>,
+    op:        Op_GainDistortion,
 }
 
 impl Plugin for Kickmess {
+    fn new(host: HostCallback) -> Self {
+        Self {
+            host,
+            params: Arc::new(GainEffectParameters::default()),
+            op:     Op_GainDistortion::new(),
+        }
+    }
+
+    fn init(&mut self) {
+        helpers::init_cos_tab();
+    }
+
     fn get_info(&self) -> Info {
         Info {
             name:         "Kickmess (VST)".to_string(),
@@ -50,7 +68,7 @@ impl Plugin for Kickmess {
             outputs:      2,
             midi_inputs:  1,
             midi_outputs: 1,
-            parameters:   1,
+            parameters:   3,
             unique_id:    934843292,
             version:      0001,
             category:     Category::Effect,
@@ -58,21 +76,11 @@ impl Plugin for Kickmess {
         }
     }
 
-   fn process(&mut self, buffer: &mut AudioBuffer<f32>) {
-        let gain = self.params.gain.get();
+    fn process(&mut self, buffer: &mut AudioBuffer<f32>) {
+        self.op.read_params(&self.params.ps, &*self.params);
 
-        let gain = p2rng(gain, 24.0, -90.0);
-
-        let coef = if gain > -90.0 {
-            10.0_f32.powf(gain * 0.05)
-        } else {
-            0.0
-        };
-
-        for (input_buffer, output_buffer) in buffer.zip() {
-            for (input_sample, output_sample) in input_buffer.iter().zip(output_buffer) {
-                *output_sample = *input_sample * coef;
-            }
+        for buf_tuple in buffer.zip() {
+            self.op.process(&mut AB::from_buffers(buf_tuple));
         }
     }
 
@@ -102,10 +110,44 @@ impl Plugin for Kickmess {
     }
 }
 
+struct GainEffectParameters {
+    ps:             ParamSet,
+    gain:           AtomicFloat,
+    distort_gain:   AtomicFloat,
+    distort_thresh: AtomicFloat,
+}
+
+impl ParamProvider for GainEffectParameters {
+    fn param(&self, p: Param) -> f32 {
+        match p {
+            Param::Gain1      => self.gain.get(),
+            Param::Gain2      => self.distort_gain.get(),
+            Param::Threshold1 => self.distort_thresh.get(),
+            _                 => 0.0,
+        }
+    }
+}
+
+impl Default for GainEffectParameters {
+    fn default() -> GainEffectParameters {
+        let mut ps = ParamSet::new();
+        Op_GainDistortion::init_params(&mut ps);
+
+        GainEffectParameters {
+            gain:           AtomicFloat::new(ps.definition(0).unwrap().default_p()),
+            distort_gain:   AtomicFloat::new(ps.definition(1).unwrap().default_p()),
+            distort_thresh: AtomicFloat::new(ps.definition(2).unwrap().default_p()),
+            ps,
+        }
+    }
+}
+
 impl PluginParameters for GainEffectParameters {
     fn get_parameter(&self, index: i32) -> f32 {
         match index {
             0 => self.gain.get(),
+            1 => self.distort_gain.get(),
+            2 => self.distort_thresh.get(),
             _ => 0.0,
         }
     }
@@ -114,21 +156,35 @@ impl PluginParameters for GainEffectParameters {
         #[allow(clippy::single_match)]
         match index {
             0 => self.gain.set(val),
+            1 => self.distort_gain.set(val),
+            2 => self.distort_thresh.set(val),
             _ => (),
         }
     }
 
     fn get_parameter_text(&self, index: i32) -> String {
-        match index {
-            0 => format!("24 >= {:.2} >= -90", p2rng(self.gain.get(), 24.0, -90.0)),
-            _ => "".to_string(),
+        if index > 2 {
+            return "".to_string();
         }
+
+        let v =
+            match index {
+                0 => self.gain.get(),
+                1 => self.distort_gain.get(),
+                2 => self.distort_thresh.get(),
+                _ => 0.0,
+            };
+
+        let pd = self.ps.definition(index as usize).unwrap();
+        format!("{} >= {:.2} >= {}", pd.min(), pd.map(v), pd.max())
     }
 
     // This shows the control's name.
     fn get_parameter_name(&self, index: i32) -> String {
         match index {
             0 => "Gain",
+            1 => "Distort Gain",
+            2 => "Distort Thresh",
             _ => "",
         }
         .to_string()
