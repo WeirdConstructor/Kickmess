@@ -1,8 +1,10 @@
-mod effects;
+mod proc;
 mod helpers;
+mod op_kickmess;
 
-use effects::Channel;
-use effects::{p2range, ParamProvider, Param, ParamSet, Op_GainDistortion, MonoProcessor};
+use proc::Channel;
+use proc::{ParamProvider, Param, ParamSet, MonoProcessor};
+use op_kickmess::*;
 
 #[macro_use]
 extern crate vst;
