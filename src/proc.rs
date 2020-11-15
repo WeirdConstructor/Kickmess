@@ -37,6 +37,7 @@ pub enum Param {
     Decay1,
     Decay2,
     Release1,
+    Release2,
     Gain1,
     Gain2,
     Dist1,
@@ -190,4 +191,5 @@ pub trait MonoVoice : MonoProcessor {
     fn start_note(&mut self, offs: usize, freq: f32, vel: f32);
     fn end_note(&mut self, offs: usize);
     fn is_playing(&self) -> bool;
+    fn in_release(&self) -> bool;
 }

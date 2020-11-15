@@ -1,6 +1,7 @@
 mod proc;
 mod helpers;
 mod op_kickmess;
+mod env;
 
 use proc::Channel;
 use proc::{ParamProvider, Param, ParamSet, MonoProcessor, MonoVoice};
@@ -39,7 +40,7 @@ impl Default for Kickmess {
         Kickmess {
             host:   HostCallback::default(),
             params: Arc::new(KickmessVSTParams::default()),
-            voice1: Op_Kickmess::new(),
+            voices: vec![],
         }
     }
 }
@@ -47,15 +48,20 @@ impl Default for Kickmess {
 struct Kickmess {
     host:      HostCallback,
     params:    Arc<KickmessVSTParams>,
-    voice1:    Op_Kickmess,
+    voices:    Vec<Op_Kickmess>,
 }
 
 impl Plugin for Kickmess {
     fn new(host: HostCallback) -> Self {
+        let mut voices = vec![];
+        for _ in 0..10 {
+            voices.push(Op_Kickmess::new());
+        }
+
         Self {
             host,
+            voices,
             params: Arc::new(KickmessVSTParams::default()),
-            voice1: Op_Kickmess::new(),
         }
     }
 
@@ -67,27 +73,39 @@ impl Plugin for Kickmess {
         Info {
             name:         "Kickmess (VST)".to_string(),
             vendor:       "Weird Constructor".to_string(),
-            inputs:       1,
+            inputs:       0,
             outputs:      1,
             midi_inputs:  1,
             midi_outputs: 0,
             parameters:   self.params.ps.param_count() as i32,
             unique_id:    934843292,
             version:      0001,
-            category:     Category::Effect,
+            category:     Category::Synth,
             ..Default::default()
         }
     }
 
     fn set_sample_rate(&mut self, rate: f32) {
-        self.voice1.set_sample_rate(rate);
+        for voice in self.voices.iter_mut() {
+            voice.set_sample_rate(rate);
+        }
     }
 
     fn process(&mut self, buffer: &mut AudioBuffer<f32>) {
-        self.voice1.read_params(&self.params.ps, &*self.params);
 
-        for buf_tuple in buffer.zip() {
-            self.voice1.process(&mut AB::from_buffers(buf_tuple));
+        let inbuf : [f32; 0] = [];
+
+        let (_, mut outputbuf) = buffer.split();
+
+        for os in outputbuf.get_mut(0) { *os = 0.0; }
+
+        let mut channel = AB::from_buffers((&inbuf, outputbuf.get_mut(0)));
+
+        for voice in self.voices.iter_mut() {
+            if voice.is_playing() {
+                voice.read_params(&self.params.ps, &*self.params);
+                voice.process(&mut channel);
+            }
         }
     }
 
@@ -96,10 +114,37 @@ impl Plugin for Kickmess {
             match e {
                 Event::Midi(MidiEvent { data, delta_frames, .. }) => {
                     if data[0] == 144 {
-                        self.voice1.start_note(
-                            delta_frames as usize,
-                            note_to_freq(data[1] as f32),
-                            data[2] as f32);
+                        let mut playing = 0;
+                        let mut release = 0;
+                        for voice in self.voices.iter_mut() {
+                            if voice.is_playing() {
+                                playing += 1;
+                                if voice.in_release() {
+                                    release += 1;
+                                }
+                            }
+                        }
+                        println!("P VOICES: p={}, r={}", playing, release);
+
+                        for (i, voice) in self.voices.iter_mut().enumerate() {
+                            if !voice.is_playing() {
+                                println!("[VOICE {}] START", i);
+                                voice.start_note(
+                                    delta_frames as usize,
+                                    note_to_freq(data[1] as f32),
+                                    data[2] as f32);
+                                break;
+                            }
+                        }
+
+                    } else if data[0] == 128 {
+                        for (i, voice) in self.voices.iter_mut().enumerate() {
+                            if voice.is_playing() && !voice.in_release() {
+                                println!("[VOICE {}] END", i);
+                                voice.end_note(delta_frames as usize);
+                                break;
+                            }
+                        }
                     }
 
                     println!("MIDI: {:?}", data);
@@ -135,8 +180,8 @@ struct KickmessVSTParams {
     dist_gain:       AtomicFloat,
     env_slope:       AtomicFloat,
     noise:           AtomicFloat,
-    click:           AtomicFloat,
     freq_slope:      AtomicFloat,
+    env_release:     AtomicFloat,
     freq_note_start: AtomicFloat,
 }
 
@@ -151,8 +196,8 @@ impl KickmessVSTParams {
             Param::Gain1    => Some(&self.dist_gain),
             Param::Env1     => Some(&self.env_slope),
             Param::Release1 => Some(&self.freq_slope),
+            Param::Release2 => Some(&self.env_release),
             Param::Noise1   => Some(&self.noise),
-            Param::Phase1   => Some(&self.click),
             Param::S1       => Some(&self.freq_note_start),
             _               => None,
         }
@@ -188,8 +233,8 @@ impl Default for KickmessVSTParams {
             dist_gain:       new_default_atom(&mut ps, Param::Gain1),
             env_slope:       new_default_atom(&mut ps, Param::Env1),
             noise:           new_default_atom(&mut ps, Param::Noise1),
-            click:           new_default_atom(&mut ps, Param::Phase1),
             freq_slope:      new_default_atom(&mut ps, Param::Release1),
+            env_release:     new_default_atom(&mut ps, Param::Release2),
             freq_note_start: new_default_atom(&mut ps, Param::S1),
             ps,
         }

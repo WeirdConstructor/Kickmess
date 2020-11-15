@@ -1,24 +1,23 @@
 use crate::proc::*;
 use crate::helpers::*;
+use crate::env::*;
 
 pub struct Op_Kickmess {
     freq_start:      f32,
     freq_end:        f32,
-    length_ms:       f32,
     dist_start:      f32,
     dist_end:        f32,
     dist_gain:       f32,
     env_slope:       f32,
     noise:           f32,
-    phase:           f32,
     freq_slope:      f32,
     freq_note_start: bool,
 
-    note_offs:       Option<usize>,
-    note_freq:       f64,
+    attack:          REnv,
+    release:         REnv,
     srate:           f32,
-    counter:         usize,
-    note_samples:    usize,
+
+    note_freq:       f64,
     cur_phase:       f32,
 }
 
@@ -27,21 +26,19 @@ impl Op_Kickmess {
         Self {
             freq_start:      0.0,
             freq_end:        0.0,
-            length_ms:       0.0,
             dist_start:      0.0,
             dist_end:        0.0,
             dist_gain:       0.0,
             env_slope:       0.0,
             noise:           0.0,
-            phase:           0.0,
             freq_slope:      0.0,
             freq_note_start: true,
 
-            note_offs:       None,
+            attack:          REnv::new(),
+            release:         REnv::new(),
+
             note_freq:       0.0,
-            counter:         0,
             srate:           0.0,
-            note_samples:    0,
             cur_phase:       0.0,
         }
     }
@@ -58,74 +55,52 @@ impl MonoProcessor for Op_Kickmess {
         ps.add(ParamDefinition::from(Param::Env1,       0.01,  1.0,    0.163, "Env. slope"));
         ps.add(ParamDefinition::from(Param::Release1,   0.001, 1.0,     0.06, "Freq. slope"));
         ps.add(ParamDefinition::from(Param::Noise1,     0.0,   1.0,      0.0, "Noise"));
-        ps.add(ParamDefinition::from(Param::Phase1,     0.0,   1.0,      0.4, "Click/Phase start"));
         ps.add(ParamDefinition::from(Param::S1,         0.0,   1.0,      1.0, "Start from note"));
+        ps.add(ParamDefinition::from(Param::Release2,   1.0,1000.0,      5.0, "Env Release"));
     }
 
     fn set_sample_rate(&mut self, sr: f32) {
         self.srate = sr;
+        self.release.set_sample_rate(sr);
+        self.attack.set_sample_rate(sr);
     }
 
     fn read_params(&mut self, ps: &ParamSet, pp: &dyn ParamProvider) {
-        self.freq_start      = ps.get( 0, pp);
-        self.freq_end        = ps.get( 1, pp);
-        self.length_ms       = ps.get( 2, pp);
-        self.dist_start      = ps.get( 3, pp);
-        self.dist_end        = ps.get( 4, pp);
-        self.dist_gain       = ps.get( 5, pp);
-        self.env_slope       = ps.get( 6, pp);
-        self.freq_slope      = ps.get( 7, pp);
-        self.noise           = ps.get( 8, pp);
-        self.phase           = ps.get( 9, pp);
-        self.freq_note_start = ps.get(10, pp) >= 0.5;
+        self.freq_start       = ps.get( 0, pp);
+        self.freq_end         = ps.get( 1, pp);
+        self.attack.set_release(ps.get( 2, pp));
+        self.dist_start       = ps.get( 3, pp);
+        self.dist_end         = ps.get( 4, pp);
+        self.dist_gain        = ps.get( 5, pp);
+        self.env_slope        = ps.get( 6, pp);
+        self.freq_slope       = ps.get( 7, pp);
+        self.noise            = ps.get( 8, pp);
+        self.freq_note_start  = ps.get( 9, pp) >= 0.5;
+        self.release.set_release(ps.get(10, pp));
 
         self.noise = self.noise * self.noise;
-        self.phase = self.phase * 0.25;
     }
 
     fn process(&mut self, l: &mut dyn Channel) {
+        l.process(&mut |_i: &[f32], o: &mut [f32]| {
+            for (offs, os) in o.iter_mut().enumerate() {
+                let mut kick_sample : f64 = 0.0;
 
-        l.process(&mut |i: &[f32], o: &mut [f32]| {
-            let mut offs = 0;
-            for (is, os) in i.iter().zip(o) {
-                if let Some(offs) = self.note_offs {
-                    println!("STARTED VOICE {} Hz AT {:?}", self.note_freq, self.note_offs);
-                    self.note_offs = None;
-                    self.counter += 1;
-                } else if self.counter > 0 {
-                    self.counter += 1;
-                }
+                if let EnvPos::Release(pos, env_value) = self.attack.next(offs) {
+                    if pos == 0 {
+                        self.release.reset();
+                        self.cur_phase = 0.0;
+                    }
 
-                if self.counter > 0 {
-                    //	const double gain =
-                    //      ( 1 - fastPow(( m_counter < m_length )
-                    //                    ? m_counter / m_length
-                    //                    : 1,
-                    //                    m_env ) );
-                    let len : f64 =
-                        if (self.counter - 1) < self.note_samples {
-                            ((self.counter - 1) as f64)
-                            / (self.note_samples as f64)
-                        } else {
-                            1.0
-                        };
-
-                    let gain : f64 = 1.0 - len.powf(self.env_slope as f64);
+                    let gain : f64 = 1.0 - env_value.powf(self.env_slope as f64);
 
                     // const sample_t s =
                     //   ( Oscillator::sinSample( m_phase ) * ( 1 - m_noise ) )
                     //   + ( Oscillator::noiseSample( 0 ) * gain * gain * m_noise );
                     let s =
-                        fast_sin(self.cur_phase as f64) * (1.0_f64 - self.noise as f64)
+                        fast_sin(self.cur_phase as f64)
+                        * (1.0_f64 - self.noise as f64)
                         ; // TODO: + rng.noise...
-
-                    if offs == 0 {
-                        println!("PHAS {} | {}", self.cur_phase, gain);
-                    }
-
-                    // buf[frame][0] = s * gain;
-                    // buf[frame][1] = s * gain;
-                    *os = (s * gain) as f32;
 
                     // // update distortion envelope if necessary
                     // if( m_hasDistEnv && m_counter < m_length )
@@ -135,6 +110,8 @@ impl MonoProcessor for Op_Kickmess {
                     // 	    m_FX.rightFX().setThreshold( thres );
                     // }
                     // m_FX.nextSample( buf[frame][0], buf[frame][1] );
+
+                    kick_sample = s * gain;
 
                     // m_phase += m_freq / sampleRate;
                     self.cur_phase +=
@@ -146,19 +123,32 @@ impl MonoProcessor for Op_Kickmess {
                     //          * ( 1 - fastPow( m_counter / m_length, m_slope ) ) )
                     //      : 0;
                     let change : f64 =
-                        if (self.counter - 1) < self.note_samples {
+                        if env_value <= 1.0 {
                             (self.freq_start - self.freq_end) as f64
-                            * (1.0 - len.powf(self.freq_slope as f64))
+                            * (1.0 - env_value.powf(self.freq_slope as f64))
                         } else {
                             0.0
                         };
 
                     // m_freq = m_endFreq + change;
-                    self.note_freq =
-                        self.freq_end as f64 + change;
+                    self.note_freq = self.freq_end as f64 + change;
                 }
 
-                offs += 1;
+                let release_env_gain =
+                    match self.release.next(offs) {
+                        EnvPos::Off => 1.0,
+                        EnvPos::Release(_, value) => {
+                            let gain : f64 = 1.0 - value.powf(0.5);
+                            gain
+                        },
+                        EnvPos::End => {
+                            self.attack.reset();
+                            self.release.reset();
+                            0.0
+                        }
+                    };
+
+                *os += (kick_sample * release_env_gain) as f32;
             }
         });
     }
@@ -166,24 +156,28 @@ impl MonoProcessor for Op_Kickmess {
 
 impl MonoVoice for Op_Kickmess {
     fn start_note(&mut self, offs: usize, freq: f32, _vel: f32) {
-        self.counter = 0;
-        self.note_offs = Some(offs);
-
-        self.note_samples =
-            ((self.length_ms as f32 * self.srate) / 1000.0) as usize;
+        self.attack.trigger(offs);
 
         if self.freq_note_start {
             self.note_freq = freq as f64;
         } else {
             self.note_freq = self.freq_start as f64;
         }
-
-        self.cur_phase = self.phase;
     }
 
     fn end_note(&mut self, offs: usize) {
+        if self.attack.active() {
+            self.release.trigger(offs);
+        }
     }
 
-    fn is_playing(&self) -> bool { self.counter > 0 }
+    fn is_playing(&self) -> bool {
+        self.attack.active()
+        || self.release.active()
+    }
+
+    fn in_release(&self) -> bool {
+        self.release.active()
+    }
 }
 
