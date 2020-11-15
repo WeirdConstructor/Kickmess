@@ -1,3 +1,29 @@
+/* Parts of this file are translated from LMMS under GPLv2-or-later
+ * into this project, which is GPLv3-or-later.
+ *
+ * DspEffectLibrary.h, kicker.cpp, KickerOsc.h
+ *
+ * Copyright (c) 2006-2014 Tobias Doerffel <tobydox/at/users.sourceforge.net>
+ * Copyright (c) 2014 grejppi <grejppi/at/gmail.com>
+ * Copyright (c) 2020 Weird Constructor <weirdconstructor/at/gmail.com>
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public
+ * License along with this program (see COPYING); if not, write to the
+ * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+ * Boston, MA 02110-1301 USA.
+ *
+ */
+
 use crate::proc::*;
 use crate::helpers::*;
 use crate::env::*;
@@ -106,11 +132,6 @@ impl MonoProcessor for Op_Kickmess {
 
                     kick_sample = s * gain;
 
-                    if has_dist_env {
-                        let thres = p2range(env_value as f32, self.dist_start, self.dist_end);
-                        kick_sample = f_distort(self.dist_gain, thres, kick_sample as f32) as f64;
-                    }
-
                     // // update distortion envelope if necessary
                     // if( m_hasDistEnv && m_counter < m_length )
                     // {
@@ -119,6 +140,11 @@ impl MonoProcessor for Op_Kickmess {
                     // 	    m_FX.rightFX().setThreshold( thres );
                     // }
                     // m_FX.nextSample( buf[frame][0], buf[frame][1] );
+
+                    if has_dist_env {
+                        let thres = p2range(env_value as f32, self.dist_start, self.dist_end);
+                        kick_sample = f_distort(self.dist_gain, thres, kick_sample as f32) as f64;
+                    }
 
 
                     // m_phase += m_freq / sampleRate;

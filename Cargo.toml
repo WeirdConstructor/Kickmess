@@ -4,7 +4,7 @@ version = "0.1.0"
 authors = ["Weird Constructor <weirdconstructor@gmail.com>"]
 edition = "2018"
 license = "GPL-3.0-or-later"
-description = "Kickmess - Port of LMMS Kicker Plugin for LV2"
+description = "Kickmess - Port of LMMS Kicker Plugin"
 
 [lib]
 name="kickmessvst"
@@ -17,7 +17,7 @@ wlambda            = { path = "../wlambda" }
 wctr_signal_ops    = { path = "../wctr-signal-ops" }
 
 [dev-dependencies]
-ggez               = "0.5.1"
+# ggez               = "0.5.1"
 # vecmath            = "1.0.0"
 # nalgebra           = "0.18.0"
 # mint               = "0.5.1"
