@@ -39,6 +39,7 @@ pub struct Op_Kickmess {
     freq_slope:      f32,
     freq_note_start: bool,
 
+    rng:             RandGen,
     attack:          REnv,
     release:         REnv,
     srate:           f32,
@@ -60,6 +61,7 @@ impl Op_Kickmess {
             freq_slope:      0.0,
             freq_note_start: true,
 
+            rng:             RandGen::new(),
             attack:          REnv::new(),
             release:         REnv::new(),
 
@@ -125,10 +127,12 @@ impl MonoProcessor for Op_Kickmess {
                     // const sample_t s =
                     //   ( Oscillator::sinSample( m_phase ) * ( 1 - m_noise ) )
                     //   + ( Oscillator::noiseSample( 0 ) * gain * gain * m_noise );
-                    let s =
+                    let mut s =
                         fast_sin(self.cur_phase as f64)
                         * (1.0_f64 - self.noise as f64)
                         ; // TODO: + rng.noise...
+
+                    s += self.rng.next_open01() * gain * gain * self.noise as f64;
 
                     kick_sample = s * gain;
 
