@@ -46,8 +46,8 @@ impl Op_Kickmess {
 
 impl MonoProcessor for Op_Kickmess {
     fn init_params(ps: &mut ParamSet) {
-        ps.add(ParamDefinition::from(Param::Freq1,      5.0,   1000.0, 150.0, "Start Freq."));
-        ps.add(ParamDefinition::from(Param::Freq2,      5.0,   1000.0,  40.0, "End Freq."));
+        ps.add(ParamDefinition::from(Param::Freq1,      5.0,   3000.0, 150.0, "Start Freq."));
+        ps.add(ParamDefinition::from(Param::Freq2,      5.0,   2000.0,  40.0, "End Freq."));
         ps.add(ParamDefinition::from(Param::Decay1,     5.0,   5000.0, 440.0, "Length"));
         ps.add(ParamDefinition::from(Param::Dist1,      0.0,   100.0,    0.8, "Dist. Start"));
         ps.add(ParamDefinition::from(Param::Dist2,      0.0,   100.0,    0.8, "Dist. End"));
@@ -82,6 +82,8 @@ impl MonoProcessor for Op_Kickmess {
     }
 
     fn process(&mut self, l: &mut dyn Channel) {
+        let has_dist_env = (self.dist_start - self.dist_end).abs() > 0.0001;
+
         l.process(&mut |_i: &[f32], o: &mut [f32]| {
             for (offs, os) in o.iter_mut().enumerate() {
                 let mut kick_sample : f64 = 0.0;
@@ -102,6 +104,13 @@ impl MonoProcessor for Op_Kickmess {
                         * (1.0_f64 - self.noise as f64)
                         ; // TODO: + rng.noise...
 
+                    kick_sample = s * gain;
+
+                    if has_dist_env {
+                        let thres = p2range(env_value as f32, self.dist_start, self.dist_end);
+                        kick_sample = f_distort(self.dist_gain, thres, kick_sample as f32) as f64;
+                    }
+
                     // // update distortion envelope if necessary
                     // if( m_hasDistEnv && m_counter < m_length )
                     // {
@@ -111,7 +120,6 @@ impl MonoProcessor for Op_Kickmess {
                     // }
                     // m_FX.nextSample( buf[frame][0], buf[frame][1] );
 
-                    kick_sample = s * gain;
 
                     // m_phase += m_freq / sampleRate;
                     self.cur_phase +=
