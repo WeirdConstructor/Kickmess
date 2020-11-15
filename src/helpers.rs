@@ -120,15 +120,16 @@ pub fn square_35(phase: f64) -> f64 {
     + fast_sin(phase * 5.0) / 5.0
 }
 
-pub fn note_to_freq(note: f64) -> f64 {
-    440.0 * (2.0_f64).powf((note - 69.0) / 12.0)
+// note: MIDI note value?
+pub fn note_to_freq(note: f32) -> f32 {
+    440.0 * (2.0_f32).powf((note - 69.0) / 12.0)
 }
 
 // Signal distortion
 // gain:        0.1 - 5.0       default = 1.0
 // threshold:   0.0 - 100.0     default = 0.8
 // i:           signal
-fn f_distort(gain: f32, threshold: f32, i: f32) -> f32 {
+pub fn f_distort(gain: f32, threshold: f32, i: f32) -> f32 {
     gain * (
         i * ( i.abs() + threshold )
         / ( i * i + (threshold - 1.0) * i.abs() + 1.0 ))
@@ -142,3 +143,11 @@ pub fn range2p(v: f32, a: f32, b: f32) -> f32 {
     (v - b) / (a - b)
 }
 
+// gain: 24.0 - -90.0   default = 0.0
+pub fn gain2coef(gain: f32) -> f32 {
+    if gain > -90.0 {
+        10.0_f32.powf(gain * 0.05)
+    } else {
+        0.0
+    }
+}

@@ -25,15 +25,26 @@
  */
 
 pub trait Channel {
-    fn process(&mut self, f: &dyn Fn(&[f32], &mut [f32]));
+    fn process(&mut self, f: &mut dyn FnMut(&[f32], &mut [f32]));
 }
 
 
 #[derive(Debug, Copy, Clone, PartialEq, PartialOrd)]
 pub enum Param {
     None,
+    Freq1,
+    Freq2,
+    Decay1,
+    Decay2,
+    Release1,
     Gain1,
     Gain2,
+    Dist1,
+    Dist2,
+    Noise1,
+    Env1,
+    Phase1,
+    S1,
     Threshold1,
     Threshold2,
     Tmp1,
@@ -69,12 +80,16 @@ impl ParamProvider for f32 {
     fn param(&self, _p: Param) -> f32 { *self }
 }
 
-pub struct ParamDefinition(Param, f32, f32, f32);
+pub struct ParamDefinition(Param, f32, f32, f32, &'static str);
 
 impl ParamDefinition {
-    pub fn from(p: Param, min: f32, max: f32, def: f32) -> Self {
-        Self(p, min, max, def)
+    pub fn from(p: Param, min: f32, max: f32, def: f32, desc: &'static str) -> Self {
+        Self(p, min, max, def, desc)
     }
+
+    pub fn param(&self) -> Param { self.0 }
+
+    pub fn name(&self) -> &'static str { self.4 }
 
     pub fn min(&self)       -> f32 { self.1 }
     pub fn max(&self)       -> f32 { self.2 }
@@ -108,6 +123,24 @@ impl ParamSet {
         }
 
         Some(&self.defines[idx])
+    }
+
+    pub fn idx_of(&self, p: Param) -> Option<usize> {
+        for (i, d) in self.defines.iter().enumerate() {
+            if d.0 == p {
+                return Some(i);
+            }
+        }
+
+        None
+    }
+
+    pub fn get_raw(&self, idx: usize, pp: &dyn ParamProvider) -> f32 {
+        if let Some(pd) = self.definition(idx) {
+            pp.param(pd.0)
+        } else {
+            0.0
+        }
     }
 
     pub fn get(&self, idx: usize, pp: &dyn ParamProvider) -> f32 {
@@ -150,5 +183,11 @@ pub trait MonoProcessor {
     fn init_params(ps: &mut ParamSet);
     fn read_params(&mut self, ps: &ParamSet, pp: &dyn ParamProvider);
     fn process(&mut self, c: &mut dyn Channel);
+    fn set_sample_rate(&mut self, srate: f32);
 }
 
+pub trait MonoVoice : MonoProcessor {
+    fn start_note(&mut self, offs: usize, freq: f32, vel: f32);
+    fn end_note(&mut self, offs: usize);
+    fn is_playing(&self) -> bool;
+}
