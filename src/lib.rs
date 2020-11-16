@@ -2,6 +2,7 @@ mod proc;
 mod helpers;
 mod op_kickmess;
 mod env;
+mod editor;
 
 use proc::Channel;
 use proc::{ParamProvider, Param, ParamSet, MonoProcessor, MonoVoice};
@@ -124,7 +125,7 @@ impl Plugin for Kickmess {
                                 }
                             }
                         }
-                        println!("P VOICES: p={}, r={}", playing, release);
+                        //d// println!("P VOICES: p={}, r={}", playing, release);
 
                         for (i, voice) in self.voices.iter_mut().enumerate() {
                             if !voice.is_playing() {
@@ -147,7 +148,7 @@ impl Plugin for Kickmess {
                         }
                     }
 
-                    println!("MIDI: {:?}", data);
+                    //d// println!("MIDI: {:?}", data);
                 },
                 _ => (),
             }
@@ -167,9 +168,14 @@ impl Plugin for Kickmess {
     fn get_parameter_object(&mut self) -> Arc<dyn PluginParameters> {
         Arc::clone(&self.params) as Arc<dyn PluginParameters>
     }
+
+    fn get_editor(&mut self) -> Option<Box<dyn vst::editor::Editor>> {
+        Some(Box::new(
+            editor::KickmessEditor::new(self.params.clone())))
+    }
 }
 
-struct KickmessVSTParams {
+pub(crate) struct KickmessVSTParams {
     ps:             ParamSet,
 
     freq_start:      AtomicFloat,
