@@ -105,10 +105,10 @@ impl Editor for KickmessEditor {
                 |pv| KickmessUI::new(pv));
 
         let ui = view.handle();
-        ui.set_window_title("Kickmess");
+        println!("title: {:?}", ui.set_window_title("Kickmess"));
         ui.make_resizable();
-        ui.set_default_size(400, 400);
-        ui.show_window();
+        println!("set_default_size: {:?}", ui.set_default_size(900, 400));
+        println!("show_window: {:?}", ui.show_window());
 
         self.view = Some(view);
 
@@ -125,12 +125,7 @@ impl Editor for KickmessEditor {
         let hdl = self.view.as_mut().unwrap().as_mut().handle();
 
 //        println!("IDLE!");
-        match hdl.update(0.0) {
-            Status::Failure => {
-                println!("FAILEDUPDATE!");
-            },
-            _ => (),
-        }
+        println!("update: {:?}", hdl.update(0.0));
 //        println!("IDLE!?!");
 
 
