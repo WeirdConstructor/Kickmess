@@ -24,8 +24,8 @@ impl KickmessUI {
 }
 
 impl PuglViewTrait for KickmessUI {
-    fn exposed(&mut self, _expose: &ExposeArea, cr: &cairo::Context) {
-        println!("EXPOSED");
+    fn exposed(&mut self, expose: &ExposeArea, cr: &cairo::Context) {
+        println!("EXPOSED {:?}", expose);
 
         cr.set_source_rgb(0.2, 0.2, 0.2);
         cr.rectangle(0., 0., self.w, self.h);
@@ -52,7 +52,7 @@ impl PuglViewTrait for KickmessUI {
     }
 
     fn resize(&mut self, size: Size) {
-        println!("RESIZE");
+        println!("RESIZE {:?}", size);
         self.w = size.w;
         self.h = size.h;
         self.post_redisplay();
@@ -108,6 +108,7 @@ impl Editor for KickmessEditor {
         println!("title: {:?}", ui.set_window_title("Kickmess"));
         ui.make_resizable();
         println!("set_default_size: {:?}", ui.set_default_size(900, 400));
+        println!("show_window: {:?}", ui.realize());
         println!("show_window: {:?}", ui.show_window());
 
         self.view = Some(view);
@@ -122,16 +123,18 @@ impl Editor for KickmessEditor {
     }
 
     fn idle(&mut self) {
-        let hdl = self.view.as_mut().unwrap().as_mut().handle();
+        if let Some(view) = self.view.as_mut() {
+            let hdl = view.as_mut().handle();
 
-//        println!("IDLE!");
-        println!("update: {:?}", hdl.update(0.0));
-//        println!("IDLE!?!");
+    //        println!("IDLE!");
+            println!("update: {:?}", hdl.update(0.0));
+    //        println!("IDLE!?!");
 
 
-        if hdl.close_requested {
-            println!("CLOSE REQ");
-            self.view = None;
+            if hdl.close_requested {
+                println!("CLOSE REQ");
+                self.view = None;
+            }
         }
     }
 
