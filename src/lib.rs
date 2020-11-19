@@ -20,6 +20,8 @@ use vst::plugin::{HostCallback, Category, Info, Plugin, PluginParameters, CanDo}
 
 use std::sync::Arc;
 
+const MAX_BLOCKSIZE: usize = 128;
+
 struct AB<'a>((&'a [f32], &'a mut [f32]));
 
 
@@ -49,14 +51,14 @@ impl Default for Kickmess {
 struct Kickmess {
     host:      HostCallback,
     params:    Arc<KickmessVSTParams>,
-    voices:    Vec<Op_Kickmess>,
+    voices:    Vec<OpKickmess>,
 }
 
 impl Plugin for Kickmess {
     fn new(host: HostCallback) -> Self {
         let mut voices = vec![];
         for _ in 0..10 {
-            voices.push(Op_Kickmess::new());
+            voices.push(OpKickmess::new());
         }
 
         Self {
@@ -228,7 +230,7 @@ fn new_default_atom(ps: &mut ParamSet, p: Param) -> AtomicFloat {
 impl Default for KickmessVSTParams {
     fn default() -> KickmessVSTParams {
         let mut ps = ParamSet::new();
-        Op_Kickmess::init_params(&mut ps);
+        OpKickmess::init_params(&mut ps);
 
         KickmessVSTParams {
             freq_start:      new_default_atom(&mut ps, Param::Freq1),

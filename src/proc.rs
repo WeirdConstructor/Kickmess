@@ -30,7 +30,7 @@ pub trait ParamMapper {
     fn map(&self, p: Param) -> Param;
 }
 
-impl ParamMapper for Fn(Param) -> Param {
+impl ParamMapper for dyn Fn(Param) -> Param {
     fn map(&self, p: Param) -> Param { self(p) }
 }
 
@@ -133,26 +133,6 @@ impl ParamSet {
 //        return ( fabsf( fabsf( fmodf( in - m_threshold, m_threshold*4 ) ) - m_threshold*2 ) - m_threshold ) * m_gain;
 //    }
 //    return in * m_gain;
-
-trait StereoOp {
-    fn process(&mut self, pp: &dyn ParamProvider, l: f32, r: f32) -> (f32, f32);
-}
-
-trait MonoOp {
-    fn process(&mut self, pp: &dyn ParamProvider, i: f32) -> f32;
-}
-
-impl StereoOp for MonoOp {
-    fn process(&mut self, pp: &dyn ParamProvider, l: f32, r: f32) -> (f32, f32) {
-        (self.process(pp, l), self.process(pp, r))
-    }
-}
-
-impl MonoOp for Fn(&dyn ParamProvider, f32) -> f32 {
-    fn process(&mut self, pp: &dyn ParamProvider, i: f32) -> f32 {
-        self(pp, i)
-    }
-}
 
 pub trait MonoProcessor {
     fn init_params(ps: &mut ParamSet);

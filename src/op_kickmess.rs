@@ -28,7 +28,9 @@ use crate::proc::*;
 use crate::helpers::*;
 use crate::env::*;
 
-pub struct Op_Kickmess {
+use crate::MAX_BLOCKSIZE;
+
+pub struct OpKickmess {
     freq_start:      f32,
     freq_end:        f32,
     dist_start:      f32,
@@ -48,7 +50,7 @@ pub struct Op_Kickmess {
     cur_phase:       f32,
 }
 
-impl Op_Kickmess {
+impl OpKickmess {
     pub fn new() -> Self {
         Self {
             freq_start:      0.0,
@@ -72,7 +74,7 @@ impl Op_Kickmess {
     }
 }
 
-impl MonoProcessor for Op_Kickmess {
+impl MonoProcessor for OpKickmess {
     fn init_params(ps: &mut ParamSet) {
         ps.add(ParamDefinition::from(Param::Freq1,      5.0,   3000.0, 150.0, "Start Freq."));
         ps.add(ParamDefinition::from(Param::Freq2,      5.0,   2000.0,  40.0, "End Freq."));
@@ -192,7 +194,7 @@ impl MonoProcessor for Op_Kickmess {
     }
 }
 
-impl MonoVoice for Op_Kickmess {
+impl MonoVoice for OpKickmess {
     fn start_note(&mut self, offs: usize, freq: f32, _vel: f32) {
         self.attack.trigger(offs);
 
