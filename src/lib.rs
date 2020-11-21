@@ -131,7 +131,7 @@ impl Plugin for Kickmess {
 
                         for (i, voice) in self.voices.iter_mut().enumerate() {
                             if !voice.is_playing() {
-                                println!("[VOICE {}] START", i);
+                                //d// println!("[VOICE {}] START", i);
                                 voice.start_note(
                                     delta_frames as usize,
                                     note_to_freq(data[1] as f32),
@@ -143,7 +143,7 @@ impl Plugin for Kickmess {
                     } else if data[0] == 128 {
                         for (i, voice) in self.voices.iter_mut().enumerate() {
                             if voice.is_playing() && !voice.in_release() {
-                                println!("[VOICE {}] END", i);
+                                //d// println!("[VOICE {}] END", i);
                                 voice.end_note(delta_frames as usize);
                                 break;
                             }

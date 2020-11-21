@@ -29,6 +29,7 @@ use crate::helpers::*;
 use crate::env::*;
 
 use crate::MAX_BLOCKSIZE;
+const PI2 : f64 = std::f64::consts::PI * 2.0;
 
 macro_rules! opKickmessParams {
     ($x: ident) => {
@@ -131,7 +132,6 @@ impl MonoProcessor for OpKickmess {
     }
 
     fn read_params(&mut self, ps: &ParamSet, pp: &dyn ParamProvider) {
-        println!("IDX OF {}", env_slope);
         self.freq_start       = ps.get( 0, pp);
         self.freq_end         = ps.get( 1, pp);
         self.attack.set_release(ps.get( 2, pp));
@@ -166,7 +166,7 @@ impl MonoProcessor for OpKickmess {
                     //   ( Oscillator::sinSample( m_phase ) * ( 1 - m_noise ) )
                     //   + ( Oscillator::noiseSample( 0 ) * gain * gain * m_noise );
                     let mut s =
-                        fast_sin(self.cur_phase as f64)
+                        fast_sin(self.cur_phase as f64 * PI2)
                         * (1.0_f64 - self.noise as f64)
                         ; // TODO: + rng.noise...
 
