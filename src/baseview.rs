@@ -12,6 +12,7 @@ use raw_window_handle::{
 
 use vst::plugin::{Info, Plugin};
 use vst::editor::Editor;
+use crate::plug_ui::{PlugUI, PlugUIState, PlugUIPainter};
 
 
 const WINDOW_WIDTH: usize = 500;
@@ -19,9 +20,23 @@ const WINDOW_HEIGHT: usize = 500;
 
 
 struct TestWindowHandler {
-    ctx: cairo::Context,
+    ctx:    cairo::Context,
+    state:  PlugUIState,
+    ui:     Box<dyn PlugUI>,
+    screen_buf: cairo::Context,
 }
 
+fn get_screen_buffer(cr: &cairo::Context) -> cairo::Context {
+    let ext = cr.clip_extents();
+    let surf =
+        cr.get_target()
+          .create_similar_image(
+              cairo::Format::ARgb32,
+              (ext.0 - ext.2).abs() as i32,
+              (ext.1 - ext.3).abs() as i32)
+          .expect("Createable new img surface");
+    cairo::Context::new(&surf)
+}
 
 impl WindowHandler for TestWindowHandler {
     type Message = ();
@@ -35,11 +50,26 @@ impl WindowHandler for TestWindowHandler {
     }
 
     fn on_frame(&mut self) {
-        
+        let mut wd =
+            PlugUIPainter::new(&mut self.state, &self.screen_buf);
+
+        if self.ui.needs_redraw() {
+            let ext = self.screen_buf.clip_extents();
+            self.screen_buf.set_source_rgb(0.5, 0.0, 0.5);
+            self.screen_buf.rectangle(ext.0, ext.1, ext.2 - ext.0, ext.3 - ext.1);
+            self.screen_buf.fill();
+
+            self.ui.redraw(&mut wd);
+        }
+
+        self.ctx.save();
+        self.ctx.set_source_surface(&self.screen_buf.get_target(), 0.0, 0.0);
+        self.ctx.paint();
+        self.ctx.restore();
     }
 }
 
-pub fn open_window(parent: Option<*mut ::std::ffi::c_void>) -> WindowHandle {
+pub fn open_window(parent: Option<*mut ::std::ffi::c_void>, ui: Box<dyn PlugUI>) -> WindowHandle {
 
     let options =
         if let Some(parent) = parent {
@@ -59,7 +89,7 @@ pub fn open_window(parent: Option<*mut ::std::ffi::c_void>) -> WindowHandle {
             }
         };
 
-    Window::open(options, |win|{
+    Window::open(options, |win| {
         unsafe {
             if let RawWindowHandle::Xlib(XlibHandle {
                     window, display,
@@ -88,7 +118,10 @@ pub fn open_window(parent: Option<*mut ::std::ffi::c_void>) -> WindowHandle {
                 let ctx = cairo::Context::new(&surf);
 
                 TestWindowHandler {
-                    ctx
+                    screen_buf: get_screen_buffer(&ctx),
+                    state: PlugUIState::new(),
+                    ctx,
+                    ui
                 }
             }
             else
@@ -97,6 +130,27 @@ pub fn open_window(parent: Option<*mut ::std::ffi::c_void>) -> WindowHandle {
             }
         }
     })
+}
+
+struct UI {
+}
+
+impl PlugUI for UI {
+    fn get_label(&mut self, idx: usize) -> String {
+        match idx {
+            _ => String::from("?"),
+        }
+    }
+
+    fn needs_redraw(&mut self) -> bool {
+        false
+    }
+
+    fn redraw(&mut self, state: &mut PlugUIPainter) {
+    }
+
+    fn handle_input(&mut self, state: &mut PlugUIPainter) {
+    }
 }
 
 
@@ -116,7 +170,7 @@ impl Editor for TestPluginEditor {
     }
 
     fn open(&mut self, parent: *mut ::std::ffi::c_void) -> bool {
-        self.handle = Some(open_window(Some(parent)));
+        self.handle = Some(open_window(Some(parent), Box::new(UI{})));
         true
     }
 

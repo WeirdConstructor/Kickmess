@@ -16,7 +16,7 @@ pugl-sys           = { git = "https://github.com/johannes-mueller/pugl-sys.git" 
 cairo-rs           = "0.9.1"
 
 raw-window-handle = "0.3"
-baseview          = { git = "https://github.com/RustAudio/baseview" }
+baseview          = { path = "/home/weictr/devel/other/baseview" }
 cairo-sys-rs      = { version = "0.10.0", features=["xlib"] }
 x11               = { version = "2.18.2" }
 
