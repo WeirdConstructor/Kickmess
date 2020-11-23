@@ -1,5 +1,5 @@
 [package]
-name    = "kickmess"
+name    = "kickmessvst"
 version = "0.1.0"
 authors = ["Weird Constructor <weirdconstructor@gmail.com>"]
 edition = "2018"
@@ -8,12 +8,17 @@ description = "Kickmess - Port of LMMS Kicker Plugin"
 
 [lib]
 name="kickmessvst"
-crate-type = ["cdylib"]
+crate-type = ["cdylib", "lib"]
 
 [dependencies]
 vst                = { git = "https://github.com/rustaudio/vst-rs" }
 pugl-sys           = { git = "https://github.com/johannes-mueller/pugl-sys.git" }
 cairo-rs           = "0.9.1"
+
+raw-window-handle = "0.3"
+baseview          = { git = "https://github.com/RustAudio/baseview" }
+cairo-sys-rs      = { version = "0.10.0", features=["xlib"] }
+x11               = { version = "2.18.2" }
 
 #lv2               = { version = "0.6.0" }
 #wlambda           = { path = "../wlambda" }
@@ -21,6 +26,3 @@ cairo-rs           = "0.9.1"
 #;pugl-sys           = { git = "https://github.com/johannes-mueller/pugl-sys.git" }
 
 [dev-dependencies]
-baseview     = { git = "https://github.com/RustAudio/baseview" }
-cairo-sys-rs = { version = "0.10.0", features=["xlib"] }
-x11          = { version = "2.18.2" }

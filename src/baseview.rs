@@ -1,17 +1,15 @@
 #[macro_use]
-extern crate vst;
-
 use baseview::{
     Size, Event, Parent, Window, WindowHandle, WindowHandler,
     WindowOpenOptions, WindowScalePolicy
-}
+};
+
 use raw_window_handle::{
     unix::XlibHandle,
     HasRawWindowHandle,
     RawWindowHandle
-};;
+};
 
-use raw_window_handle::RawWindowHandle;
 use vst::plugin::{Info, Plugin};
 use vst::editor::Editor;
 
@@ -20,19 +18,20 @@ const WINDOW_WIDTH: usize = 500;
 const WINDOW_HEIGHT: usize = 500;
 
 
-#[derive(Default)]
-struct TestWindowHandler;
+struct TestWindowHandler {
+    ctx: cairo::Context,
+}
 
 
 impl WindowHandler for TestWindowHandler {
     type Message = ();
 
     fn on_message(&mut self, _: &mut Window, message: Self::Message) {
-        ::log::info!("TestWindowHandler received message: {:?}", message)
+        println!("MESG: {:?}", message);
     }
 
     fn on_event(&mut self, _: &mut Window, event: Event) {
-        ::log::info!("TestWindowHandler received event: {:?}", event)
+        println!("EVENT: {:?}", event);
     }
 
     fn on_frame(&mut self) {
@@ -40,11 +39,11 @@ impl WindowHandler for TestWindowHandler {
     }
 }
 
-fn open_window(parent: Option<*mut ::std::ffi::c_void>) -> WindowHandle {
-    let parent = raw_window_handle_from_parent(parent);
+pub fn open_window(parent: Option<*mut ::std::ffi::c_void>) -> WindowHandle {
 
     let options =
         if let Some(parent) = parent {
+            let parent = raw_window_handle_from_parent(parent);
             WindowOpenOptions {
                 title: "BaseviewTest".to_string(),
                 size: Size::new(WINDOW_WIDTH as f64, WINDOW_HEIGHT as f64),
@@ -89,8 +88,6 @@ fn open_window(parent: Option<*mut ::std::ffi::c_void>) -> WindowHandle {
                 let ctx = cairo::Context::new(&surf);
 
                 TestWindowHandler {
-                    once:false,
-                    surf,
                     ctx
                 }
             }
@@ -119,7 +116,7 @@ impl Editor for TestPluginEditor {
     }
 
     fn open(&mut self, parent: *mut ::std::ffi::c_void) -> bool {
-        self.handle = open_window_parent(parent);
+        self.handle = Some(open_window(Some(parent)));
         true
     }
 

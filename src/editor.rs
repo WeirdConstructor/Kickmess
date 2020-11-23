@@ -121,7 +121,7 @@ impl SegmentedKnob {
         let s1_len  = ((s0.0 - s1.1).powf(2.0) + (s0.0 - s1.1).powf(2.0)).sqrt();
         let s2_len  = ((s1.0 - s2.1).powf(2.0) + (s1.0 - s2.1).powf(2.0)).sqrt();
 
-        let full_len = self.s0_len * 2.0 + self.s1_len * 6.0;
+        let full_len = s1_len * 2.0 + s2_len * 6.0;
 
         Self {
             s0, s1, s2, s3, s4, s5, s6, s7, s8,
@@ -137,29 +137,29 @@ impl SegmentedKnob {
         }
     }
 
-    fn draw_at_center(&self, cr: &cairo::Context, x, y, line_w: f64, color: (f64, f64, f64), arc_len: f64) {
-        cr.set_line_width(line_w);
-        cr.set_source_rgb(color.0, color.1, color.2);
-        cr.move_to(x + self.s0.0, y + self.s0.1);
-        if        arc_len > self.s1_arc_len {
-        } else if arc_len > self.s2_arc_len {
-        } else if arc_len > self.s3_arc_len {
-        } else if arc_len > self.s4_arc_len {
-        } else if arc_len > self.s5_arc_len {
-        } else if arc_len > self.s6_arc_len {
-        } else if arc_len > self.s7_arc_len {
-        }
-
-        cr.line_to(x + self.s1.0, y + self.s1.1);
-        cr.line_to(x + self.s2.0, y + self.s2.1);
-        cr.line_to(x + self.s3.0, y + self.s3.1);
-        cr.line_to(x + self.s4.0, y + self.s4.1);
-        cr.line_to(x + self.s5.0, y + self.s5.1);
-        cr.line_to(x + self.s6.0, y + self.s6.1);
-        cr.line_to(x + self.s7.0, y + self.s7.1);
-        cr.line_to(x + self.s8.0, y + self.s8.1);
-        cr.stroke();
-    }
+//    fn draw_at_center(&self, cr: &cairo::Context, x, y, line_w: f64, color: (f64, f64, f64), arc_len: f64) {
+//        cr.set_line_width(line_w);
+//        cr.set_source_rgb(color.0, color.1, color.2);
+//        cr.move_to(x + self.s0.0, y + self.s0.1);
+//        if        arc_len > self.s1_arc_len {
+//        } else if arc_len > self.s2_arc_len {
+//        } else if arc_len > self.s3_arc_len {
+//        } else if arc_len > self.s4_arc_len {
+//        } else if arc_len > self.s5_arc_len {
+//        } else if arc_len > self.s6_arc_len {
+//        } else if arc_len > self.s7_arc_len {
+//        }
+//
+//        cr.line_to(x + self.s1.0, y + self.s1.1);
+//        cr.line_to(x + self.s2.0, y + self.s2.1);
+//        cr.line_to(x + self.s3.0, y + self.s3.1);
+//        cr.line_to(x + self.s4.0, y + self.s4.1);
+//        cr.line_to(x + self.s5.0, y + self.s5.1);
+//        cr.line_to(x + self.s6.0, y + self.s6.1);
+//        cr.line_to(x + self.s7.0, y + self.s7.1);
+//        cr.line_to(x + self.s8.0, y + self.s8.1);
+//        cr.stroke();
+//    }
 }
 
 enum DrawCacheImg {

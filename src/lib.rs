@@ -3,6 +3,7 @@ mod helpers;
 mod op_kickmess;
 mod env;
 mod editor;
+pub mod baseview;
 
 use proc::Channel;
 use proc::{ParamProvider, Param, ParamSet, MonoProcessor, MonoVoice};
