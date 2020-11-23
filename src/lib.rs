@@ -2,6 +2,7 @@ mod proc;
 mod helpers;
 mod op_kickmess;
 mod env;
+mod editor;
 
 use proc::Channel;
 use proc::{ParamProvider, Param, ParamSet, MonoProcessor, MonoVoice};
@@ -18,6 +19,8 @@ use vst::buffer::AudioBuffer;
 use vst::plugin::{HostCallback, Category, Info, Plugin, PluginParameters, CanDo};
 
 use std::sync::Arc;
+
+const MAX_BLOCKSIZE: usize = 128;
 
 struct AB<'a>((&'a [f32], &'a mut [f32]));
 
@@ -48,14 +51,14 @@ impl Default for Kickmess {
 struct Kickmess {
     host:      HostCallback,
     params:    Arc<KickmessVSTParams>,
-    voices:    Vec<Op_Kickmess>,
+    voices:    Vec<OpKickmess>,
 }
 
 impl Plugin for Kickmess {
     fn new(host: HostCallback) -> Self {
         let mut voices = vec![];
         for _ in 0..10 {
-            voices.push(Op_Kickmess::new());
+            voices.push(OpKickmess::new());
         }
 
         Self {
@@ -124,11 +127,11 @@ impl Plugin for Kickmess {
                                 }
                             }
                         }
-                        println!("P VOICES: p={}, r={}", playing, release);
+                        //d// println!("P VOICES: p={}, r={}", playing, release);
 
                         for (i, voice) in self.voices.iter_mut().enumerate() {
                             if !voice.is_playing() {
-                                println!("[VOICE {}] START", i);
+                                //d// println!("[VOICE {}] START", i);
                                 voice.start_note(
                                     delta_frames as usize,
                                     note_to_freq(data[1] as f32),
@@ -140,14 +143,14 @@ impl Plugin for Kickmess {
                     } else if data[0] == 128 {
                         for (i, voice) in self.voices.iter_mut().enumerate() {
                             if voice.is_playing() && !voice.in_release() {
-                                println!("[VOICE {}] END", i);
+                                //d// println!("[VOICE {}] END", i);
                                 voice.end_note(delta_frames as usize);
                                 break;
                             }
                         }
                     }
 
-                    println!("MIDI: {:?}", data);
+                    //d// println!("MIDI: {:?}", data);
                 },
                 _ => (),
             }
@@ -167,9 +170,14 @@ impl Plugin for Kickmess {
     fn get_parameter_object(&mut self) -> Arc<dyn PluginParameters> {
         Arc::clone(&self.params) as Arc<dyn PluginParameters>
     }
+
+    fn get_editor(&mut self) -> Option<Box<dyn vst::editor::Editor>> {
+        Some(Box::new(
+            editor::KickmessEditor::new(self.params.clone())))
+    }
 }
 
-struct KickmessVSTParams {
+pub(crate) struct KickmessVSTParams {
     ps:             ParamSet,
 
     freq_start:      AtomicFloat,
@@ -222,7 +230,7 @@ fn new_default_atom(ps: &mut ParamSet, p: Param) -> AtomicFloat {
 impl Default for KickmessVSTParams {
     fn default() -> KickmessVSTParams {
         let mut ps = ParamSet::new();
-        Op_Kickmess::init_params(&mut ps);
+        OpKickmess::init_params(&mut ps);
 
         KickmessVSTParams {
             freq_start:      new_default_atom(&mut ps, Param::Freq1),

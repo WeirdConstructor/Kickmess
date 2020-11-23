@@ -28,7 +28,45 @@ use crate::proc::*;
 use crate::helpers::*;
 use crate::env::*;
 
-pub struct Op_Kickmess {
+use crate::MAX_BLOCKSIZE;
+const PI2 : f64 = std::f64::consts::PI * 2.0;
+
+macro_rules! opKickmessParams {
+    ($x: ident) => {
+        // ($idx: literal, $id: ident, $type: ident, $init: expr, $param: expr,
+        //  $min: expr, $max: expr, $default: expr, $name: literal)
+        $x!{0,  freq_start,      f32, 0.0, Param::Freq1,      5.0,   3000.0, 150.0, "Start Freq."}
+        $x!{1,  freq_end,        f32, 0.0, Param::Freq2,      5.0,   2000.0,  40.0, "End Freq."}
+        $x!{2,  length,          f32, 0.0, Param::Decay1,     5.0,   5000.0, 440.0, "Length"}
+        $x!{3,  dist_start,      f32, 0.0, Param::Dist1,      0.0,   100.0,    0.8, "Dist. Start"}
+        $x!{4,  dist_end,        f32, 0.0, Param::Dist2,      0.0,   100.0,    0.8, "Dist. End"}
+        $x!{5,  dist_gain,       f32, 0.0, Param::Gain1,      0.1,   5.0,      1.0, "Dist. Gain"}
+        $x!{6,  env_slope,       f32, 0.0, Param::Env1,       0.01,  1.0,    0.163, "Env. slope"}
+        $x!{7,  freq_slope,      f32, 0.0, Param::Release1,   0.001, 1.0,     0.06, "Freq. slope"}
+        $x!{8,  noise,           f32, 0.0, Param::Noise1,     0.0,   1.0,      0.0, "Noise"}
+        $x!{9,  freq_note_start, f32, 0.0, Param::S1,         0.0,   1.0,      1.0, "Start from note"}
+        $x!{10, release,         f32, 0.0, Param::Release2,   1.0,1000.0,      5.0, "Env Release"}
+    }
+}
+
+macro_rules! defineFields {
+    ($idx: literal, $id: ident, $type: ident, $init: expr, $param: expr,
+     $min: expr, $max: expr, $default: expr, $name: literal) => {
+        $id : $type,
+    }
+}
+
+
+macro_rules! defineIdxConstants {
+    ($idx: literal, $id: ident, $type: ident, $init: expr, $param: expr,
+     $min: expr, $max: expr, $default: expr, $name: literal) => {
+        const $id : usize = $idx;
+    }
+}
+
+opKickmessParams!{defineIdxConstants}
+
+pub struct OpKickmess {
     freq_start:      f32,
     freq_end:        f32,
     dist_start:      f32,
@@ -37,7 +75,7 @@ pub struct Op_Kickmess {
     env_slope:       f32,
     noise:           f32,
     freq_slope:      f32,
-    freq_note_start: bool,
+    freq_note_start: f32,
 
     rng:             RandGen,
     attack:          REnv,
@@ -48,7 +86,7 @@ pub struct Op_Kickmess {
     cur_phase:       f32,
 }
 
-impl Op_Kickmess {
+impl OpKickmess {
     pub fn new() -> Self {
         Self {
             freq_start:      0.0,
@@ -59,7 +97,7 @@ impl Op_Kickmess {
             env_slope:       0.0,
             noise:           0.0,
             freq_slope:      0.0,
-            freq_note_start: true,
+            freq_note_start: 0.0,
 
             rng:             RandGen::new(),
             attack:          REnv::new(),
@@ -72,7 +110,7 @@ impl Op_Kickmess {
     }
 }
 
-impl MonoProcessor for Op_Kickmess {
+impl MonoProcessor for OpKickmess {
     fn init_params(ps: &mut ParamSet) {
         ps.add(ParamDefinition::from(Param::Freq1,      5.0,   3000.0, 150.0, "Start Freq."));
         ps.add(ParamDefinition::from(Param::Freq2,      5.0,   2000.0,  40.0, "End Freq."));
@@ -103,7 +141,7 @@ impl MonoProcessor for Op_Kickmess {
         self.env_slope        = ps.get( 6, pp);
         self.freq_slope       = ps.get( 7, pp);
         self.noise            = ps.get( 8, pp);
-        self.freq_note_start  = ps.get( 9, pp) >= 0.5;
+        self.freq_note_start  = ps.get( 9, pp);
         self.release.set_release(ps.get(10, pp));
 
         self.noise = self.noise * self.noise;
@@ -128,7 +166,7 @@ impl MonoProcessor for Op_Kickmess {
                     //   ( Oscillator::sinSample( m_phase ) * ( 1 - m_noise ) )
                     //   + ( Oscillator::noiseSample( 0 ) * gain * gain * m_noise );
                     let mut s =
-                        fast_sin(self.cur_phase as f64)
+                        fast_sin(self.cur_phase as f64 * PI2)
                         * (1.0_f64 - self.noise as f64)
                         ; // TODO: + rng.noise...
 
@@ -192,11 +230,11 @@ impl MonoProcessor for Op_Kickmess {
     }
 }
 
-impl MonoVoice for Op_Kickmess {
+impl MonoVoice for OpKickmess {
     fn start_note(&mut self, offs: usize, freq: f32, _vel: f32) {
         self.attack.trigger(offs);
 
-        if self.freq_note_start {
+        if self.freq_note_start >= 0.5 {
             self.note_freq = freq as f64;
         } else {
             self.note_freq = self.freq_start as f64;

@@ -11,11 +11,14 @@ name="kickmessvst"
 crate-type = ["cdylib"]
 
 [dependencies]
-vst = { git = "https://github.com/rustaudio/vst-rs" }
-#lv2                = { version = "0.6.0" }
-#wlambda            = { path = "../wlambda" }
-#wctr_signal_ops    = { path = "../wctr-signal-ops" }
-pugl-sys           = { git = "https://github.com/johannes-mueller/pugl-sys.git" }
+vst                = { git = "https://github.com/rustaudio/vst-rs" }
+pugl-sys           = { path = "/home/weictr/devel/other/pugl-sys" }
+cairo-rs           = "0.9.1"
+
+#lv2               = { version = "0.6.0" }
+#wlambda           = { path = "../wlambda" }
+#wctr_signal_ops   = { path = "../wctr-signal-ops" }
+#;pugl-sys           = { git = "https://github.com/johannes-mueller/pugl-sys.git" }
 
 [dev-dependencies]
 baseview = { git = "https://github.com/RustAudio/baseview" }
