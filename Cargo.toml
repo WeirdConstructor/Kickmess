@@ -12,7 +12,7 @@ crate-type = ["cdylib"]
 
 [dependencies]
 vst                = { git = "https://github.com/rustaudio/vst-rs" }
-pugl-sys           = { path = "/home/weictr/devel/other/pugl-sys" }
+pugl-sys           = { git = "https://github.com/johannes-mueller/pugl-sys.git" }
 cairo-rs           = "0.9.1"
 
 #lv2               = { version = "0.6.0" }
@@ -21,4 +21,6 @@ cairo-rs           = "0.9.1"
 #;pugl-sys           = { git = "https://github.com/johannes-mueller/pugl-sys.git" }
 
 [dev-dependencies]
-baseview = { git = "https://github.com/RustAudio/baseview" }
+baseview     = { git = "https://github.com/RustAudio/baseview" }
+cairo-sys-rs = { version = "0.10.0", features=["xlib"] }
+x11          = { version = "2.18.2" }
