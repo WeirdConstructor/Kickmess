@@ -72,25 +72,12 @@ const UI_ELEM_N_W   : f64 =  80.0;
 const UI_ELEM_TXT_H : f64 =  20.0;
 
 struct SegmentedKnob {
-    sc: (f64, f64),
-    s0: (f64, f64),
-    s1: (f64, f64),
-    s2: (f64, f64),
-    s3: (f64, f64),
-    s4: (f64, f64),
-    s5: (f64, f64),
-    s6: (f64, f64),
-    s7: (f64, f64),
-    s8: (f64, f64),
-    s1_arc_len: f64,
-    s2_arc_len: f64,
-    s3_arc_len: f64,
-    s4_arc_len: f64,
-    s5_arc_len: f64,
-    s6_arc_len: f64,
-    s7_arc_len: f64,
-    s1_len: f64,
-    s2_len: f64,
+    sc:             (f64, f64),
+    s:              [(f64, f64); 9],
+    arc_len:        [f64; 7],
+    full_len:       f64,
+    s1_len:         f64,
+    s2_len:         f64,
 }
 
 impl SegmentedKnob {
@@ -100,31 +87,40 @@ impl SegmentedKnob {
         let (xo, yo) =
             (radius + UI_BG_KNOB_STROKE * 2.0,
              radius + UI_BG_KNOB_STROKE * 2.0);
-        let sc = circle_point(radius, init_rot.to_radians());
-        let s0 = circle_point(radius, (init_rot + 10.0_f64).to_radians());
-        let s1 = circle_point(radius, (init_rot + 45.0_f64).to_radians());
-        let s2 = circle_point(radius, (init_rot + 90.0_f64).to_radians());
-        let s3 = circle_point(radius, (init_rot + 135.0_f64).to_radians());
-        let s4 = circle_point(radius, (init_rot + 180.0_f64).to_radians());
-        let s5 = circle_point(radius, (init_rot + 225.0_f64).to_radians());
-        let s6 = circle_point(radius, (init_rot + 270.0_f64).to_radians());
-        let s7 = circle_point(radius, (init_rot + 315.0_f64).to_radians());
-        let s8 = circle_point(radius, (init_rot + 350.0_f64).to_radians());
 
-        let s1_len  = ((s0.0 - s1.1).powf(2.0) + (s0.0 - s1.1).powf(2.0)).sqrt();
-        let s2_len  = ((s1.0 - s2.1).powf(2.0) + (s1.0 - s2.1).powf(2.0)).sqrt();
+        let mut s       = [(0.0_f64, 0.0_f64); 9];
+        let mut arc_len = [0.0_f64; 7];
+
+        let sc = circle_point(radius, init_rot.to_radians());
+
+        s[0] = circle_point(radius, (init_rot + 10.0_f64).to_radians());
+        s[1] = circle_point(radius, (init_rot + 45.0_f64).to_radians());
+        s[2] = circle_point(radius, (init_rot + 90.0_f64).to_radians());
+        s[3] = circle_point(radius, (init_rot + 135.0_f64).to_radians());
+        s[4] = circle_point(radius, (init_rot + 180.0_f64).to_radians());
+        s[5] = circle_point(radius, (init_rot + 225.0_f64).to_radians());
+        s[6] = circle_point(radius, (init_rot + 270.0_f64).to_radians());
+        s[7] = circle_point(radius, (init_rot + 315.0_f64).to_radians());
+        s[8] = circle_point(radius, (init_rot + 350.0_f64).to_radians());
+
+        let s1_len  = ((s[0].0 - s[1].1).powf(2.0) + (s[0].0 - s[1].1).powf(2.0)).sqrt();
+        let s2_len  = ((s[1].0 - s[2].1).powf(2.0) + (s[1].0 - s[2].1).powf(2.0)).sqrt();
 
         let full_len = s1_len * 2.0 + s2_len * 6.0;
 
+        arc_len[0] = s1_len                  / full_len;
+        arc_len[1] = (s1_len + s2_len)       / full_len;
+        arc_len[2] = (s1_len + 2.0 * s2_len) / full_len;
+        arc_len[3] = (s1_len + 3.0 * s2_len) / full_len;
+        arc_len[4] = (s1_len + 4.0 * s2_len) / full_len;
+        arc_len[5] = (s1_len + 5.0 * s2_len) / full_len;
+        arc_len[6] = (s1_len + 6.0 * s2_len) / full_len;
+
         Self {
-            sc, s0, s1, s2, s3, s4, s5, s6, s7, s8,
-            s1_arc_len: s1_len                  / full_len,
-            s2_arc_len: (s1_len + s2_len)       / full_len,
-            s3_arc_len: (s1_len + 2.0 * s2_len) / full_len,
-            s4_arc_len: (s1_len + 3.0 * s2_len) / full_len,
-            s5_arc_len: (s1_len + 4.0 * s2_len) / full_len,
-            s6_arc_len: (s1_len + 5.0 * s2_len) / full_len,
-            s7_arc_len: (s1_len + 6.0 * s2_len) / full_len,
+            sc,
+            s,
+            arc_len,
+            full_len,
             s1_len,
             s2_len,
         }
@@ -142,29 +138,50 @@ impl SegmentedKnob {
         (0.0, 0.0, 0.0, 0.0)
     }
 
-//    fn draw_at_center(&self, cr: &cairo::Context, x, y, line_w: f64, color: (f64, f64, f64), arc_len: f64) {
-//        cr.set_line_width(line_w);
-//        cr.set_source_rgb(color.0, color.1, color.2);
-//        cr.move_to(x + self.s0.0, y + self.s0.1);
-//        if        arc_len > self.s1_arc_len {
-//        } else if arc_len > self.s2_arc_len {
-//        } else if arc_len > self.s3_arc_len {
-//        } else if arc_len > self.s4_arc_len {
-//        } else if arc_len > self.s5_arc_len {
-//        } else if arc_len > self.s6_arc_len {
-//        } else if arc_len > self.s7_arc_len {
-//        }
-//
-//        cr.line_to(x + self.s1.0, y + self.s1.1);
-//        cr.line_to(x + self.s2.0, y + self.s2.1);
-//        cr.line_to(x + self.s3.0, y + self.s3.1);
-//        cr.line_to(x + self.s4.0, y + self.s4.1);
-//        cr.line_to(x + self.s5.0, y + self.s5.1);
-//        cr.line_to(x + self.s6.0, y + self.s6.1);
-//        cr.line_to(x + self.s7.0, y + self.s7.1);
-//        cr.line_to(x + self.s8.0, y + self.s8.1);
-//        cr.stroke();
-//    }
+    fn draw_at_center(&self, cr: &cairo::Context, x: f64, y: f64, line_w: f64, color: (f64, f64, f64), value: f64) {
+        cr.set_line_width(line_w);
+        cr.set_source_rgb(color.0, color.1, color.2);
+        let s       = &self.s;
+        let arc_len = &self.arc_len;
+
+        let (last_idx, segment_len, prev_arc_len) =
+            if        value > self.arc_len[6] {
+                (8, self.s1_len, self.arc_len[6])
+            } else if value > self.arc_len[5] {
+                (7, self.s2_len, self.arc_len[5])
+            } else if value > self.arc_len[4] {
+                (6, self.s2_len, self.arc_len[4])
+            } else if value > self.arc_len[3] {
+                (5, self.s2_len, self.arc_len[3])
+            } else if value > self.arc_len[2] {
+                (4, self.s2_len, self.arc_len[2])
+            } else if value > self.arc_len[1] {
+                (3, self.s2_len, self.arc_len[1])
+            } else if value > self.arc_len[0] {
+                (2, self.s2_len, self.arc_len[0])
+            } else {
+                (1, self.s1_len, 0.0)
+            };
+
+        cr.move_to(x + s[0].0, y + s[0].1);
+        for i in 1..last_idx {
+            cr.line_to(x + s[i].0, y + s[i].1);
+        }
+
+        let prev = s[last_idx - 1];
+        let last = s[last_idx];
+        let rest_len = value - prev_arc_len;
+        println!("i[{}] prev_arc_len={:1.3}, rest_len={:1.3}, value={:1.3}",
+                 last_idx, prev_arc_len, rest_len, value);
+        let rest_ratio = 1.0 - (rest_len / (segment_len / self.full_len));
+        let partial =
+            ((last.0 - prev.0) * rest_ratio,
+             (last.1 - prev.1) * rest_ratio);
+
+        cr.line_to(x + prev.0 + partial.0, y + prev.1 + partial.1);
+
+        cr.stroke();
+    }
 }
 
 enum DrawCacheImg {
@@ -272,7 +289,6 @@ impl UIDrawCache {
             cr.line_to(xo + cx9, yo + cy9);
             cr.stroke();
 
-
 //            cr.set_line_width(UI_FG_KNOB_STROKE);
 //            cr.set_source_rgb(
 //                UI_FG_KNOB_STROKE_CLR.0,
@@ -292,10 +308,42 @@ impl UIDrawCache {
 
         let surf = &self.surf[DrawCacheImg::Knob as usize].as_ref().unwrap();
 
+
+
         cr.save();
         cr.set_source_surface(surf, x, y);
         cr.paint();
         cr.restore();
+
+        self.knob.draw_at_center(
+            &cr, x + 10.0, y + 210.0,
+            UI_MG_KNOB_STROKE,
+            UI_FG_KNOB_STROKE_CLR,
+            1.0);
+
+        self.knob.draw_at_center(
+            &cr, x + 90.0, y + 290.0,
+            UI_MG_KNOB_STROKE,
+            UI_FG_KNOB_STROKE_CLR,
+            0.01);
+
+        self.knob.draw_at_center(
+            &cr, x + 90.0, y + 210.0,
+            UI_MG_KNOB_STROKE,
+            UI_FG_KNOB_STROKE_CLR,
+            0.5);
+
+        self.knob.draw_at_center(
+            &cr, x + 190.0, y + 210.0,
+            UI_MG_KNOB_STROKE,
+            UI_FG_KNOB_STROKE_CLR,
+            0.4);
+
+        self.knob.draw_at_center(
+            &cr, x + 10.0, y + 290.0,
+            UI_MG_KNOB_STROKE,
+            UI_FG_KNOB_STROKE_CLR,
+            0.0001);
     }
 }
 
