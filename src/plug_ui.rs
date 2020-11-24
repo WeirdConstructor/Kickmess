@@ -261,7 +261,7 @@ impl UIDrawCache {
 
             cr.rectangle(
                 (xo + cx1) - 0.25 * UI_BG_KNOB_STROKE,
-                (yo + c_bottom.1) - UI_BG_KNOB_STROKE,
+                (yo + c_bottom.1) - 0.5 * UI_BG_KNOB_STROKE,
                 (cx9 - cx1).abs() + 0.5 * UI_BG_KNOB_STROKE,
                 UI_BG_KNOB_STROKE * 3.0);
             cr.fill();
