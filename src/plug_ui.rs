@@ -59,15 +59,17 @@ const UI_BG_KNOB_STROKE       : f64 = 8.0;
 const UI_MG_KNOB_STROKE       : f64 = 3.0;
 const UI_FG_KNOB_STROKE       : f64 = 5.0;
 const UI_MG_KNOB_STROKE_CLR   : (f64, f64, f64) = (0.26, 0.33, 0.57);
+const UI_FG_KNOB_STROKE_CLR   : (f64, f64, f64) = (0.84, 0.76, 0.32);
 const UI_KNOB_RADIUS          : f64 = 30.0;
 const UI_KNOB_SMALL_RADIUS    : f64 = 20.0;
 
-const UI_BOX_H    : f64 = 90.0;
-const UI_BOX_BORD : f64 =  3.0;
-const UI_MARGIN   : f64 =  5.0;
-const UI_PADDING  : f64 =  3.0;
-const UI_ELEM_N_H : f64 = 70.0;
-const UI_ELEM_N_W : f64 = 40.0;
+const UI_BOX_H      : f64 = 200.0;
+const UI_BOX_BORD   : f64 =   3.0;
+const UI_MARGIN     : f64 =   5.0;
+const UI_PADDING    : f64 =   3.0;
+const UI_ELEM_N_H   : f64 = 120.0;
+const UI_ELEM_N_W   : f64 =  80.0;
+const UI_ELEM_TXT_H : f64 =  20.0;
 
 struct SegmentedKnob {
     s0: (f64, f64),
@@ -189,11 +191,13 @@ impl UIDrawCache {
             self.surf[DrawCacheImg::Knob as usize] = Some(surf);
 
             cr.save();
-            let init_rot = 90.;
+            let init_rot : f64 = 90.;
             // middle of the new surface
             let (xo, yo) =
                 ((UI_ELEM_N_H / 2.0).round(),
                  (UI_ELEM_N_H / 2.0).round());
+            let c_bottom   = circle_point(UI_KNOB_RADIUS, (init_rot).to_radians());
+
             let (cx1, cy1) = circle_point(UI_KNOB_RADIUS, (init_rot + 10.0_f64).to_radians());
             let (cx2, cy2) = circle_point(UI_KNOB_RADIUS, (init_rot + 45.0_f64).to_radians());
             let (cx3, cy3) = circle_point(UI_KNOB_RADIUS, (init_rot + 90.0_f64).to_radians());
@@ -220,6 +224,20 @@ impl UIDrawCache {
             cr.line_to(xo + cx9, yo + cy9);
             cr.stroke();
 
+            cr.rectangle(
+                (xo + cx1) - 0.25 * UI_BG_KNOB_STROKE,
+                (yo + c_bottom.1) - UI_BG_KNOB_STROKE,
+                (cx9 - cx1).abs() + 0.5 * UI_BG_KNOB_STROKE,
+                UI_BG_KNOB_STROKE * 3.0);
+            cr.fill();
+
+            cr.rectangle(
+                (xo + c_bottom.0) - UI_ELEM_N_W * 0.5,
+                (yo + c_bottom.1) + UI_BG_KNOB_STROKE,
+                UI_ELEM_N_W,
+                UI_ELEM_TXT_H);
+            cr.fill();
+
             cr.set_line_width(UI_MG_KNOB_STROKE);
             cr.set_source_rgb(
                 UI_MG_KNOB_STROKE_CLR.0,
@@ -237,17 +255,17 @@ impl UIDrawCache {
             cr.stroke();
 
 
-            cr.set_line_width(UI_FG_KNOB_STROKE);
-            cr.set_source_rgb(
-                UI_MG_KNOB_STROKE_CLR.0,
-                UI_MG_KNOB_STROKE_CLR.1,
-                UI_MG_KNOB_STROKE_CLR.2);
-            cr.move_to(xo + cx1, yo + cy1);
-            cr.line_to(xo + cx2, yo + cy2);
-            cr.line_to(xo + cx3, yo + cy3);
-            cr.line_to(xo + cx4, yo + cy4);
-            cr.line_to(xo + cx5, yo + cy5);
-            cr.stroke();
+//            cr.set_line_width(UI_FG_KNOB_STROKE);
+//            cr.set_source_rgb(
+//                UI_FG_KNOB_STROKE_CLR.0,
+//                UI_FG_KNOB_STROKE_CLR.1,
+//                UI_FG_KNOB_STROKE_CLR.2);
+//            cr.move_to(xo + cx1, yo + cy1);
+//            cr.line_to(xo + cx2, yo + cy2);
+//            cr.line_to(xo + cx3, yo + cy3);
+//            cr.line_to(xo + cx4, yo + cy4);
+//            cr.line_to(xo + cx5, yo + cy5);
+//            cr.stroke();
 
             println!("LEN: {}", ((cx1 - cx2).powf(2.0) + (cy1 - cy2).powf(2.0)).sqrt());
             println!("LEN: {}", ((cx2 - cx3).powf(2.0) + (cy2 - cy3).powf(2.0)).sqrt());
