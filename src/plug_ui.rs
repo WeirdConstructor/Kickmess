@@ -72,6 +72,7 @@ const UI_ELEM_N_W   : f64 =  80.0;
 const UI_ELEM_TXT_H : f64 =  20.0;
 
 struct SegmentedKnob {
+    sc: (f64, f64),
     s0: (f64, f64),
     s1: (f64, f64),
     s2: (f64, f64),
@@ -94,18 +95,21 @@ struct SegmentedKnob {
 
 impl SegmentedKnob {
     fn new(radius: f64) -> Self {
-        let init_rot = 90.;
+        let init_rot : f64 = 90.;
         // middle of the new surface
-        let (xo, yo) = (32., 32.);
-        let s0 = circle_point(UI_KNOB_RADIUS, (init_rot + 10.0_f64).to_radians());
-        let s1 = circle_point(UI_KNOB_RADIUS, (init_rot + 45.0_f64).to_radians());
-        let s2 = circle_point(UI_KNOB_RADIUS, (init_rot + 90.0_f64).to_radians());
-        let s3 = circle_point(UI_KNOB_RADIUS, (init_rot + 135.0_f64).to_radians());
-        let s4 = circle_point(UI_KNOB_RADIUS, (init_rot + 180.0_f64).to_radians());
-        let s5 = circle_point(UI_KNOB_RADIUS, (init_rot + 225.0_f64).to_radians());
-        let s6 = circle_point(UI_KNOB_RADIUS, (init_rot + 270.0_f64).to_radians());
-        let s7 = circle_point(UI_KNOB_RADIUS, (init_rot + 315.0_f64).to_radians());
-        let s8 = circle_point(UI_KNOB_RADIUS, (init_rot + 350.0_f64).to_radians());
+        let (xo, yo) =
+            (radius + UI_BG_KNOB_STROKE * 2.0,
+             radius + UI_BG_KNOB_STROKE * 2.0);
+        let sc = circle_point(radius, init_rot.to_radians());
+        let s0 = circle_point(radius, (init_rot + 10.0_f64).to_radians());
+        let s1 = circle_point(radius, (init_rot + 45.0_f64).to_radians());
+        let s2 = circle_point(radius, (init_rot + 90.0_f64).to_radians());
+        let s3 = circle_point(radius, (init_rot + 135.0_f64).to_radians());
+        let s4 = circle_point(radius, (init_rot + 180.0_f64).to_radians());
+        let s5 = circle_point(radius, (init_rot + 225.0_f64).to_radians());
+        let s6 = circle_point(radius, (init_rot + 270.0_f64).to_radians());
+        let s7 = circle_point(radius, (init_rot + 315.0_f64).to_radians());
+        let s8 = circle_point(radius, (init_rot + 350.0_f64).to_radians());
 
         let s1_len  = ((s0.0 - s1.1).powf(2.0) + (s0.0 - s1.1).powf(2.0)).sqrt();
         let s2_len  = ((s1.0 - s2.1).powf(2.0) + (s1.0 - s2.1).powf(2.0)).sqrt();
@@ -113,7 +117,7 @@ impl SegmentedKnob {
         let full_len = s1_len * 2.0 + s2_len * 6.0;
 
         Self {
-            s0, s1, s2, s3, s4, s5, s6, s7, s8,
+            sc, s0, s1, s2, s3, s4, s5, s6, s7, s8,
             s1_arc_len: s1_len                  / full_len,
             s2_arc_len: (s1_len + s2_len)       / full_len,
             s3_arc_len: (s1_len + 2.0 * s2_len) / full_len,
@@ -124,6 +128,18 @@ impl SegmentedKnob {
             s1_len,
             s2_len,
         }
+    }
+
+    fn get_value_rect(&self) -> (f64, f64, f64, f64) {
+        (0.0, 0.0, 0.0, 0.0)
+    }
+
+    fn get_label_rect(&self) -> (f64, f64, f64, f64) {
+        (0.0, 0.0, 0.0, 0.0)
+    }
+
+    fn get_label_connect_rect(&self) -> (f64, f64, f64, f64) {
+        (0.0, 0.0, 0.0, 0.0)
     }
 
 //    fn draw_at_center(&self, cr: &cairo::Context, x, y, line_w: f64, color: (f64, f64, f64), arc_len: f64) {
@@ -179,6 +195,7 @@ impl UIDrawCache {
             knob_element_short_len,
             knob_s_element_norm_len,
             knob_s_element_short_len,
+            knob: SegmentedKnob::new(UI_KNOB_RADIUS),
         }
     }
 
@@ -196,6 +213,7 @@ impl UIDrawCache {
             let (xo, yo) =
                 ((UI_ELEM_N_H / 2.0).round(),
                  (UI_ELEM_N_H / 2.0).round());
+
             let c_bottom   = circle_point(UI_KNOB_RADIUS, (init_rot).to_radians());
 
             let (cx1, cy1) = circle_point(UI_KNOB_RADIUS, (init_rot + 10.0_f64).to_radians());
@@ -287,6 +305,7 @@ pub struct UIDrawCache {
     knob_element_short_len:   f64,
     knob_s_element_norm_len:  f64,
     knob_s_element_short_len: f64,
+    knob:                     SegmentedKnob,
 }
 
 pub struct PlugUIPainter<'a, 'b> {
