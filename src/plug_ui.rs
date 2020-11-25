@@ -144,7 +144,7 @@ impl SegmentedKnob {
         let s       = &self.s;
         let arc_len = &self.arc_len;
 
-        let (last_idx, segment_len, prev_arc_len) =
+        let (next_idx, segment_len, prev_arc_len) =
             if        value > self.arc_len[6] {
                 (8, self.s1_len, self.arc_len[6])
             } else if value > self.arc_len[5] {
@@ -164,16 +164,17 @@ impl SegmentedKnob {
             };
 
         cr.move_to(x + s[0].0, y + s[0].1);
-        for i in 1..last_idx {
+        for i in 1..next_idx {
             cr.line_to(x + s[i].0, y + s[i].1);
         }
 
-        let prev = s[last_idx - 1];
-        let last = s[last_idx];
+        let prev = s[next_idx - 1];
+        let last = s[next_idx];
         let rest_len = value - prev_arc_len;
-        println!("i[{}] prev_arc_len={:1.3}, rest_len={:1.3}, value={:1.3}",
-                 last_idx, prev_arc_len, rest_len, value);
-        let rest_ratio = 1.0 - (rest_len / (segment_len / self.full_len));
+        println!("i[{}] prev_arc_len={:1.3}, rest_len={:1.3}, value={:1.3}, seglen={:1.3}",
+                 next_idx, prev_arc_len, rest_len, value,
+                 segment_len / self.full_len);
+        let rest_ratio = rest_len / (segment_len / self.full_len);
         let partial =
             ((last.0 - prev.0) * rest_ratio,
              (last.1 - prev.1) * rest_ratio);
@@ -217,6 +218,10 @@ impl UIDrawCache {
     }
 
     fn draw_knob(&mut self, cr: &cairo::Context, x: f64, y: f64) {
+        let (xo, yo) =
+            ((UI_ELEM_N_H / 2.0).round(),
+             (UI_ELEM_N_H / 2.0).round());
+
         if let None = self.surf[DrawCacheImg::Knob as usize] {
             let surf = cr.get_target().create_similar_image(
                 cairo::Format::ARgb32,
@@ -227,9 +232,6 @@ impl UIDrawCache {
             cr.save();
             let init_rot : f64 = 90.;
             // middle of the new surface
-            let (xo, yo) =
-                ((UI_ELEM_N_H / 2.0).round(),
-                 (UI_ELEM_N_H / 2.0).round());
 
             let c_bottom   = circle_point(UI_KNOB_RADIUS, (init_rot).to_radians());
 
@@ -322,10 +324,10 @@ impl UIDrawCache {
             1.0);
 
         self.knob.draw_at_center(
-            &cr, x + 90.0, y + 290.0,
+            &cr, x + xo, y + yo,
             UI_MG_KNOB_STROKE,
             UI_FG_KNOB_STROKE_CLR,
-            0.01);
+            0.1);
 
         self.knob.draw_at_center(
             &cr, x + 90.0, y + 210.0,
@@ -343,7 +345,7 @@ impl UIDrawCache {
             &cr, x + 10.0, y + 290.0,
             UI_MG_KNOB_STROKE,
             UI_FG_KNOB_STROKE_CLR,
-            0.0001);
+            0.3);
     }
 }
 
@@ -413,7 +415,7 @@ impl<'a, 'b> UIPainter for PlugUIPainter<'a, 'b> {
         self.cr.fill();
         self.cr.restore();
 
-        self.cache.draw_knob(self.cr, 10., 10.);
+//        self.cache.draw_knob(self.cr, 10., 10.);
         self.cache.draw_knob(self.cr, 200., 100.);
     }
 
