@@ -46,6 +46,7 @@ macro_rules! opKickmessParams {
         $x!{8,  noise,           f32, 0.0, Param::Noise1,     0.0,   1.0,      0.0, "Noise"}
         $x!{9,  freq_note_start, f32, 0.0, Param::S1,         0.0,   1.0,      1.0, "Start from note"}
         $x!{10, release,         f32, 0.0, Param::Release2,   1.0,1000.0,      5.0, "Env Release"}
+        $x!{11, phase_offs,      f32, 0.0, Param::Phase1,     0.0,   1.0,      0.0, "Click"}
     }
 }
 
@@ -76,6 +77,7 @@ pub struct OpKickmess {
     noise:           f32,
     freq_slope:      f32,
     freq_note_start: f32,
+    phase_offs:      f64,
 
     rng:             RandGen,
     attack:          REnv,
@@ -98,6 +100,7 @@ impl OpKickmess {
             noise:           0.0,
             freq_slope:      0.0,
             freq_note_start: 0.0,
+            phase_offs:      0.0,
 
             rng:             RandGen::new(),
             attack:          REnv::new(),
@@ -123,6 +126,7 @@ impl MonoProcessor for OpKickmess {
         ps.add(ParamDefinition::from(Param::Noise1,     0.0,   1.0,      0.0, "Noise"));
         ps.add(ParamDefinition::from(Param::S1,         0.0,   1.0,      1.0, "Start from note"));
         ps.add(ParamDefinition::from(Param::Release2,   1.0,1000.0,      5.0, "Env Release"));
+        ps.add(ParamDefinition::from(Param::Phase1,     0.0,   1.0,      0.0, "Click"));
     }
 
     fn set_sample_rate(&mut self, sr: f32) {
@@ -143,6 +147,7 @@ impl MonoProcessor for OpKickmess {
         self.noise            = ps.get( 8, pp);
         self.freq_note_start  = ps.get( 9, pp);
         self.release.set_release(ps.get(10, pp));
+        self.phase_offs       = ps.get(11, pp) as f64 * PI2;
 
         self.noise = self.noise * self.noise;
     }
@@ -166,7 +171,7 @@ impl MonoProcessor for OpKickmess {
                     //   ( Oscillator::sinSample( m_phase ) * ( 1 - m_noise ) )
                     //   + ( Oscillator::noiseSample( 0 ) * gain * gain * m_noise );
                     let mut s =
-                        fast_sin(self.cur_phase as f64 * PI2)
+                        fast_sin(self.cur_phase as f64 * PI2 + self.phase_offs)
                         * (1.0_f64 - self.noise as f64)
                         ; // TODO: + rng.noise...
 
