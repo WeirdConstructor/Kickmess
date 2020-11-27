@@ -1,6 +1,6 @@
 #[macro_use]
 use baseview::{
-    Size, Event, Parent, Window, WindowHandle, WindowHandler,
+    Size, Event, MouseEvent, Parent, Window, WindowHandle, WindowHandler,
     WindowOpenOptions, WindowScalePolicy
 };
 
@@ -12,7 +12,7 @@ use raw_window_handle::{
 
 use vst::plugin::{Info, Plugin};
 use vst::editor::Editor;
-use crate::plug_ui::{PlugUI, PlugUIState, PlugUIPainter};
+use crate::plug_ui::{PlugUI, PlugUIState, PlugUIPainter, PUIMouseState};
 
 
 const WINDOW_WIDTH: usize = 500;
@@ -46,7 +46,14 @@ impl WindowHandler for TestWindowHandler {
     }
 
     fn on_event(&mut self, _: &mut Window, event: Event) {
-        println!("EVENT: {:?}", event);
+        match event {
+            Event::Mouse(MouseEvent::CursorMoved { position: p }) => {
+                self.state.handle_mouse(p.x, p.y, PUIMouseState::None);
+            },
+            _ => {
+                println!("UNHANDLED EVENT: {:?}", event);
+            },
+        }
     }
 
     fn on_frame(&mut self) {
@@ -60,12 +67,17 @@ impl WindowHandler for TestWindowHandler {
             self.screen_buf.fill();
 
             self.ui.redraw(&mut wd);
+
+            self.screen_buf.get_target().flush();
+            println!("REDRAW UI!");
         }
 
-        self.ctx.save();
+//        self.ctx.save();
         self.ctx.set_source_surface(&self.screen_buf.get_target(), 0.0, 0.0);
         self.ctx.paint();
-        self.ctx.restore();
+//        self.ctx.restore();
+        self.ctx.get_target().flush();
+        self.ctx.get_target().get_device().unwrap().flush();
     }
 }
 

@@ -1,4 +1,4 @@
-mod proc;
+pub mod proc;
 mod helpers;
 mod op_kickmess;
 mod env;

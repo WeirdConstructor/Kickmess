@@ -1,4 +1,3 @@
-
 pub trait PlugUI : Send {
     fn get_labels(&mut self, idx: usize) -> Vec<String>;
     fn needs_redraw(&mut self) -> bool;
@@ -6,23 +5,44 @@ pub trait PlugUI : Send {
     fn handle_input(&mut self, state: &mut PlugUIPainter);
 }
 
+#[derive(Debug, Clone, Copy)]
+pub enum PUIMouseState {
+    None,
+    BUTTON_PRESSED,
+}
+
 pub struct PlugUIState {
     zones:  Vec<ActiveZone>,
     cache:  UIDrawCache,
     labels: Vec<String>,
+    hover_zone: Option<usize>,
+    drag_zone: Option<(usize, f64)>,
 }
 
 impl PlugUIState {
     pub fn new() -> Self {
         Self {
-            zones:  vec![],
-            cache:  UIDrawCache::new(),
-            labels: vec![],
+            zones:      vec![],
+            cache:      UIDrawCache::new(),
+            labels:     vec![],
+            hover_zone: None,
+            drag_zone:  None,
         }
     }
 
     pub fn init_labels(&mut self, v: Vec<String>) {
         self.labels = v;
+    }
+
+    pub fn handle_mouse(&mut self, x: f64, y: f64, state: PUIMouseState) {
+        for z in self.zones.iter() {
+            if z.is_inside(x, y) {
+                self.hover_zone = Some(z.id);
+                println!("handle_mouse: {},{} : {:?} => Hoverzone={}",
+                         x, y, state, z.id);
+                break;
+            }
+        }
     }
 }
 
@@ -45,19 +65,36 @@ enum Connector {
     Right,
 }
 
+#[derive(Debug, Clone, Copy)]
 pub struct ActiveZone {
-    id:  usize,
-    idx: u32,
-    x:   u32,
-    y:   u32,
-    w:   u32,
-    h:   u32,
+    pub id:  usize,
+    pub x:   f64,
+    pub y:   f64,
+    pub w:   f64,
+    pub h:   f64,
+}
+
+impl ActiveZone {
+    fn from_rect(xo: f64, yo: f64, r: (f64, f64, f64, f64)) -> Self {
+        Self {
+            id: 0,
+            x: r.0 + xo,
+            y: r.1 + yo,
+            w: r.2,
+            h: r.3,
+        }
+    }
+
+    fn is_inside(&self, x: f64, y: f64) -> bool {
+           x >= self.x && x <= (self.x + self.w)
+        && y >= self.y && y <= (self.y + self.h)
+    }
 }
 
 pub trait UIPainter {
     fn start_redraw(&mut self);
     fn done_redraw(&mut self);
-    fn add_active_zone(&mut self, z: ActiveZone);
+    fn add_active_zone(&mut self, id: usize, z: ActiveZone);
     fn paint_element_hbox(&mut self, name: &str, x: usize, y: usize, elements: &[Element], states: &[ElementState]);
 }
 
@@ -158,6 +195,32 @@ impl SegmentedKnob {
          UI_BG_KNOB_STROKE * 3.0)
     }
 
+    fn draw_name_bg(&self, cr: &cairo::Context, x: f64, y: f64, s: &str) {
+        let r = self.get_label_rect();
+        let ff = cairo::FontFace::toy_create(
+            "monospace",
+            cairo::FontSlant::Normal,
+            cairo::FontWeight::Normal);
+        cr.set_font_face(&ff);
+        cr.set_font_size(15.);
+        cr.set_source_rgb(1.0, 0.3, 0.3);
+        cr.move_to(x + r.0 + 4.0, y + r.1 + UI_ELEM_TXT_H - 4.0); // TODO: Fix 4.0 magic number, use text extends
+        cr.show_text(s);
+    }
+
+    fn draw_value(&self, cr: &cairo::Context, x: f64, y: f64, s: &str) {
+        let r = self.get_value_rect();
+        let ff = cairo::FontFace::toy_create(
+            "monospace",
+            cairo::FontSlant::Normal,
+            cairo::FontWeight::Normal);
+        cr.set_font_face(&ff);
+        cr.set_font_size(10.);
+        cr.set_source_rgb(1.0, 0.3, 0.3);
+        cr.move_to(x + r.0 + 14.0, y + r.1 + UI_ELEM_TXT_H - 4.0); // TODO: Fix 4.0 magic number, use text extends
+        cr.show_text(s);
+    }
+
     fn draw_oct_arc(&self, cr: &cairo::Context, x: f64, y: f64, line_w: f64, color: (f64, f64, f64), value: f64) {
         cr.set_line_width(line_w);
         cr.set_source_rgb(color.0, color.1, color.2);
@@ -221,7 +284,7 @@ impl UIDrawCache {
         }
     }
 
-    fn draw_knob_data(&mut self, cr: &cairo::Context, x: f64, y: f64, value: f64, label: &str) {
+    fn draw_knob_data(&mut self, cr: &cairo::Context, x: f64, y: f64, value: f64, val_s: &str) {
         let (xo, yo) =
             ((UI_ELEM_N_H / 2.0).round(),
              (UI_ELEM_N_H / 2.0).round());
@@ -231,9 +294,11 @@ impl UIDrawCache {
             UI_MG_KNOB_STROKE,
             UI_FG_KNOB_STROKE_CLR,
             value);
+
+        self.knob.draw_value(&cr, x + xo, y + yo, val_s);
     }
 
-    fn draw_knob_bg(&mut self, cr: &cairo::Context, x: f64, y: f64) {
+    fn draw_knob_bg(&mut self, cr: &cairo::Context, x: f64, y: f64, name: &str) -> ActiveZone {
         let (xo, yo) =
             ((UI_ELEM_N_H / 2.0).round(),
              (UI_ELEM_N_H / 2.0).round());
@@ -276,6 +341,8 @@ impl UIDrawCache {
                 UI_MG_KNOB_STROKE,
                 UI_MG_KNOB_STROKE_CLR,
                 1.0);
+
+            self.knob.draw_name_bg(&cr, xo, yo, name);
         }
 
         let surf = &self.surf[DrawCacheImg::Knob as usize].as_ref().unwrap();
@@ -284,6 +351,8 @@ impl UIDrawCache {
         cr.set_source_surface(surf, x, y);
         cr.paint();
         cr.restore();
+
+        ActiveZone::from_rect(x + xo, y + yo, self.knob.get_value_rect())
     }
 }
 
@@ -357,15 +426,15 @@ impl<'a, 'b> UIPainter for PlugUIPainter<'a, 'b> {
         for e in elements.iter() {
             x += UI_PADDING;
             match e {
-                Element::Knob(_, _) => {
-                    self.cache.draw_knob_bg(self.cr, x, y);
-                    self.cache.draw_knob_data(self.cr, x, y, 0.75, "test");
+                Element::Knob(id, _) => {
+                    let az = self.cache.draw_knob_bg(self.cr, x, y, "SFreq");
+                    self.add_active_zone(*id, az);
+                    self.cache.draw_knob_data(self.cr, x, y, 0.75, "0.75");
                     x += UI_ELEM_N_W;
                 },
                 _ => {}
             }
         }
-//        self.cache.draw_knob(self.cr, 10., 10.);
     }
 
     fn start_redraw(&mut self)
@@ -377,8 +446,9 @@ impl<'a, 'b> UIPainter for PlugUIPainter<'a, 'b> {
     {
     }
 
-    fn add_active_zone(&mut self, z: ActiveZone)
+    fn add_active_zone(&mut self, id: usize, mut z: ActiveZone)
     {
+        z.id = id;
         self.zones.push(z);
     }
 }
