@@ -1,22 +1,28 @@
 
 pub trait PlugUI : Send {
-    fn get_label(&mut self, idx: usize) -> String;
+    fn get_labels(&mut self, idx: usize) -> Vec<String>;
     fn needs_redraw(&mut self) -> bool;
     fn redraw(&mut self, state: &mut PlugUIPainter);
     fn handle_input(&mut self, state: &mut PlugUIPainter);
 }
 
 pub struct PlugUIState {
-    zones: Vec<ActiveZone>,
-    cache: UIDrawCache,
+    zones:  Vec<ActiveZone>,
+    cache:  UIDrawCache,
+    labels: Vec<String>,
 }
 
 impl PlugUIState {
     pub fn new() -> Self {
         Self {
-            zones: vec![],
-            cache: UIDrawCache::new(),
+            zones:  vec![],
+            cache:  UIDrawCache::new(),
+            labels: vec![],
         }
+    }
+
+    pub fn init_labels(&mut self, v: Vec<String>) {
+        self.labels = v;
     }
 }
 
@@ -208,33 +214,26 @@ enum DrawCacheImg {
 
 impl UIDrawCache {
     pub fn new() -> Self {
-        // calculate the length of the knobs long and short
-        // elements
-        let init_rot = 90.;
-        let (cx1, cy1) = circle_point(UI_KNOB_RADIUS, (init_rot + 10.0_f64).to_radians());
-        let (cx2, cy2) = circle_point(UI_KNOB_RADIUS, (init_rot + 45.0_f64).to_radians());
-        let (cx3, cy3) = circle_point(UI_KNOB_RADIUS, (init_rot + 90.0_f64).to_radians());
-        let knob_element_norm_len  = ((cx1 - cx2).powf(2.0) + (cy1 - cy2).powf(2.0)).sqrt();
-        let knob_element_short_len = ((cx2 - cx3).powf(2.0) + (cy2 - cy3).powf(2.0)).sqrt();
-
-        let (cx1, cy1) = circle_point(UI_KNOB_SMALL_RADIUS, (init_rot + 10.0_f64).to_radians());
-        let (cx2, cy2) = circle_point(UI_KNOB_SMALL_RADIUS, (init_rot + 45.0_f64).to_radians());
-        let (cx3, cy3) = circle_point(UI_KNOB_SMALL_RADIUS, (init_rot + 90.0_f64).to_radians());
-        let knob_s_element_norm_len  = ((cx1 - cx2).powf(2.0) + (cy1 - cy2).powf(2.0)).sqrt();
-        let knob_s_element_short_len = ((cx2 - cx3).powf(2.0) + (cy2 - cy3).powf(2.0)).sqrt();
-
         Self {
-            surf: vec![None, None],
-            knob_element_norm_len,
-            knob_element_short_len,
-            knob_s_element_norm_len,
-            knob_s_element_short_len,
+            surf:   vec![None, None],
             knob:   SegmentedKnob::new(UI_KNOB_RADIUS),
             knob_s: SegmentedKnob::new(UI_KNOB_RADIUS * 0.8),
         }
     }
 
-    fn draw_knob(&mut self, cr: &cairo::Context, x: f64, y: f64) {
+    fn draw_knob_data(&mut self, cr: &cairo::Context, x: f64, y: f64, value: f64, label: &str) {
+        let (xo, yo) =
+            ((UI_ELEM_N_H / 2.0).round(),
+             (UI_ELEM_N_H / 2.0).round());
+
+        self.knob.draw_oct_arc(
+            &cr, x + xo, y + yo,
+            UI_MG_KNOB_STROKE,
+            UI_FG_KNOB_STROKE_CLR,
+            value);
+    }
+
+    fn draw_knob_bg(&mut self, cr: &cairo::Context, x: f64, y: f64) {
         let (xo, yo) =
             ((UI_ELEM_N_H / 2.0).round(),
              (UI_ELEM_N_H / 2.0).round());
@@ -285,53 +284,20 @@ impl UIDrawCache {
         cr.set_source_surface(surf, x, y);
         cr.paint();
         cr.restore();
-
-        self.knob.draw_oct_arc(
-            &cr, x + 10.0, y + 210.0,
-            UI_MG_KNOB_STROKE,
-            UI_FG_KNOB_STROKE_CLR,
-            1.0);
-
-        self.knob.draw_oct_arc(
-            &cr, x + xo, y + yo,
-            UI_MG_KNOB_STROKE,
-            UI_FG_KNOB_STROKE_CLR,
-            0.1);
-
-        self.knob.draw_oct_arc(
-            &cr, x + 90.0, y + 210.0,
-            UI_MG_KNOB_STROKE,
-            UI_FG_KNOB_STROKE_CLR,
-            0.5);
-
-        self.knob.draw_oct_arc(
-            &cr, x + 190.0, y + 210.0,
-            UI_MG_KNOB_STROKE,
-            UI_FG_KNOB_STROKE_CLR,
-            0.4);
-
-        self.knob.draw_oct_arc(
-            &cr, x + 10.0, y + 290.0,
-            UI_MG_KNOB_STROKE,
-            UI_FG_KNOB_STROKE_CLR,
-            0.3);
     }
 }
 
 pub struct UIDrawCache {
-    surf:                     Vec<Option<cairo::Surface>>,
-    knob_element_norm_len:    f64,
-    knob_element_short_len:   f64,
-    knob_s_element_norm_len:  f64,
-    knob_s_element_short_len: f64,
-    knob:                     SegmentedKnob,
-    knob_s:                   SegmentedKnob,
+    surf:   Vec<Option<cairo::Surface>>,
+    knob:   SegmentedKnob,
+    knob_s: SegmentedKnob,
 }
 
 pub struct PlugUIPainter<'a, 'b> {
     cr:     &'b cairo::Context,
     zones:  &'a mut Vec<ActiveZone>,
     cache:  &'a mut UIDrawCache,
+    labels: &'a Vec<String>,
 }
 
 impl<'a, 'b> PlugUIPainter<'a, 'b> {
@@ -340,8 +306,9 @@ impl<'a, 'b> PlugUIPainter<'a, 'b> {
 
         Self {
             cr,
-            zones: &mut uistate.zones,
-            cache: &mut uistate.cache,
+            zones:  &mut uistate.zones,
+            cache:  &mut uistate.cache,
+            labels: &mut uistate.labels,
         }
     }
 }
@@ -385,8 +352,20 @@ impl<'a, 'b> UIPainter for PlugUIPainter<'a, 'b> {
         self.cr.fill();
         self.cr.restore();
 
+        let mut x = x;
+        let mut y = y + UI_ELEM_TXT_H;
+        for e in elements.iter() {
+            x += UI_PADDING;
+            match e {
+                Element::Knob(_, _) => {
+                    self.cache.draw_knob_bg(self.cr, x, y);
+                    self.cache.draw_knob_data(self.cr, x, y, 0.75, "test");
+                    x += UI_ELEM_N_W;
+                },
+                _ => {}
+            }
+        }
 //        self.cache.draw_knob(self.cr, 10., 10.);
-        self.cache.draw_knob(self.cr, 200., 100.);
     }
 
     fn start_redraw(&mut self)

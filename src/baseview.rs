@@ -136,10 +136,12 @@ struct UI {
 }
 
 impl PlugUI for UI {
-    fn get_label(&mut self, idx: usize) -> String {
-        match idx {
-            _ => String::from("?"),
-        }
+    fn get_labels(&mut self, idx: usize) -> Vec<String> {
+        vec![
+            String::from("Start"),
+            String::from("End"),
+            String::from("?"),
+        ]
     }
 
     fn needs_redraw(&mut self) -> bool {

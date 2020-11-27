@@ -20,13 +20,12 @@ impl PlugUI for UI {
         self.needs_redraw
     }
 
-    fn get_label(&mut self, idx: usize) -> String {
-        match idx {
-            0 => String::from("Start"),
-            1 => String::from("End"),
-            2 => String::from("Note"),
-            _ => String::new(),
-        }
+    fn get_labels(&mut self, idx: usize) -> Vec<String> {
+        vec![
+            String::from("Start"),
+            String::from("End"),
+            String::from("Note"),
+        ]
     }
 
     fn redraw(&mut self, p: &mut PlugUIPainter) {
