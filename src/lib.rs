@@ -3,7 +3,7 @@ mod helpers;
 mod op_kickmess;
 mod env;
 mod editor;
-pub mod plug_ui;
+mod ui;
 pub mod baseview;
 
 use proc::Channel;

@@ -2,7 +2,6 @@ use crate::KickmessVSTParams;
 use vst::editor::Editor;
 use std::sync::Arc;
 use std::rc::Rc;
-use crate::plug_ui::*;
 
 use pugl_sys::*;
 

@@ -69,7 +69,7 @@ impl WindowHandler for TestWindowHandler {
             self.ui.redraw(&mut wd);
 
             self.screen_buf.get_target().flush();
-            println!("REDRAW UI!");
+            println!("REDRAW UI! {:?}", ext);
         }
 
 //        self.ctx.save();
