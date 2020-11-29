@@ -1,15 +1,33 @@
 use std::sync::mpsc::{Sender, Receiver};
 
 #[derive(Debug, Clone)]
-pub enum UIComponent {
+pub struct UIInputValue {
+    id:     usize,
+    value:  f32,
+}
+
+#[derive(Debug, Clone)]
+pub enum UIInput {
+    KnobSmall { id: usize, label: String },
+    Knob      { id: usize, label: String },
+}
+
+#[derive(Debug, Clone)]
+pub enum UILayout {
+    Container {
+        label:    String,
+        w_ratio:  f64,
+        h_ratio:  f64,
+        elements: Vec<UIInput>
+    },
 }
 
 /// Flows from UI "user" aka the plugin aka the client
 /// to the UI provider (the UI thread / window abstraction).
 #[derive(Debug, Clone)]
 pub enum UICmd {
-    Define(Vec<UIComponent>),
-    SetValue { id: usize, value: f64 },
+    Define(Vec<UILayout>),
+    SetValues(Vec<UIInputValue>),
 }
 
 /// Flows back from the UI provider to the UI client.
