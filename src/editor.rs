@@ -3,6 +3,10 @@ use vst::editor::Editor;
 use std::sync::Arc;
 use std::rc::Rc;
 
+use crate::ui::protocol::UIClientHandle;
+use crate::ui::protocol::UIProviderHandle;
+use crate::ui::UI;
+
 use pugl_sys::*;
 
 
@@ -11,17 +15,21 @@ struct KickmessUI {
     w:                  f64,
     h:                  f64,
     close_requested:    bool,
-    state:              PlugUIState,
+    ui:                 UI,
+    cl_hdl:             UIClientHandle,
 }
 
 impl KickmessUI {
     fn new(view: PuglViewFFI) -> Self {
+        let (cl_hdl, p_hdl) = UIClientHandle::create();
+
         Self {
             view,
             w:               0.0,
             h:               0.0,
             close_requested: false,
-            state:           PlugUIState::new(),
+            ui:              UI::new(p_hdl),
+            cl_hdl,
         }
     }
 }
@@ -38,23 +46,23 @@ impl PuglViewTrait for KickmessUI {
 //        cr.stroke();
 //        cr.restore();
 
-        let mut wd = PlugUIPainter::new(&mut self.state, cr);
-
-        let elems = [
-            Element::Knob(     0, 0),
-            Element::SmallKnob(1, 1),
-            Element::Toggle(   1, 2),
-        ];
-
-        let states = [
-            ElementState::Active(0.3),
-            ElementState::Disabled(0.5),
-            ElementState::Hover(0.5),
-        ];
-
-        wd.start_redraw();
-        wd.paint_element_hbox("Frequency", 0, 0, &elems, &states);
-        wd.done_redraw();
+//        let mut wd = PlugUIPainter::new(&mut self.state, cr);
+//
+//        let elems = [
+//            Element::Knob(     0, 0),
+//            Element::SmallKnob(1, 1),
+//            Element::Toggle(   1, 2),
+//        ];
+//
+//        let states = [
+//            ElementState::Active(0.3),
+//            ElementState::Disabled(0.5),
+//            ElementState::Hover(0.5),
+//        ];
+//
+//        wd.start_redraw();
+//        wd.paint_element_hbox("Frequency", 0, 0, &elems, &states);
+//        wd.done_redraw();
     }
 
     fn event(&mut self, ev: Event) -> Status {

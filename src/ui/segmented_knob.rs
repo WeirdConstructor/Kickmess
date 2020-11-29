@@ -1,4 +1,5 @@
 use crate::ui::painting::*;
+use crate::ui::constants::*;
 
 pub struct SegmentedKnob {
     sbottom:        (f64, f64),

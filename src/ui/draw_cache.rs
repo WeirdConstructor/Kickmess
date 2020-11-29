@@ -1,4 +1,6 @@
 use crate::ui::painting::*;
+use crate::ui::constants::*;
+use crate::ui::segmented_knob::*;
 
 enum DrawCacheImg {
     Knob,

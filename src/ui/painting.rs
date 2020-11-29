@@ -1,3 +1,5 @@
+use crate::ui::constants::*;
+
 #[derive(Debug, Clone, Copy)]
 pub struct ActiveZone {
     pub id:  usize,
@@ -37,7 +39,7 @@ impl ActiveZone {
         }
     }
 
-    fn is_inside(&self, x: f64, y: f64) -> bool {
+    pub fn is_inside(&self, x: f64, y: f64) -> bool {
            x >= self.x && x <= (self.x + self.w)
         && y >= self.y && y <= (self.y + self.h)
     }

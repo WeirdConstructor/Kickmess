@@ -2,7 +2,7 @@ mod segmented_knob;
 mod painting;
 mod draw_cache;
 mod constants;
-mod protocol;
+pub mod protocol;
 
 use crate::ui::painting::Painter;
 use crate::ui::protocol::{UIMsg, UICmd, UIProviderHandle};
@@ -14,12 +14,12 @@ pub enum MouseButton {
 }
 
 pub enum UIEvent {
-    MousePosition(i32, i32),
+    MousePosition(f64, f64),
     MouseButtonPressed(MouseButton),
     MouseButtonReleased(MouseButton),
 }
 
-struct UI {
+pub struct UI {
     ui_handle: UIProviderHandle,
     painter:   Painter,
 }
@@ -28,6 +28,7 @@ impl UI {
     pub fn new(ui_handle: UIProviderHandle) -> Self {
         Self {
             ui_handle,
+            painter: Painter::new(),
         }
     }
 
@@ -40,9 +41,9 @@ impl UI {
             UIEvent::MousePosition(x, y) => {
                 for zone in self.painter.zones.iter() {
                     if zone.is_inside(x, y) {
-                        self.hover_zone = Some(zone.id);
-                        println!("handle_mouse: {},{} : {:?} => Hoverzone={}",
-                                 x, y, state, zone.id);
+//                        self.hover_zone = Some(zone.id);
+                        println!("handle_mouse: {},{} => Hoverzone={}",
+                                 x, y, zone.id);
                         break;
                     }
                 }
