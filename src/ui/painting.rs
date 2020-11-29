@@ -1,4 +1,5 @@
 use crate::ui::constants::*;
+use crate::ui::draw_cache::DrawCache;
 
 #[derive(Debug, Clone, Copy)]
 pub struct ActiveZone {
@@ -29,7 +30,7 @@ pub enum Connector {
 }
 
 impl ActiveZone {
-    fn from_rect(xo: f64, yo: f64, r: (f64, f64, f64, f64)) -> Self {
+    pub fn from_rect(xo: f64, yo: f64, r: (f64, f64, f64, f64)) -> Self {
         Self {
             id: 0,
             x: r.0 + xo,
@@ -47,16 +48,18 @@ impl ActiveZone {
 
 pub struct Painter {
     pub zones: Vec<ActiveZone>,
+    cache: DrawCache,
 }
 
 impl Painter {
     pub fn new() -> Self {
         Self {
             zones: vec![],
+            cache: DrawCache::new(),
         }
     }
 
-    pub fn paint_element_hbox(&mut self, name: &str, x: usize, y: usize, elements: &[Element], states: &[ElementState])
+    pub fn paint_element_hbox(&mut self, cr: &cairo::Context, name: &str, x: usize, y: usize, elements: &[Element], states: &[ElementState])
     {
         let mut w =
             elements.iter().fold(0.0, |w, e| {
@@ -73,21 +76,21 @@ impl Painter {
         let x = x as f64 * (UI_ELEM_N_W + UI_MARGIN);
         let y = y as f64 * (UI_ELEM_N_H + UI_MARGIN);
 
-        self.cr.save();
-        self.cr.set_line_width(1.0);
+        cr.save();
+        cr.set_line_width(1.0);
 
-        self.cr.set_source_rgb(0.29, 0.29, 0.29);
-        self.cr.rectangle(x, y, w, h);
-        self.cr.fill();
+        cr.set_source_rgb(0.29, 0.29, 0.29);
+        cr.rectangle(x, y, w, h);
+        cr.fill();
 
-        self.cr.set_source_rgb(0.54, 0.54, 0.54);
-        self.cr.rectangle(
+        cr.set_source_rgb(0.54, 0.54, 0.54);
+        cr.rectangle(
             x + UI_PADDING,
             y + UI_PADDING,
             w - 2.0 * UI_PADDING,
             h - 2.0 * UI_PADDING);
-        self.cr.fill();
-        self.cr.restore();
+        cr.fill();
+        cr.restore();
 
         let mut x = x;
         let mut y = y + UI_ELEM_TXT_H;
@@ -95,9 +98,9 @@ impl Painter {
             x += UI_PADDING;
             match e {
                 Element::Knob(id, _) => {
-                    let az = self.cache.draw_knob_bg(self.cr, x, y, "SFreq");
+                    let az = self.cache.draw_knob_bg(cr, x, y, "SFreq");
                     self.add_active_zone(*id, az);
-                    self.cache.draw_knob_data(self.cr, x, y, 0.75, "0.75");
+                    self.cache.draw_knob_data(cr, x, y, 0.75, "0.75");
                     x += UI_ELEM_N_W;
                 },
                 _ => {}

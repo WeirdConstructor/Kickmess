@@ -149,6 +149,7 @@ pub fn open_window(parent: Option<*mut ::std::ffi::c_void>, ui_hdl: UIProviderHa
 #[derive(Default)]
 struct TestPluginEditor {
     handle: Option<WindowHandle>,
+    cl_hdl: Option<UIClientHandle>,
 }
 
 
@@ -162,7 +163,9 @@ impl Editor for TestPluginEditor {
     }
 
     fn open(&mut self, parent: *mut ::std::ffi::c_void) -> bool {
-        self.handle = Some(open_window(Some(parent), Box::new(UI{})));
+        let (cl_hdl, p_hdl) = UIClientHandle::create();
+        self.cl_hdl = Some(cl_hdl);
+        self.handle = Some(open_window(Some(parent), p_hdl));
         true
     }
 

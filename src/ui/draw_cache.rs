@@ -7,7 +7,13 @@ enum DrawCacheImg {
     KnobSmall,
 }
 
-impl UIDrawCache {
+pub struct DrawCache {
+    surf:   Vec<Option<cairo::Surface>>,
+    knob:   SegmentedKnob,
+    knob_s: SegmentedKnob,
+}
+
+impl DrawCache {
     pub fn new() -> Self {
         Self {
             surf:   vec![None, None],
@@ -88,8 +94,3 @@ impl UIDrawCache {
     }
 }
 
-pub struct UIDrawCache {
-    surf:   Vec<Option<cairo::Surface>>,
-    knob:   SegmentedKnob,
-    knob_s: SegmentedKnob,
-}

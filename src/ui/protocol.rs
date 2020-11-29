@@ -1,10 +1,12 @@
 use std::sync::mpsc::{Sender, Receiver};
 
+#[derive(Debug, Clone)]
 pub enum UIComponent {
 }
 
 /// Flows from UI "user" aka the plugin aka the client
 /// to the UI provider (the UI thread / window abstraction).
+#[derive(Debug, Clone)]
 pub enum UICmd {
     Define(Vec<UIComponent>),
     SetValue { id: usize, value: f64 },
@@ -12,6 +14,7 @@ pub enum UICmd {
 
 /// Flows back from the UI provider to the UI client.
 /// See also `UICmd`.
+#[derive(Debug, Clone)]
 pub enum UIMsg {
     ValueChangeStart { id: usize, value: f64 },
     ValueChangeEnd   { id: usize, value: f64 },
@@ -19,8 +22,8 @@ pub enum UIMsg {
 }
 
 pub struct UIClientHandle {
-    rx: Receiver<UIMsg>,
-    tx: Sender<UICmd>,
+    pub rx: Receiver<UIMsg>,
+    pub tx: Sender<UICmd>,
 }
 
 impl UIClientHandle {
