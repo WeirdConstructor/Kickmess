@@ -16,8 +16,10 @@ pub enum UIInput {
 pub enum UILayout {
     Container {
         label:    String,
-        w_ratio:  f64,
-        h_ratio:  f64,
+        xv:       u8,
+        yv:       u8,
+        wv:       u8,
+        hv:       u8,
         elements: Vec<UIInput>
     },
 }
@@ -60,6 +62,6 @@ impl UIClientHandle {
 }
 
 pub struct UIProviderHandle {
-    rx: Receiver<UICmd>,
-    tx: Sender<UIMsg>,
+    pub rx: Receiver<UICmd>,
+    pub tx: Sender<UIMsg>,
 }
