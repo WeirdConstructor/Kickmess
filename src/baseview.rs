@@ -132,10 +132,14 @@ pub fn open_window(parent: Option<*mut ::std::ffi::c_void>, ui_hdl: UIProviderHa
                         .expect("surface creation from xlib surface ok");
                 let ctx = cairo::Context::new(&surf);
 
+                let mut ui = UI::new(ui_hdl);
+
+                ui.set_window_size(WINDOW_WIDTH as f64, WINDOW_HEIGHT as f64);
+
                 TestWindowHandler {
                     screen_buf: new_screen_buffer(&ctx),
 //                    state:      PlugUIState::new(),
-                    ui: UI::new(ui_hdl),
+                    ui,
                     ctx,
 //                    ui
                 }

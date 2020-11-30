@@ -20,18 +20,24 @@ pub enum UIEvent {
 }
 
 pub struct UI {
-    ui_handle: UIProviderHandle,
-    painter:   Painter,
-    layout:    Vec<UILayout>,
+    ui_handle:      UIProviderHandle,
+    painter:        Painter,
+    layout:         Vec<UILayout>,
+    window_size:    (f64, f64),
 }
 
 impl UI {
     pub fn new(ui_handle: UIProviderHandle) -> Self {
         Self {
             ui_handle,
-            painter:    Painter::new(),
-            layout:     vec![],
+            painter:        Painter::new(),
+            layout:         vec![],
+            window_size:    (0.0, 0.0),
         }
+    }
+
+    pub fn set_window_size(&mut self, w: f64, h: f64) {
+        self.window_size = (w, h);
     }
 
     pub fn handle_client_command(&mut self) {
@@ -39,6 +45,7 @@ impl UI {
             match cmd {
                 UICmd::Define(layout) => {
                     self.layout = layout;
+                    println!("CLIENT EVENT: LAYOUT!");
                 },
                 UICmd::SetValues(_) => {
                 },
@@ -64,6 +71,23 @@ impl UI {
     }
 
     pub fn draw(&mut self, cr: &cairo::Context) {
+        let (ww, wh) = self.window_size;
+
+        for layout in self.layout.iter() {
+            match layout {
+                UILayout::Container { label, xv, yv, wv, hv, elements } => {
+                    let x = (((*xv as f64) * ww) / 12.0).floor();
+                    let y = (((*yv as f64) * wh) / 12.0).floor();
+                    let w = (((*wv as f64) * ww) / 12.0).ceil();
+                    let h = (((*hv as f64) * wh) / 12.0).ceil();
+
+                    cr.set_source_rgb(0.29, 0.29, 0.29);
+                    cr.rectangle(x, y, w, h);
+                    cr.fill();
+                    println!("DRAW CONTAINER {},{},{},{}", x, y, w, h);
+                },
+            }
+        }
         // TODO:
         //  - calculate box sizes by 1/12th
         //  - distribute knobs thoughout the box available size.

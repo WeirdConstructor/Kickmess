@@ -1,5 +1,6 @@
 use kickmessvst;
 use kickmessvst::ui;
+use kickmessvst::ui::protocol::*;
 use std::rc::Rc;
 use std::sync::Arc;
 use std::sync::Mutex;
@@ -142,6 +143,25 @@ fn main() {
     let (cl_hdl, p_hdl) = ui::protocol::UIClientHandle::create();
 
     let handle = kickmessvst::baseview::open_window(None, p_hdl);
+
+    cl_hdl.tx.send(UICmd::Define(vec![
+//        UILayout::Container {
+//            label: String::from("Test"),
+//            xv: 0,
+//            yv: 0,
+//            wv: 1,
+//            hv: 2,
+//            elements: vec![],
+//        },
+        UILayout::Container {
+            label: String::from("Test"),
+            xv: 1,
+            yv: 1,
+            wv: 10,
+            hv: 10,
+            elements: vec![],
+        },
+    ])).expect("mpsc ok");
 
     std::thread::spawn(move || {
         while let Ok(msg) = cl_hdl.rx.recv_timeout(
