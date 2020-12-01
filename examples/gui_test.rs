@@ -159,9 +159,18 @@ fn main() {
             yv: 1,
             wv: 10,
             hv: 10,
-            elements: vec![],
+            elements: vec![
+                UIInput::Knob {
+                    id: 1,
+                    label: String::from("SFreq."),
+                    xv: 0,
+                    yv: 0,
+                }
+            ],
         },
     ])).expect("mpsc ok");
+
+     // TODO: Send VALUES!
 
     std::thread::spawn(move || {
         while let Ok(msg) = cl_hdl.rx.recv_timeout(

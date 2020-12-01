@@ -8,8 +8,8 @@ pub struct UIInputValue {
 
 #[derive(Debug, Clone)]
 pub enum UIInput {
-    KnobSmall { id: usize, label: String },
-    Knob      { id: usize, label: String },
+    KnobSmall { xv: u8, yv: u8, id: usize, label: String },
+    Knob      { xv: u8, yv: u8, id: usize, label: String },
 }
 
 #[derive(Debug, Clone)]
