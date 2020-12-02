@@ -1,7 +1,7 @@
 mod segmented_knob;
 mod painting;
 mod draw_cache;
-mod constants;
+pub mod constants;
 pub mod protocol;
 
 use std::rc::Rc;
@@ -10,6 +10,7 @@ use std::cell::RefCell;
 use crate::ui::painting::{Painter, ActiveZone};
 use crate::ui::draw_cache::DrawCache;
 use crate::ui::protocol::{UIMsg, UICmd, UIProviderHandle, UILayout, UIInput};
+use crate::ui::constants::*;
 
 pub enum MouseButton {
     Left,
@@ -123,9 +124,20 @@ impl UI {
                     let w = (((*wv as f64) * ww) / 12.0).ceil();
                     let h = (((*hv as f64) * wh) / 12.0).ceil();
 
-                    cr.set_source_rgb(0.29, 0.29, 0.29);
+                    cr.set_source_rgb(
+                        UI_GUI_BG_CLR.0,
+                        UI_GUI_BG_CLR.1,
+                        UI_GUI_BG_CLR.2);
                     cr.rectangle(x, y, w, h);
                     cr.fill();
+
+                    cr.set_line_width(UI_BORDER_WIDTH);
+                    cr.rectangle(x, y, w, h);
+                    cr.set_source_rgb(
+                        UI_BORDER_CLR.0,
+                        UI_BORDER_CLR.1,
+                        UI_BORDER_CLR.2);
+                    cr.stroke();
 
                     for el in elements.iter() {
                         match el {

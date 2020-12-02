@@ -15,6 +15,7 @@ use vst::editor::Editor;
 
 use crate::ui::protocol::UIClientHandle;
 use crate::ui::protocol::UIProviderHandle;
+use crate::ui::constants::*;
 use crate::ui::UI;
 
 const WINDOW_WIDTH:  usize = 500;
@@ -64,7 +65,10 @@ impl WindowHandler for TestWindowHandler {
 //
 //        if self.ui.needs_redraw() {
             let ext = self.screen_buf.clip_extents();
-            self.screen_buf.set_source_rgb(0.5, 0.0, 0.5);
+            self.screen_buf.set_source_rgb(
+                UI_GUI_CLEAR_CLR.0,
+                UI_GUI_CLEAR_CLR.1,
+                UI_GUI_CLEAR_CLR.2);
             self.screen_buf.rectangle(ext.0, ext.1, ext.2 - ext.0, ext.3 - ext.1);
             self.screen_buf.fill();
 //

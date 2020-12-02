@@ -56,11 +56,14 @@ impl DrawCache {
             self.knob.draw_oct_arc(
                 &cr, xo, yo,
                 UI_BG_KNOB_STROKE,
-                (0.28, 0.28, 0.28),
+                UI_BG_KNOB_STROKE_CLR,
                 1.0);
 
             cr.set_line_width(UI_BG_KNOB_STROKE);
-            cr.set_source_rgb(0.28, 0.28, 0.28);
+            cr.set_source_rgb(
+                UI_BG_KNOB_STROKE_CLR.0,
+                UI_BG_KNOB_STROKE_CLR.1,
+                UI_BG_KNOB_STROKE_CLR.2);
 
             let dc1 = self.knob.get_decor_rect1();
             cr.rectangle(xo + dc1.0, yo + dc1.1, dc1.2, dc1.3);
@@ -90,7 +93,7 @@ impl DrawCache {
         cr.paint();
         cr.restore();
 
-        ActiveZone::from_rect(x + xo, y + yo, self.knob.get_value_rect())
+        ActiveZone::from_rect(x + xo, y + yo, 0, self.knob.get_value_rect())
     }
 }
 

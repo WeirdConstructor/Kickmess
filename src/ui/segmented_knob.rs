@@ -90,8 +90,15 @@ impl SegmentedKnob {
             cairo::FontWeight::Normal);
         cr.set_font_face(&ff);
         cr.set_font_size(15.);
-        cr.set_source_rgb(1.0, 0.3, 0.3);
-        cr.move_to(x + r.0 + 4.0, y + r.1 + UI_ELEM_TXT_H - 4.0); // TODO: Fix 4.0 magic number, use text extends
+        cr.set_source_rgb(
+            UI_TXT_KNOB_CLR.0,
+            UI_TXT_KNOB_CLR.1,
+            UI_TXT_KNOB_CLR.2);
+
+        let ext = cr.text_extents(s);
+        cr.move_to(
+            x + r.0 + ((r.2 - ext.width) / 2.0).abs().round(),
+            y + r.1 + ext.height);
         cr.show_text(s);
     }
 
@@ -103,8 +110,16 @@ impl SegmentedKnob {
             cairo::FontWeight::Normal);
         cr.set_font_face(&ff);
         cr.set_font_size(10.);
-        cr.set_source_rgb(1.0, 0.3, 0.3);
-        cr.move_to(x + r.0 + 14.0, y + r.1 + UI_ELEM_TXT_H - 4.0); // TODO: Fix 4.0 magic number, use text extends
+        cr.set_source_rgb(
+            UI_TXT_KNOB_CLR.0,
+            UI_TXT_KNOB_CLR.1,
+            UI_TXT_KNOB_CLR.2);
+
+        let ext = cr.text_extents(s);
+        cr.move_to(
+            x + r.0 + ((r.2 - ext.width)  / 2.0).abs().round(),
+            y + r.1 + ext.height
+                    + ((r.3 - ext.height) / 2.0).abs().round());
         cr.show_text(s);
     }
 

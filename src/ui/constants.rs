@@ -1,8 +1,14 @@
 pub const UI_BG_KNOB_STROKE       : f64 = 8.0;
 pub const UI_MG_KNOB_STROKE       : f64 = 3.0;
 pub const UI_FG_KNOB_STROKE       : f64 = 5.0;
+pub const UI_BG_KNOB_STROKE_CLR   : (f64, f64, f64) = (36.0  / 255.0,  24.0 / 255.0,  33.0 / 255.0);
 pub const UI_MG_KNOB_STROKE_CLR   : (f64, f64, f64) = (0.26, 0.33, 0.57);
 pub const UI_FG_KNOB_STROKE_CLR   : (f64, f64, f64) = (0.84, 0.76, 0.32);
+pub const UI_TXT_KNOB_CLR         : (f64, f64, f64) = (201.0 / 255.0,  98.0 / 255.0,   0.0 / 255.0);
+pub const UI_GUI_BG_CLR           : (f64, f64, f64) = (54.0  / 255.0,  48.0 / 255.0,  53.0 / 255.0);
+pub const UI_GUI_CLEAR_CLR        : (f64, f64, f64) = (54.0  / 255.0,  48.0 / 255.0,  53.0 / 255.0);
+pub const UI_BORDER_CLR           : (f64, f64, f64) = (145.0 / 255.0, 131.0 / 255.0, 131.0 / 255.0);
+pub const UI_BORDER_WIDTH         : f64 = 4.0;
 pub const UI_KNOB_RADIUS          : f64 = 30.0;
 pub const UI_KNOB_SMALL_RADIUS    : f64 = 20.0;
 
