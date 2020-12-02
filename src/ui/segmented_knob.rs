@@ -105,11 +105,12 @@ impl SegmentedKnob {
     pub fn draw_value(&self, cr: &cairo::Context, x: f64, y: f64, hover_style: bool, s: &str) {
         let r = self.get_value_rect();
         let ff = cairo::FontFace::toy_create(
-            "monospace",
+            "serif",
             cairo::FontSlant::Normal,
-            cairo::FontWeight::Normal);
+            if hover_style { cairo::FontWeight::Bold }
+            else           { cairo::FontWeight::Normal });
         cr.set_font_face(&ff);
-        cr.set_font_size(10.);
+        cr.set_font_size(if hover_style { 11. } else { 10. });
         if hover_style {
             cr.set_source_rgb(
                 UI_TXT_KNOB_HOVER_CLR.0,
