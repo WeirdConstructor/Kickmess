@@ -22,7 +22,7 @@ impl DrawCache {
         }
     }
 
-    pub fn draw_knob_data(&mut self, cr: &cairo::Context, x: f64, y: f64, value: f64, val_s: &str) {
+    pub fn draw_knob_data(&mut self, cr: &cairo::Context, x: f64, y: f64, hover_style: bool, value: f64, val_s: &str) {
         let (xo, yo) =
             ((UI_ELEM_N_H / 2.0).round(),
              (UI_ELEM_N_H / 2.0).round());
@@ -33,7 +33,7 @@ impl DrawCache {
             UI_FG_KNOB_STROKE_CLR,
             value);
 
-        self.knob.draw_value(&cr, x + xo, y + yo, val_s);
+        self.knob.draw_value(&cr, x + xo, y + yo, hover_style, val_s);
     }
 
     pub fn draw_knob_bg(&mut self, cr: &cairo::Context, x: f64, y: f64, name: &str) -> ActiveZone {

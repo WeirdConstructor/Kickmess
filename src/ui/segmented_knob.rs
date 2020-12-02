@@ -102,7 +102,7 @@ impl SegmentedKnob {
         cr.show_text(s);
     }
 
-    pub fn draw_value(&self, cr: &cairo::Context, x: f64, y: f64, s: &str) {
+    pub fn draw_value(&self, cr: &cairo::Context, x: f64, y: f64, hover_style: bool, s: &str) {
         let r = self.get_value_rect();
         let ff = cairo::FontFace::toy_create(
             "monospace",
@@ -110,10 +110,17 @@ impl SegmentedKnob {
             cairo::FontWeight::Normal);
         cr.set_font_face(&ff);
         cr.set_font_size(10.);
-        cr.set_source_rgb(
-            UI_TXT_KNOB_CLR.0,
-            UI_TXT_KNOB_CLR.1,
-            UI_TXT_KNOB_CLR.2);
+        if hover_style {
+            cr.set_source_rgb(
+                UI_TXT_KNOB_HOVER_CLR.0,
+                UI_TXT_KNOB_HOVER_CLR.1,
+                UI_TXT_KNOB_HOVER_CLR.2);
+        } else {
+            cr.set_source_rgb(
+                UI_TXT_KNOB_CLR.0,
+                UI_TXT_KNOB_CLR.1,
+                UI_TXT_KNOB_CLR.2);
+        }
 
         let ext = cr.text_extents(s);
         cr.move_to(

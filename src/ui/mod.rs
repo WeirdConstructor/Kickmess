@@ -12,12 +12,14 @@ use crate::ui::draw_cache::DrawCache;
 use crate::ui::protocol::{UIMsg, UICmd, UIProviderHandle, UILayout, UIInput};
 use crate::ui::constants::*;
 
+#[derive(Debug, Clone, Copy)]
 pub enum MouseButton {
     Left,
     Right,
     Middle,
 }
 
+#[derive(Debug, Clone, Copy)]
 pub enum UIEvent {
     MousePosition(f64, f64),
     MouseButtonPressed(MouseButton),
@@ -31,11 +33,14 @@ pub struct UI {
 
     layout:         Rc<RefCell<Vec<UILayout>>>,
 
-    element_values:     Vec<f32>,
+    element_values: Vec<f32>,
     window_size:    (f64, f64),
 
     zones:          Vec<ActiveZone>,
     cache:          DrawCache,
+
+    hover_zone:     Option<ActiveZone>,
+    last_mouse_pos: (f64, f64),
 }
 
 impl UI {
@@ -48,6 +53,8 @@ impl UI {
             zones:              vec![],
             cache:              DrawCache::new(),
             element_values:     vec![],
+            hover_zone:         None,
+            last_mouse_pos:     (0.0, 0.0),
         }
     }
 
@@ -72,14 +79,23 @@ impl UI {
     pub fn handle_ui_event(&mut self, ev: UIEvent) {
         match ev {
             UIEvent::MousePosition(x, y) => {
+                self.last_mouse_pos = (x, y);
+                self.hover_zone     = None;
+
                 for zone in self.zones.iter() {
                     if zone.is_inside(x, y) {
-//                        self.hover_zone = Some(zone.id);
+                        self.hover_zone = Some(*zone);
                         println!("handle_mouse: {},{} => Hoverzone={}",
                                  x, y, zone.id);
                         break;
                     }
                 }
+            },
+            UIEvent::MouseButtonPressed(btn) => {
+                println!("BUTTON PRESS: {:?} @{:?}", btn, self.last_mouse_pos);
+            },
+            UIEvent::MouseButtonReleased(btn) => {
+                println!("BUTTON RELEASE: {:?} @{:?}", btn, self.last_mouse_pos);
             },
             _ => {},
         }
@@ -147,11 +163,23 @@ impl UI {
 
                                 let az = self.cache.draw_knob_bg(cr, xe, ye, label);
                                 self.add_active_zone(*id, az);
+
+                                let hover =
+                                    if let Some(hover_zone) = self.hover_zone {
+                                        if hover_zone.id == *id {
+                                            true
+                                        } else {
+                                            false
+                                        }
+                                    } else {
+                                        false
+                                    };
+
                                 let val = self.get_element_value(*id) as f64;
                                 let val_str = format!("{}", val);
                                 // TODO: cache strings in a cache structure with inner
                                 //       mutability and pass around Rc<String>!
-                                self.cache.draw_knob_data(cr, xe, ye, val, &val_str);
+                                self.cache.draw_knob_data(cr, xe, ye, hover, val, &val_str);
                             },
                             UIInput::KnobSmall { id, label, xv, yv } => {
                             },

@@ -1,6 +1,6 @@
 #[macro_use]
 use baseview::{
-    Size, Event, MouseEvent, Parent, Window, WindowHandle, WindowHandler,
+    Size, Event, MouseEvent, MouseButton, Parent, Window, WindowHandle, WindowHandler,
     WindowOpenOptions, WindowScalePolicy
 };
 
@@ -16,7 +16,8 @@ use vst::editor::Editor;
 use crate::ui::protocol::UIClientHandle;
 use crate::ui::protocol::UIProviderHandle;
 use crate::ui::constants::*;
-use crate::ui::UI;
+use crate::ui::{UI, UIEvent};
+use crate::ui;
 
 const WINDOW_WIDTH:  usize = 500;
 const WINDOW_HEIGHT: usize = 500;
@@ -48,14 +49,34 @@ impl WindowHandler for TestWindowHandler {
     }
 
     fn on_event(&mut self, _: &mut Window, event: Event) {
-//        match event {
-//            Event::Mouse(MouseEvent::CursorMoved { position: p }) => {
-//                self.state.handle_mouse(p.x, p.y, PUIMouseState::None);
-//            },
-//            _ => {
-//                println!("UNHANDLED EVENT: {:?}", event);
-//            },
-//        }
+        match event {
+            Event::Mouse(MouseEvent::CursorMoved { position: p }) => {
+                self.ui.handle_ui_event(UIEvent::MousePosition(p.x, p.y));
+            },
+            Event::Mouse(MouseEvent::ButtonPressed(btn)) => {
+                let ev_btn =
+                    match btn {
+                        MouseButton::Left   => ui::MouseButton::Left,
+                        MouseButton::Right  => ui::MouseButton::Right,
+                        MouseButton::Middle => ui::MouseButton::Middle,
+                        _                   => ui::MouseButton::Left,
+                    };
+                self.ui.handle_ui_event(UIEvent::MouseButtonPressed(ev_btn));
+            },
+            Event::Mouse(MouseEvent::ButtonReleased(btn)) => {
+                let ev_btn =
+                    match btn {
+                        MouseButton::Left   => ui::MouseButton::Left,
+                        MouseButton::Right  => ui::MouseButton::Right,
+                        MouseButton::Middle => ui::MouseButton::Middle,
+                        _                   => ui::MouseButton::Left,
+                    };
+                self.ui.handle_ui_event(UIEvent::MouseButtonReleased(ev_btn));
+            },
+            _ => {
+                println!("UNHANDLED EVENT: {:?}", event);
+            },
+        }
     }
 
     fn on_frame(&mut self) {
