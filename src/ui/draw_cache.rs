@@ -52,8 +52,6 @@ impl DrawCache {
                 cairo::Context::new(
                     self.surf[DrawCacheImg::Knob as usize].as_mut().unwrap());
 
-            cr.save();
-
             self.knob.draw_oct_arc(
                 &cr, xo, yo,
                 UI_BG_KNOB_STROKE,

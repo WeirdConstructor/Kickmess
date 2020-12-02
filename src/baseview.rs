@@ -84,7 +84,7 @@ impl WindowHandler for TestWindowHandler {
 //        let mut wd =
 //            PlugUIPainter::new(&mut self.state, &self.screen_buf);
 //
-//        if self.ui.needs_redraw() {
+        if self.ui.needs_redraw() {
             let ext = self.screen_buf.clip_extents();
             self.screen_buf.set_source_rgb(
                 UI_GUI_CLEAR_CLR.0,
@@ -98,7 +98,7 @@ impl WindowHandler for TestWindowHandler {
 //
             self.screen_buf.get_target().flush();
 //            println!("REDRAW UI! {:?}", ext);
-//        }
+        }
 //
 //        self.ctx.save();
         self.ctx.set_source_surface(&self.screen_buf.get_target(), 0.0, 0.0);

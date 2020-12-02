@@ -41,6 +41,8 @@ pub struct UI {
 
     hover_zone:     Option<ActiveZone>,
     last_mouse_pos: (f64, f64),
+
+    needs_redraw_flag: bool,
 }
 
 impl UI {
@@ -55,7 +57,16 @@ impl UI {
             element_values:     vec![],
             hover_zone:         None,
             last_mouse_pos:     (0.0, 0.0),
+            needs_redraw_flag:  false,
         }
+    }
+
+    pub fn needs_redraw(&self) -> bool {
+        self.needs_redraw_flag
+    }
+
+    pub fn queue_redraw(&mut self) {
+        self.needs_redraw_flag = true;
     }
 
     pub fn set_window_size(&mut self, w: f64, h: f64) {
@@ -67,6 +78,7 @@ impl UI {
             match cmd {
                 UICmd::Define(layout) => {
                     self.layout = Rc::new(RefCell::new(layout));
+                    self.queue_redraw();
                     println!("CLIENT EVENT: LAYOUT!");
                 },
                 UICmd::SetValues(_) => {
@@ -90,6 +102,8 @@ impl UI {
                         break;
                     }
                 }
+
+                self.queue_redraw();
             },
             UIEvent::MouseButtonPressed(btn) => {
                 println!("BUTTON PRESS: {:?} @{:?}", btn, self.last_mouse_pos);
@@ -127,6 +141,12 @@ impl UI {
 
     pub fn draw(&mut self, cr: &cairo::Context) {
         let (ww, wh) = self.window_size;
+
+        let ff = cairo::FontFace::toy_create(
+            "serif",
+            cairo::FontSlant::Normal,
+            cairo::FontWeight::Normal);
+        cr.set_font_face(&ff);
 
         self.zones.clear();
 
@@ -175,10 +195,16 @@ impl UI {
                                         false
                                     };
 
-                                let val = self.get_element_value(*id) as f64;
+                                let val     = self.get_element_value(*id) as f64;
                                 let val_str = format!("{:4.2}", val);
                                 // TODO: cache strings in a cache structure with inner
                                 //       mutability and pass around Rc<String>!
+                                // TODO: Cache inside draw_knob_data, pass a callback for
+                                //       string formatting, so that we only allocate new strings
+                                //       when actually drawing new content.
+                                //       The cache inside draw_knob_data should check hover and val
+                                //       for differences! => Otherwise redraw old content.
+                                //       Use rounded int xe/ye as key for cache lookup!
                                 self.cache.draw_knob_data(cr, xe, ye, hover, val, &val_str);
                             },
                             UIInput::KnobSmall { id, label, xv, yv } => {
@@ -194,5 +220,7 @@ impl UI {
         //  - distribute knobs thoughout the box available size.
         //  - make sure that it is possible to provide a minimal size
         //  - handle window resizing?
+
+        self.needs_redraw_flag = false;
     }
 }

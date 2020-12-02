@@ -160,12 +160,14 @@ fn main() {
             wv: 10,
             hv: 10,
             elements: vec![
-                UIInput::Knob {
-                    id: 1,
-                    label: String::from("SFreq."),
-                    xv: 0,
-                    yv: 0,
-                }
+                UIInput::Knob { label: String::from("SFreq."), id: 1, xv: 0, yv: 0, },
+                UIInput::Knob { label: String::from("SFreq."), id: 2, xv: 6, yv: 0, },
+                UIInput::Knob { label: String::from("SFreq."), id: 3, xv: 0, yv: 4, },
+                UIInput::Knob { label: String::from("SFreq."), id: 4, xv: 6, yv: 4, },
+                UIInput::Knob { label: String::from("SFreq."), id: 5, xv: 0, yv: 8, },
+                UIInput::Knob { label: String::from("SFreq."), id: 6, xv: 6, yv: 8, },
+                UIInput::Knob { label: String::from("SFreq."), id: 7, xv: 3, yv: 0, },
+                UIInput::Knob { label: String::from("SFreq."), id: 8, xv: 3, yv: 4, },
             ],
         },
     ])).expect("mpsc ok");
