@@ -85,7 +85,7 @@ impl SegmentedKnob {
     pub fn draw_name_bg(&self, cr: &cairo::Context, x: f64, y: f64, s: &str) {
         let r = self.get_label_rect();
         let ff = cairo::FontFace::toy_create(
-            "monospace",
+            "serif",
             cairo::FontSlant::Normal,
             cairo::FontWeight::Normal);
         cr.set_font_face(&ff);
@@ -131,7 +131,7 @@ impl SegmentedKnob {
         cr.show_text(s);
     }
 
-    pub fn draw_oct_arc(&self, cr: &cairo::Context, x: f64, y: f64, line_w: f64, color: (f64, f64, f64), value: f64) {
+    pub fn draw_oct_arc(&self, cr: &cairo::Context, x: f64, y: f64, line_w: f64, color: (f64, f64, f64), with_dot: bool, value: f64) {
         cr.set_line_width(line_w);
         cr.set_source_rgb(color.0, color.1, color.2);
         let s       = &self.s;
@@ -175,6 +175,15 @@ impl SegmentedKnob {
         cr.line_to(
             x + prev.0 + partial.0,
             y + prev.1 + partial.1);
+        cr.stroke();
+
+        if with_dot {
+            cr.set_line_width(line_w * 0.5);
+            cr.arc(
+                x + prev.0 + partial.0,
+                y + prev.1 + partial.1,
+                line_w * 1.5, 0.0, 2.0 * std::f64::consts::PI);
+        }
 
         cr.stroke();
     }

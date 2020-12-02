@@ -114,7 +114,7 @@ impl UI {
 
     fn get_element_value(&mut self, id: usize) -> f32 {
         if id >= self.element_values.len() {
-            self.element_values.resize(id * 2, 0.0);
+            self.element_values.resize(id * 2, 0.7);
         }
 
         self.element_values[id]
@@ -176,7 +176,7 @@ impl UI {
                                     };
 
                                 let val = self.get_element_value(*id) as f64;
-                                let val_str = format!("{}", val);
+                                let val_str = format!("{:4.2}", val);
                                 // TODO: cache strings in a cache structure with inner
                                 //       mutability and pass around Rc<String>!
                                 self.cache.draw_knob_data(cr, xe, ye, hover, val, &val_str);
@@ -185,7 +185,7 @@ impl UI {
                             },
                         }
                     }
-                    println!("DRAW CONTAINER {},{},{},{}", x, y, w, h);
+                    //d// println!("DRAW CONTAINER {},{},{},{}", x, y, w, h);
                 },
             }
         }

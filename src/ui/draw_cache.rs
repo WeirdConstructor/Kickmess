@@ -31,6 +31,7 @@ impl DrawCache {
             &cr, x + xo, y + yo,
             UI_MG_KNOB_STROKE,
             UI_FG_KNOB_STROKE_CLR,
+            true,
             value);
 
         self.knob.draw_value(&cr, x + xo, y + yo, hover_style, val_s);
@@ -57,6 +58,7 @@ impl DrawCache {
                 &cr, xo, yo,
                 UI_BG_KNOB_STROKE,
                 UI_BG_KNOB_STROKE_CLR,
+                false,
                 1.0);
 
             cr.set_line_width(UI_BG_KNOB_STROKE);
@@ -81,6 +83,7 @@ impl DrawCache {
                 &cr, xo, yo,
                 UI_MG_KNOB_STROKE,
                 UI_MG_KNOB_STROKE_CLR,
+                false,
                 1.0);
 
             self.knob.draw_name_bg(&cr, xo, yo, name);
