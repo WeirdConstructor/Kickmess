@@ -84,16 +84,18 @@ impl SegmentedKnob {
 
     pub fn draw_name_bg(&self, cr: &cairo::Context, x: f64, y: f64, s: &str) {
         let r = self.get_label_rect();
-        cr.set_font_size(15.);
+        cr.set_font_size(12.);
         cr.set_source_rgb(
             UI_TXT_KNOB_CLR.0,
             UI_TXT_KNOB_CLR.1,
             UI_TXT_KNOB_CLR.2);
 
         let ext = cr.text_extents(s);
+        println!("BEARING: {}={},{} | {} | {} => {}", s, ext.y_bearing, ext.height, (r.3 - ext.height) / 2.0, r.3, ext.y_bearing + ((r.3 - ext.height) / 1.0).abs());
         cr.move_to(
             x + r.0 + ((r.2 - ext.width) / 2.0).abs().round(),
-            y + r.1 + ext.height);
+            (y + r.1 - r.3) - ext.y_bearing
+                    + ((r.3 - ext.y_bearing) / 2.0).abs().round());
         cr.show_text(s);
     }
 

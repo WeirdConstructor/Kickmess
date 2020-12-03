@@ -83,8 +83,6 @@ impl DrawCache {
                 UI_MG_KNOB_STROKE_CLR,
                 false,
                 1.0);
-
-            self.knob.draw_name_bg(&cr, xo, yo, name);
         }
 
         let surf = &self.surf[DrawCacheImg::Knob as usize].as_ref().unwrap();
@@ -92,6 +90,7 @@ impl DrawCache {
         cr.save();
         cr.set_source_surface(surf, x, y);
         cr.paint();
+        self.knob.draw_name_bg(&cr, x + xo, y + yo, name);
         cr.restore();
 
         ActiveZone::from_rect(x + xo, y + yo, 0, self.knob.get_value_rect())
