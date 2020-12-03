@@ -3,12 +3,15 @@ use vst::editor::Editor;
 use std::sync::Arc;
 use std::rc::Rc;
 
-use crate::ui::protocol::UIClientHandle;
-use crate::ui::protocol::UIProviderHandle;
-use crate::ui::UI;
+use crate::ui::protocol::*;
+use crate::ui::constants::*;
+use crate::ui::{UI, UIEvent};
+use crate::ui;
 
 use pugl_sys::*;
 
+const WINDOW_WIDTH:  usize = 500;
+const WINDOW_HEIGHT: usize = 500;
 
 struct KickmessUI {
     view:               PuglViewFFI,
@@ -23,22 +26,50 @@ impl KickmessUI {
     fn new(view: PuglViewFFI) -> Self {
         let (cl_hdl, p_hdl) = UIClientHandle::create();
 
-        Self {
+        let mut this = Self {
             view,
             w:               0.0,
             h:               0.0,
             close_requested: false,
             ui:              UI::new(p_hdl),
             cl_hdl,
-        }
+        };
+
+        this.ui.set_window_size(
+            WINDOW_WIDTH  as f64,
+            WINDOW_HEIGHT as f64);
+        this.define_ui();
+
+        this
+    }
+
+    fn define_ui(&mut self) {
+        self.cl_hdl.tx.send(UICmd::Define(vec![
+            UILayout::Container {
+                label: String::from("Test"),
+                xv: 1,
+                yv: 1,
+                wv: 10,
+                hv: 10,
+                elements: vec![
+                    UIInput::Knob { label: String::from("SFreq."), id: 1, xv: 0, yv: 0, },
+                    UIInput::Knob { label: String::from("SFreq."), id: 2, xv: 6, yv: 0, },
+                    UIInput::Knob { label: String::from("SFreq."), id: 3, xv: 0, yv: 4, },
+                    UIInput::Knob { label: String::from("SFreq."), id: 4, xv: 6, yv: 4, },
+                    UIInput::Knob { label: String::from("SFreq."), id: 5, xv: 0, yv: 8, },
+                    UIInput::Knob { label: String::from("SFreq."), id: 6, xv: 6, yv: 8, },
+                    UIInput::Knob { label: String::from("SFreq."), id: 7, xv: 3, yv: 0, },
+                    UIInput::Knob { label: String::from("SFreq."), id: 8, xv: 3, yv: 4, },
+                ],
+            },
+        ])).expect("mpsc ok");
     }
 }
 
 impl PuglViewTrait for KickmessUI {
     fn exposed(&mut self, expose: &ExposeArea, cr: &cairo::Context) {
-//        cr.set_source_rgb(0.2, 1.0, 0.2);
-//        cr.rectangle(0., 0., 400., 400.);
-//        cr.fill();
+        println!("EXPOSE");
+        self.ui.draw(&cr);
 //
 //        cr.save();
 //        cr.set_source_rgb(0.9, 0.9, 0.9);
@@ -82,6 +113,9 @@ impl PuglViewTrait for KickmessUI {
 
     fn resize(&mut self, size: Size) {
         println!("RESIZE {:?}", size);
+        self.ui.set_window_size(
+            size.w as f64,
+            size.h as f64);
 //        self.w = size.w;
 //        self.h = size.h;
 //        self.post_redisplay();
@@ -114,7 +148,7 @@ impl KickmessEditor {
 impl Editor for KickmessEditor {
     fn size(&self) -> (i32, i32) {
 //        let hdl = self.view.as_ref().unwrap().as_ref().handle();
-        (900, 400)
+        (WINDOW_WIDTH as i32, WINDOW_HEIGHT as i32)
 //        (hdl.get_frame().size.w as i32,
 //         hdl.get_frame().size.h as i32)
     }
@@ -136,11 +170,14 @@ impl Editor for KickmessEditor {
         let ui = view.handle();
         ui.set_frame(Rect {
             pos: Coord { x: 0., y: 0. },
-            size: Size { w: 900., h: 900. },
+            size: Size { w: WINDOW_WIDTH as f64, h: WINDOW_HEIGHT as f64 },
         });
         println!("title: {:?}", ui.set_window_title("Kickmess"));
         ui.make_resizable();
-        println!("set_default_size: {:?}", ui.set_default_size(900, 400));
+        println!("set_default_size: {:?}",
+            ui.set_default_size(
+                WINDOW_WIDTH as i32,
+                WINDOW_HEIGHT as i32));
 //        println!("show_window: {:?}", ui.realize());
         println!("show_window: {:?}", ui.show_window());
 
@@ -160,9 +197,14 @@ impl Editor for KickmessEditor {
             let hdl = view.as_mut().handle();
 
     //        println!("IDLE!");
-            hdl.update(0.01);
+            hdl.update(0.0);
 //            hdl.draw();
     //        println!("IDLE!?!");
+
+            while let Ok(msg) = hdl.cl_hdl.rx.try_recv() {
+                println!("MSG FROM UI: {:?}", msg);
+            }
+            hdl.ui.handle_client_command();
 
             if hdl.close_requested {
                 println!("CLOSE REQ");

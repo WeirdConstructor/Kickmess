@@ -67,7 +67,7 @@ impl UI {
             drag_tmp_value:     None,
             drag_zone:          None,
             last_mouse_pos:     (0.0, 0.0),
-            needs_redraw_flag:  false,
+            needs_redraw_flag:  true,
         }
     }
 

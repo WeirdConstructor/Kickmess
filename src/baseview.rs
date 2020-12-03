@@ -28,6 +28,7 @@ struct TestWindowHandler {
     display:    *mut x11::xlib::Display,
     visual:     *mut x11::xlib::Visual,
     drawable:   x11::xlib::Drawable,
+    gui_surf:   Option<cairo::Surface>,
     ui:         UI,
 }
 
@@ -85,47 +86,65 @@ impl WindowHandler for TestWindowHandler {
     fn on_frame(&mut self) {
         self.ui.handle_client_command();
 
-        if self.ui.needs_redraw() {
-            let surf =
-                unsafe {
-                    cairo_sys::cairo_xlib_surface_create(
-                        self.display,
-                        self.drawable,
-                        self.visual,
-                        WINDOW_WIDTH  as i32,
-                        WINDOW_HEIGHT as i32
-                    )
-                };
+        let surf =
+            unsafe {
+                cairo_sys::cairo_xlib_surface_create(
+                    self.display,
+                    self.drawable,
+                    self.visual,
+                    WINDOW_WIDTH  as i32,
+                    WINDOW_HEIGHT as i32
+                )
+            };
 
-            let surf =
-                unsafe {
-                    cairo::Surface::from_raw_full(surf)
-                        .expect("surface creation from xlib surface ok") };
-            let ctx = cairo::Context::new(&surf);
+        let surf =
+            unsafe {
+                cairo::Surface::from_raw_full(surf)
+                    .expect("surface creation from xlib surface ok") };
+        let ctx = cairo::Context::new(&surf);
+        let ext = ctx.clip_extents();
+
+        let front_surf =
+            ctx.get_target()
+              .create_similar(
+                  cairo::Content::ColorAlpha,
+                  (ext.0 - ext.2).abs() as i32,
+                  (ext.1 - ext.3).abs() as i32)
+              .expect("Createable new img surface");
+        let mut front_ctx = cairo::Context::new(&front_surf);
+
+        if self.gui_surf.is_none() {
+            self.gui_surf = Some(
+                surf.create_similar_image(
+                    cairo::Format::Rgb24,
+                    (ext.0 - ext.2).abs() as i32,
+                    (ext.1 - ext.3).abs() as i32).expect("image surface ok"));
+        }
+
+        let gui_surf = self.gui_surf.as_ref().unwrap();
+
+        if self.ui.needs_redraw() {
+            println!("DRAW {:?}", ext);
+            let mut gui_ctx = cairo::Context::new(&gui_surf);
 
             let ext = ctx.clip_extents();
-            let front_surf =
-                ctx.get_target()
-                  .create_similar(
-                      cairo::Content::Color,
-                      (ext.0 - ext.2).abs() as i32,
-                      (ext.1 - ext.3).abs() as i32)
-                  .expect("Createable new img surface");
-            let mut front = cairo::Context::new(&front_surf);
-
-            let ext = front.clip_extents();
-            front.set_source_rgb(
+            gui_ctx.set_source_rgb(
                 UI_GUI_CLEAR_CLR.0,
                 UI_GUI_CLEAR_CLR.1,
                 UI_GUI_CLEAR_CLR.2);
-            front.rectangle(ext.0, ext.1, ext.2 - ext.0, ext.3 - ext.1);
-            front.fill();
-            self.ui.draw(&mut front);
-
-            ctx.set_source_surface(&front.get_target(), 0.0, 0.0);
-            ctx.paint();
-            ctx.get_target().flush();
+            gui_ctx.rectangle(ext.0, ext.1, ext.2 - ext.0, ext.3 - ext.1);
+            gui_ctx.fill();
+            self.ui.draw(&gui_ctx);
+            gui_surf.flush();
         }
+
+        front_ctx.set_source_surface(&gui_surf, 0.0, 0.0);
+        front_ctx.paint();
+        front_surf.flush();
+
+        ctx.set_source_surface(&front_surf, 0.0, 0.0);
+        ctx.paint();
+        surf.flush();
     }
 }
 
@@ -172,6 +191,7 @@ pub fn open_window(parent: Option<*mut ::std::ffi::c_void>, ui_hdl: UIProviderHa
                     drawable: window,
                     display: display as *mut x11::xlib::Display,
                     visual: vis,
+                    gui_surf: None,
                 }
             }
             else
