@@ -23,13 +23,15 @@ const WINDOW_WIDTH:  usize = 500;
 const WINDOW_HEIGHT: usize = 500;
 
 struct TestWindowHandler {
-    ctx:        cairo::Context,
+//    ctx:        cairo::Context,
 //    state:      PlugUIState,
+    display:    *mut x11::xlib::Display,
+    visual:     *mut x11::xlib::Visual,
+    drawable:   x11::xlib::Drawable,
     ui:         UI,
-    screen_buf: cairo::Context,
 }
 
-fn new_screen_buffer(cr: &cairo::Context) -> cairo::Context {
+fn new_screen_buffer(cr: &cairo::Context) -> (cairo::Surface, cairo::Context) {
     let ext = cr.clip_extents();
     let surf =
         cr.get_target()
@@ -38,7 +40,8 @@ fn new_screen_buffer(cr: &cairo::Context) -> cairo::Context {
               (ext.0 - ext.2).abs() as i32,
               (ext.1 - ext.3).abs() as i32)
           .expect("Createable new img surface");
-    cairo::Context::new(&surf)
+    let ctx = cairo::Context::new(&surf);
+    (surf, ctx)
 }
 
 impl WindowHandler for TestWindowHandler {
@@ -83,21 +86,46 @@ impl WindowHandler for TestWindowHandler {
         self.ui.handle_client_command();
 
         if self.ui.needs_redraw() {
-            let ext = self.screen_buf.clip_extents();
-            self.screen_buf.set_source_rgb(
+            let surf =
+                unsafe {
+                    cairo_sys::cairo_xlib_surface_create(
+                        self.display,
+                        self.drawable,
+                        self.visual,
+                        WINDOW_WIDTH  as i32,
+                        WINDOW_HEIGHT as i32
+                    )
+                };
+
+            let surf =
+                unsafe {
+                    cairo::Surface::from_raw_full(surf)
+                        .expect("surface creation from xlib surface ok") };
+            let ctx = cairo::Context::new(&surf);
+
+            let ext = ctx.clip_extents();
+            let front_surf =
+                ctx.get_target()
+                  .create_similar(
+                      cairo::Content::Color,
+                      (ext.0 - ext.2).abs() as i32,
+                      (ext.1 - ext.3).abs() as i32)
+                  .expect("Createable new img surface");
+            let mut front = cairo::Context::new(&front_surf);
+
+            let ext = front.clip_extents();
+            front.set_source_rgb(
                 UI_GUI_CLEAR_CLR.0,
                 UI_GUI_CLEAR_CLR.1,
                 UI_GUI_CLEAR_CLR.2);
-            self.screen_buf.rectangle(ext.0, ext.1, ext.2 - ext.0, ext.3 - ext.1);
-            self.screen_buf.fill();
-            self.ui.draw(&mut self.screen_buf);
-            self.screen_buf.get_target().flush();
-        }
+            front.rectangle(ext.0, ext.1, ext.2 - ext.0, ext.3 - ext.1);
+            front.fill();
+            self.ui.draw(&mut front);
 
-        self.ctx.set_source_surface(&self.screen_buf.get_target(), 0.0, 0.0);
-        self.ctx.paint();
-        self.ctx.get_target().flush();
-        self.ctx.get_target().get_device().unwrap().flush();
+            ctx.set_source_surface(&front.get_target(), 0.0, 0.0);
+            ctx.paint();
+            ctx.get_target().flush();
+        }
     }
 }
 
@@ -135,28 +163,15 @@ pub fn open_window(parent: Option<*mut ::std::ffi::c_void>, ui_hdl: UIProviderHa
                         x11::xlib::XDefaultScreen(
                             display as *mut x11::xlib::Display));
 
-                let surf =
-                    cairo_sys::cairo_xlib_surface_create(
-                        display as *mut x11::xlib::Display,
-                        window,
-                        vis,
-                        WINDOW_WIDTH  as i32,
-                        WINDOW_HEIGHT as i32
-                    );
-
-                let surf =
-                    cairo::Surface::from_raw_full(surf)
-                        .expect("surface creation from xlib surface ok");
-                let ctx = cairo::Context::new(&surf);
-
                 let mut ui = UI::new(ui_hdl);
 
                 ui.set_window_size(WINDOW_WIDTH as f64, WINDOW_HEIGHT as f64);
 
                 TestWindowHandler {
-                    screen_buf: new_screen_buffer(&ctx),
                     ui,
-                    ctx,
+                    drawable: window,
+                    display: display as *mut x11::xlib::Display,
+                    visual: vis,
                 }
             }
             else

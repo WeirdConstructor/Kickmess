@@ -104,7 +104,7 @@ impl UI {
             let yd = self.last_mouse_pos.1 - drag_zone.0.1;
             let mut distance = xd + yd; // (xd * xd).sqrt() (yd * yd).sqrt();
 
-            self.drag_tmp_value = Some((drag_zone.1.id, distance / 100.0));
+            self.drag_tmp_value = Some((drag_zone.1.id, distance / 200.0));
         } else {
             self.drag_tmp_value = None;
         }
@@ -147,13 +147,14 @@ impl UI {
                 }
             },
             UIEvent::MouseButtonReleased(btn) => {
-                // TODO: If drag zone, then apply the value change!
                 self.recalc_drag_value();
 
                 if let Some(drag_tmp_value) = self.drag_tmp_value {
                     let id = drag_tmp_value.0;
                     let v = self.get_element_value(id);
                     self.set_element_value(id, v);
+                    // TODO: Send message with the virtually adjusted
+                    //       value to the client!
                     self.queue_redraw();
                 }
                 self.drag_zone      = None;
