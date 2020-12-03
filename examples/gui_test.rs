@@ -145,14 +145,6 @@ fn main() {
     let handle = kickmessvst::baseview::open_window(None, p_hdl);
 
     cl_hdl.tx.send(UICmd::Define(vec![
-//        UILayout::Container {
-//            label: String::from("Test"),
-//            xv: 0,
-//            yv: 0,
-//            wv: 1,
-//            hv: 2,
-//            elements: vec![],
-//        },
         UILayout::Container {
             label: String::from("Test"),
             xv: 1,
@@ -177,7 +169,6 @@ fn main() {
     std::thread::spawn(move || {
         while let Ok(msg) = cl_hdl.rx.recv_timeout(
             std::time::Duration::from_millis(1000)) {
-
             println!("MSG FROM UI: {:?}", msg);
         }
     });

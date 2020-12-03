@@ -81,9 +81,7 @@ impl WindowHandler for TestWindowHandler {
 
     fn on_frame(&mut self) {
         self.ui.handle_client_command();
-//        let mut wd =
-//            PlugUIPainter::new(&mut self.state, &self.screen_buf);
-//
+
         if self.ui.needs_redraw() {
             let ext = self.screen_buf.clip_extents();
             self.screen_buf.set_source_rgb(
@@ -92,18 +90,12 @@ impl WindowHandler for TestWindowHandler {
                 UI_GUI_CLEAR_CLR.2);
             self.screen_buf.rectangle(ext.0, ext.1, ext.2 - ext.0, ext.3 - ext.1);
             self.screen_buf.fill();
-//
-//            self.ui.redraw(&mut wd);
             self.ui.draw(&mut self.screen_buf);
-//
             self.screen_buf.get_target().flush();
-//            println!("REDRAW UI! {:?}", ext);
         }
-//
-//        self.ctx.save();
+
         self.ctx.set_source_surface(&self.screen_buf.get_target(), 0.0, 0.0);
         self.ctx.paint();
-//        self.ctx.restore();
         self.ctx.get_target().flush();
         self.ctx.get_target().get_device().unwrap().flush();
     }
@@ -163,10 +155,8 @@ pub fn open_window(parent: Option<*mut ::std::ffi::c_void>, ui_hdl: UIProviderHa
 
                 TestWindowHandler {
                     screen_buf: new_screen_buffer(&ctx),
-//                    state:      PlugUIState::new(),
                     ui,
                     ctx,
-//                    ui
                 }
             }
             else

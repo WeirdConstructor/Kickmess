@@ -12,6 +12,12 @@ use crate::ui::draw_cache::DrawCache;
 use crate::ui::protocol::{UIMsg, UICmd, UIProviderHandle, UILayout, UIInput};
 use crate::ui::constants::*;
 
+fn clamp01(x: f32) -> f32 {
+    if x < 0.0 { return 0.0; }
+    if x > 1.0 { return 1.0; }
+    x
+}
+
 #[derive(Debug, Clone, Copy)]
 pub enum MouseButton {
     Left,
@@ -40,6 +46,8 @@ pub struct UI {
     cache:          DrawCache,
 
     hover_zone:     Option<ActiveZone>,
+    drag_zone:      Option<((f64, f64), ActiveZone)>,
+    drag_tmp_value: Option<(usize, f64)>,
     last_mouse_pos: (f64, f64),
 
     needs_redraw_flag: bool,
@@ -56,6 +64,8 @@ impl UI {
             cache:              DrawCache::new(),
             element_values:     vec![],
             hover_zone:         None,
+            drag_tmp_value:     None,
+            drag_zone:          None,
             last_mouse_pos:     (0.0, 0.0),
             needs_redraw_flag:  false,
         }
@@ -88,27 +98,66 @@ impl UI {
         // check ui_handle
     }
 
+    fn recalc_drag_value(&mut self) {
+        if let Some(drag_zone) = self.drag_zone {
+            let xd = self.last_mouse_pos.0 - drag_zone.0.0;
+            let yd = self.last_mouse_pos.1 - drag_zone.0.1;
+            let mut distance = xd + yd; // (xd * xd).sqrt() (yd * yd).sqrt();
+
+            self.drag_tmp_value = Some((drag_zone.1.id, distance / 100.0));
+        } else {
+            self.drag_tmp_value = None;
+        }
+    }
+
     pub fn handle_ui_event(&mut self, ev: UIEvent) {
         match ev {
             UIEvent::MousePosition(x, y) => {
                 self.last_mouse_pos = (x, y);
-                self.hover_zone     = None;
 
-                for zone in self.zones.iter() {
-                    if zone.is_inside(x, y) {
-                        self.hover_zone = Some(*zone);
-                        println!("handle_mouse: {},{} => Hoverzone={}",
-                                 x, y, zone.id);
-                        break;
+                if self.drag_zone.is_none() {
+                    self.hover_zone = None;
+
+                    for zone in self.zones.iter() {
+                        if zone.is_inside(x, y) {
+                            self.hover_zone = Some(*zone);
+                            println!("handle_mouse: {},{} => Hoverzone={}",
+                                     x, y, zone.id);
+                            break;
+                        }
                     }
+                } else {
+                    self.recalc_drag_value();
+                    // TODO: Send message with the virtually adjusted
+                    //       value to the client!
+                    println!("SENDBACK VALUE CHANGE: {:?}",
+                        self.drag_tmp_value);
                 }
 
                 self.queue_redraw();
             },
             UIEvent::MouseButtonPressed(btn) => {
-                println!("BUTTON PRESS: {:?} @{:?}", btn, self.last_mouse_pos);
+                if self.drag_zone.is_none() && self.hover_zone.is_some() {
+                    self.drag_zone = Some((self.last_mouse_pos, self.hover_zone.unwrap()));
+                    self.recalc_drag_value();
+                    self.queue_redraw();
+                    println!("drag start! {:?}", self.drag_zone);
+                } else {
+                    println!("BUTTON PRESS: {:?} @{:?}", btn, self.last_mouse_pos);
+                }
             },
             UIEvent::MouseButtonReleased(btn) => {
+                // TODO: If drag zone, then apply the value change!
+                self.recalc_drag_value();
+
+                if let Some(drag_tmp_value) = self.drag_tmp_value {
+                    let id = drag_tmp_value.0;
+                    let v = self.get_element_value(id);
+                    self.set_element_value(id, v);
+                    self.queue_redraw();
+                }
+                self.drag_zone      = None;
+                self.drag_tmp_value = None;
                 println!("BUTTON RELEASE: {:?} @{:?}", btn, self.last_mouse_pos);
             },
             _ => {},
@@ -126,12 +175,29 @@ impl UI {
 //        &self.element_values_str[id]
 //    }
 
-    fn get_element_value(&mut self, id: usize) -> f32 {
+    fn set_element_value(&mut self, id: usize, value: f32) {
         if id >= self.element_values.len() {
-            self.element_values.resize(id * 2, 0.7);
+            self.element_values.resize(id * 2, 0.0);
         }
 
-        self.element_values[id]
+        self.element_values[id] = value;
+    }
+
+    fn get_element_value(&mut self, id: usize) -> f32 {
+        if id >= self.element_values.len() {
+            self.element_values.resize(id * 2, 0.0);
+        }
+
+        let mut v = self.element_values[id];
+
+        if let Some(drag_tmp_value) = self.drag_tmp_value {
+            if drag_tmp_value.0 == id {
+                v = (v as f64 + drag_tmp_value.1) as f32;
+                println!("DRAGOFF {}", drag_tmp_value.1);
+            }
+        }
+
+        clamp01(v)
     }
 
     fn add_active_zone(&mut self, id: usize, mut az: ActiveZone) {

@@ -1,5 +1,5 @@
 pub mod proc;
-mod helpers;
+pub mod helpers;
 mod op_kickmess;
 mod env;
 mod editor;
