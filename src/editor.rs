@@ -102,12 +102,11 @@ impl PuglViewTrait for KickmessUI {
         match ev.data {
             EventType::MouseMove(_) => {
                 let pos = ev.pos();
-                println!("MOUSEMOVE: {}:{}", pos.x, pos.y);
+                //d// println!("MOUSEMOVE: {}:{}", pos.x, pos.y);
                 self.ui.handle_ui_event(UIEvent::MousePosition(pos.x, pos.y));
                 self.post_redisplay();
             },
             EventType::MouseButtonRelease(btn) => {
-                println!("REL: {:?}", btn);
                 let ev_btn =
                     match btn.num {
                         1 => ui::MouseButton::Left,

@@ -113,19 +113,20 @@ impl WindowHandler for TestWindowHandler {
               .expect("Createable new img surface");
         let mut front_ctx = cairo::Context::new(&front_surf);
 
-        if self.gui_surf.is_none() {
-            self.gui_surf = Some(
-                surf.create_similar_image(
-                    cairo::Format::Rgb24,
-                    (ext.0 - ext.2).abs() as i32,
-                    (ext.1 - ext.3).abs() as i32).expect("image surface ok"));
-        }
-
-        let gui_surf = self.gui_surf.as_ref().unwrap();
+//        if self.gui_surf.is_none() {
+//            self.gui_surf = Some(
+//                surf.create_similar_image(
+//                    cairo::Format::Rgb24,
+//                    (ext.0 - ext.2).abs() as i32,
+//                    (ext.1 - ext.3).abs() as i32).expect("image surface ok"));
+//        }
+//
+//        let gui_surf = self.gui_surf.as_ref().unwrap();
 
         if self.ui.needs_redraw() {
             println!("DRAW {:?}", ext);
-            let mut gui_ctx = cairo::Context::new(&gui_surf);
+//            let mut gui_ctx = cairo::Context::new(&gui_surf);
+            let mut gui_ctx = front_ctx;
 
             let ext = ctx.clip_extents();
             gui_ctx.set_source_rgb(
@@ -135,12 +136,12 @@ impl WindowHandler for TestWindowHandler {
             gui_ctx.rectangle(ext.0, ext.1, ext.2 - ext.0, ext.3 - ext.1);
             gui_ctx.fill();
             self.ui.draw(&gui_ctx);
-            gui_surf.flush();
+//            gui_surf.flush();
         }
 
-        front_ctx.set_source_surface(&gui_surf, 0.0, 0.0);
-        front_ctx.paint();
-        front_surf.flush();
+//        front_ctx.set_source_surface(&gui_surf, 0.0, 0.0);
+//        front_ctx.paint();
+//        front_surf.flush();
 
         ctx.set_source_surface(&front_surf, 0.0, 0.0);
         ctx.paint();
