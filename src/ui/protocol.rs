@@ -39,6 +39,7 @@ pub enum UIMsg {
     ValueChangeStart { id: usize, value: f64 },
     ValueChangeEnd   { id: usize, value: f64 },
     ValueChanged     { id: usize, value: f64 },
+    WindowClosed,
 }
 
 pub struct UIClientHandle {

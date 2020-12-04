@@ -30,6 +30,7 @@ pub enum UIEvent {
     MousePosition(f64, f64),
     MouseButtonPressed(MouseButton),
     MouseButtonReleased(MouseButton),
+    WindowClose,
 }
 
 pub struct UI {
@@ -160,6 +161,10 @@ impl UI {
                 self.drag_zone      = None;
                 self.drag_tmp_value = None;
                 println!("BUTTON RELEASE: {:?} @{:?}", btn, self.last_mouse_pos);
+            },
+            UIEvent::WindowClose => {
+                self.ui_handle.tx.send(
+                    UIMsg::WindowClosed).expect("Sending works");
             },
             _ => {},
         }

@@ -52,21 +52,27 @@ impl Editor for KickmessEditor {
     }
 
     fn idle(&mut self) {
+        let mut close = false;
+
         if let Some(view) = self.view.as_mut() {
             let hdl = view.as_mut().handle();
 
             hdl.update(0.0);
 
             while let Ok(msg) = hdl.cl_hdl().unwrap().rx.try_recv() {
-                println!("MSG FROM UI: {:?}", msg);
+                match msg {
+                    UIMsg::WindowClosed => { close = true; },
+                    _ => {
+                        println!("MSG FROM UI: {:?}", msg);
+                    }
+                }
             }
 
             hdl.update_ui();
+        }
 
-            if hdl.should_close() {
-                println!("CLOSE REQ");
-                self.view = None;
-            }
+        if close {
+            self.view = None;
         }
     }
 

@@ -20,7 +20,7 @@ x11                = { version = "2.18.2" }
 baseview           = { git = "https://github.com/RustAudio/baseview.git" }
 #baseview           = { path = "/home/weictr/devel/other/baseview" }
 
-pugl-sys           = { git = "https://github.com/johannes-mueller/pugl-sys.git" }
-#pugl-sys           = { path = "/home/weictr/devel/other/pugl-sys/" }
+#pugl-sys           = { git = "https://github.com/johannes-mueller/pugl-sys.git" }
+pugl-sys           = { path = "/home/weictr/devel/other/pugl-sys/" }
 
 [dev-dependencies]

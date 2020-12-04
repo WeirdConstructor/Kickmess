@@ -43,17 +43,18 @@ fn main() {
 //    });
 
     let mut hdl = view.as_mut().handle();
-    loop {
+    let mut closed = false;
+    while !closed {
         hdl.update(0.01);
 
         while let Ok(msg) = cl_hdl.rx.try_recv() {
+            match msg {
+                UIMsg::WindowClosed => { closed = true; break; },
+                _ => {},
+            }
             println!("MSG FROM UI: {:?}", msg);
         }
-        hdl.update_ui();
 
-//        if hdl.close_requested {
-//            println!("CLOSE REQ");
-//            self.view = None;
-//        }
+        hdl.update_ui();
     }
 }

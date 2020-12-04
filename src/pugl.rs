@@ -12,7 +12,6 @@ const WINDOW_HEIGHT: usize = 500;
 pub struct PuglUI {
     view:               PuglViewFFI,
     ui:                 UI,
-    close_requested:    bool,
     cl_hdl:             Option<UIClientHandle>,
 }
 
@@ -21,7 +20,6 @@ impl PuglUI {
         Self {
             view,
             ui:              UI::new(ui_hdl),
-            close_requested: false,
             cl_hdl:          None,
         }
     }
@@ -32,7 +30,6 @@ impl PuglUI {
         Self {
             view,
             ui:              UI::new(p_hdl),
-            close_requested: false,
             cl_hdl:          Some(cl_hdl),
         }
     }
@@ -42,12 +39,6 @@ impl PuglUI {
     pub fn update_ui(&mut self) {
         self.ui.handle_client_command();
     }
-
-    pub fn close_request(&mut self) {
-        self.close_requested = true;
-    }
-
-    pub fn should_close(&self) -> bool { self.close_requested }
 }
 
 impl PuglViewTrait for PuglUI {
@@ -84,7 +75,9 @@ impl PuglViewTrait for PuglUI {
                     };
                 self.ui.handle_ui_event(UIEvent::MouseButtonPressed(ev_btn));
             },
-            _ => {},
+            _ => {
+                println!("EVENT: {:?}", ev);
+            },
         }
 
         Status::Success
@@ -97,7 +90,7 @@ impl PuglViewTrait for PuglUI {
     }
 
     fn close_request(&mut self) {
-        self.close_requested = true;
+        self.ui.handle_ui_event(UIEvent::WindowClose);
     }
 
     fn view(&self) -> PuglViewFFI {

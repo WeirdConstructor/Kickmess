@@ -167,9 +167,6 @@ impl MonoProcessor for OpKickmess {
 
                     let gain : f64 = 1.0 - env_value.powf(self.env_slope as f64);
 
-                    // const sample_t s =
-                    //   ( Oscillator::sinSample( m_phase ) * ( 1 - m_noise ) )
-                    //   + ( Oscillator::noiseSample( 0 ) * gain * gain * m_noise );
                     let mut s =
                         fast_sin(self.cur_phase as f64 * PI2 + self.phase_offs)
                         * (1.0_f64 - self.noise as f64)
@@ -179,30 +176,14 @@ impl MonoProcessor for OpKickmess {
 
                     kick_sample = s * gain;
 
-                    // // update distortion envelope if necessary
-                    // if( m_hasDistEnv && m_counter < m_length )
-                    // {
-                    // 	    float thres = linearInterpolate( m_distStart, m_distEnd, m_counter / m_length );
-                    // 	    m_FX.leftFX().setThreshold( thres );
-                    // 	    m_FX.rightFX().setThreshold( thres );
-                    // }
-                    // m_FX.nextSample( buf[frame][0], buf[frame][1] );
-
                     if has_dist_env {
                         let thres = p2range(env_value as f32, self.dist_start, self.dist_end);
                         kick_sample = f_distort(self.dist_gain, thres, kick_sample as f32) as f64;
                     }
 
-
-                    // m_phase += m_freq / sampleRate;
                     self.cur_phase +=
                         (self.note_freq / (self.srate as f64)) as f32;
 
-                    // const double change =
-                    //  ( m_counter < m_length )
-                    //      ? ( ( m_startFreq - m_endFreq )
-                    //          * ( 1 - fastPow( m_counter / m_length, m_slope ) ) )
-                    //      : 0;
                     let change : f64 =
                         if env_value <= 1.0 {
                             (self.freq_start - self.freq_end) as f64
@@ -211,7 +192,6 @@ impl MonoProcessor for OpKickmess {
                             0.0
                         };
 
-                    // m_freq = m_endFreq + change;
                     self.note_freq = self.freq_end as f64 + change;
                 }
 
