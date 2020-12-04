@@ -29,7 +29,7 @@ impl PuglUI {
 
 impl PuglViewTrait for PuglUI {
     fn exposed(&mut self, expose: &ExposeArea, cr: &cairo::Context) {
-        println!("EXPOSE!");
+        //d// println!("EXPOSE!");
         self.ui.draw(&cr);
     }
 

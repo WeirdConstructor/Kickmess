@@ -121,8 +121,8 @@ impl UI {
                     for zone in self.zones.iter() {
                         if zone.is_inside(x, y) {
                             self.hover_zone = Some(*zone);
-                            println!("handle_mouse: {},{} => Hoverzone={}",
-                                     x, y, zone.id);
+                            //d// println!("handle_mouse: {},{} => Hoverzone={}",
+                            //d//          x, y, zone.id);
                             break;
                         }
                     }
