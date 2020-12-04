@@ -52,14 +52,14 @@ impl KickmessUI {
                 wv: 10,
                 hv: 10,
                 elements: vec![
-//                    UIInput::Knob { label: String::from("SFreq."), id: 1, xv: 0, yv: 0, },
-//                    UIInput::Knob { label: String::from("SFreq."), id: 2, xv: 6, yv: 0, },
-//                    UIInput::Knob { label: String::from("SFreq."), id: 3, xv: 0, yv: 4, },
-                    UIInput::Knob { label: String::from("SFreq."), id: 4, xv: 6, yv: 4, },
-                    UIInput::Knob { label: String::from("SFreq."), id: 5, xv: 0, yv: 8, },
-//                    UIInput::Knob { label: String::from("SFreq."), id: 6, xv: 6, yv: 8, },
-                    UIInput::Knob { label: String::from("SFreq."), id: 7, xv: 3, yv: 0, },
-                    UIInput::Knob { label: String::from("SFreq."), id: 8, xv: 3, yv: 4, },
+                    UIInput::Knob { label: String::from("SFreq."),     id: 1, xv: 0, yv: 0, },
+                    UIInput::Knob { label: String::from("EFreq."),     id: 2, xv: 6, yv: 0, },
+                    UIInput::Knob { label: String::from("Noise"),      id: 3, xv: 0, yv: 4, },
+                    UIInput::Knob { label: String::from("Dist S."),    id: 4, xv: 6, yv: 4, },
+                    UIInput::Knob { label: String::from("Dist E."),    id: 5, xv: 0, yv: 8, },
+                    UIInput::Knob { label: String::from("Dist Gain"),  id: 6, xv: 6, yv: 8, },
+                    UIInput::Knob { label: String::from("F Slope"),    id: 7, xv: 3, yv: 0, },
+                    UIInput::Knob { label: String::from("Env Slope."), id: 8, xv: 3, yv: 4, },
                 ],
             },
         ])).expect("mpsc ok");
@@ -103,7 +103,29 @@ impl PuglViewTrait for KickmessUI {
             EventType::MouseMove(_) => {
                 let pos = ev.pos();
                 println!("MOUSEMOVE: {}:{}", pos.x, pos.y);
+                self.ui.handle_ui_event(UIEvent::MousePosition(pos.x, pos.y));
                 self.post_redisplay();
+            },
+            EventType::MouseButtonRelease(btn) => {
+                println!("REL: {:?}", btn);
+                let ev_btn =
+                    match btn.num {
+                        1 => ui::MouseButton::Left,
+                        2 => ui::MouseButton::Middle,
+                        3 => ui::MouseButton::Right,
+                        _ => ui::MouseButton::Left,
+                    };
+                self.ui.handle_ui_event(UIEvent::MouseButtonReleased(ev_btn));
+            },
+            EventType::MouseButtonPress(btn) => {
+                let ev_btn =
+                    match btn.num {
+                        1 => ui::MouseButton::Left,
+                        3 => ui::MouseButton::Middle,
+                        2 => ui::MouseButton::Right,
+                        _ => ui::MouseButton::Left,
+                    };
+                self.ui.handle_ui_event(UIEvent::MouseButtonPressed(ev_btn));
             },
             _ => {},
         }
