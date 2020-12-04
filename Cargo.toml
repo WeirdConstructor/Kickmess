@@ -1,28 +1,26 @@
 [package]
-name    = "kickmessvst"
-version = "0.1.0"
-authors = ["Weird Constructor <weirdconstructor@gmail.com>"]
-edition = "2018"
-license = "GPL-3.0-or-later"
+name        = "kickmessvst"
+version     = "0.1.0"
+authors     = ["Weird Constructor <weirdconstructor@gmail.com>"]
+edition     = "2018"
+license     = "GPL-3.0-or-later"
 description = "Kickmess - Port of LMMS Kicker Plugin"
 
 [lib]
-name="kickmessvst"
+name       = "kickmessvst"
 crate-type = ["cdylib", "lib"]
 
 [dependencies]
 vst                = { git = "https://github.com/rustaudio/vst-rs" }
-pugl-sys           = { git = "https://github.com/johannes-mueller/pugl-sys.git" }
 cairo-rs           = "0.9.1"
+raw-window-handle  = "0.3"
+cairo-sys-rs       = { version = "0.10.0", features=["xlib"] }
+x11                = { version = "2.18.2" }
 
-raw-window-handle = "0.3"
-baseview          = { path = "/home/weictr/devel/other/baseview" }
-cairo-sys-rs      = { version = "0.10.0", features=["xlib"] }
-x11               = { version = "2.18.2" }
+baseview           = { git = "https://github.com/RustAudio/baseview.git" }
+#baseview           = { path = "/home/weictr/devel/other/baseview" }
 
-#lv2               = { version = "0.6.0" }
-#wlambda           = { path = "../wlambda" }
-#wctr_signal_ops   = { path = "../wctr-signal-ops" }
-#;pugl-sys           = { git = "https://github.com/johannes-mueller/pugl-sys.git" }
+#pugl-sys           = { git = "https://github.com/johannes-mueller/pugl-sys.git" }
+pugl-sys           = { path = "/home/weictr/devel/other/pugl-sys/" }
 
 [dev-dependencies]

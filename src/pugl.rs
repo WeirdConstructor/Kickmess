@@ -10,21 +10,44 @@ const WINDOW_WIDTH:  usize = 500;
 const WINDOW_HEIGHT: usize = 500;
 
 pub struct PuglUI {
-    view:   PuglViewFFI,
-    ui:     UI,
+    view:               PuglViewFFI,
+    ui:                 UI,
+    close_requested:    bool,
+    cl_hdl:             Option<UIClientHandle>,
 }
 
 impl PuglUI {
     pub fn new(view: PuglViewFFI, ui_hdl: UIProviderHandle) -> Self {
         Self {
             view,
-            ui: UI::new(ui_hdl),
+            ui:              UI::new(ui_hdl),
+            close_requested: false,
+            cl_hdl:          None,
         }
     }
+
+    pub fn new_with_internal_handles(view: PuglViewFFI) -> Self {
+        let (cl_hdl, p_hdl) = ui::protocol::UIClientHandle::create();
+
+        Self {
+            view,
+            ui:              UI::new(p_hdl),
+            close_requested: false,
+            cl_hdl:          Some(cl_hdl),
+        }
+    }
+
+    pub fn cl_hdl(&self) -> Option<&UIClientHandle> { self.cl_hdl.as_ref() }
 
     pub fn update_ui(&mut self) {
         self.ui.handle_client_command();
     }
+
+    pub fn close_request(&mut self) {
+        self.close_requested = true;
+    }
+
+    pub fn should_close(&self) -> bool { self.close_requested }
 }
 
 impl PuglViewTrait for PuglUI {
@@ -74,7 +97,7 @@ impl PuglViewTrait for PuglUI {
     }
 
     fn close_request(&mut self) {
-//        self.close_requested = true;
+        self.close_requested = true;
     }
 
     fn view(&self) -> PuglViewFFI {
@@ -82,12 +105,19 @@ impl PuglViewTrait for PuglUI {
     }
 }
 
-pub fn open_window(parent: Option<*mut std::ffi::c_void>, ui_hdl: UIProviderHandle) -> Box<PuglView<PuglUI>> {
+pub fn open_window(parent: Option<*mut std::ffi::c_void>, ui_hdl: Option<UIProviderHandle>) -> Box<PuglView<PuglUI>> {
     let mut view =
-        PuglView::<PuglUI>::new(
-            if let Some(parent) = parent { parent }
-            else                         { std::ptr::null_mut() },
-            move |pv| PuglUI::new(pv, ui_hdl));
+        if let Some(ui_hdl) = ui_hdl {
+            PuglView::<PuglUI>::new(
+                if let Some(parent) = parent { parent }
+                else                         { std::ptr::null_mut() },
+                move |pv| PuglUI::new(pv, ui_hdl))
+        } else {
+            PuglView::<PuglUI>::new(
+                if let Some(parent) = parent { parent }
+                else                         { std::ptr::null_mut() },
+                move |pv| PuglUI::new_with_internal_handles(pv))
+        };
 
     let ui = view.handle();
     ui.set_frame(Rect {

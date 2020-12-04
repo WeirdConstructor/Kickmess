@@ -165,23 +165,10 @@ impl UI {
         }
     }
 
-//    fn get_element_value_formatted(&mut self, id: usize) -> &str {
-//        if id >= self.element_values_str.len() {
-//            self.element_values_str.resize(id * 2, String::new());
-//        }
-//
-//        let v = self.get_element_value(id);
-//        self.element_values_str[id] = format!("{}", v);
-//
-//        &self.element_values_str[id]
-//    }
-
     fn set_element_value(&mut self, id: usize, value: f32) {
         if id >= self.element_values.len() {
             self.element_values.resize(id * 2, 0.0);
         }
-
-//        println!("SETVALUE: {}", value);
 
         self.element_values[id] = value;
     }
@@ -196,11 +183,9 @@ impl UI {
         if let Some(drag_tmp_value) = self.drag_tmp_value {
             if drag_tmp_value.0 == id {
                 v = (v as f64 + drag_tmp_value.1) as f32;
-//                println!("DRAGOFF {}", drag_tmp_value.1);
             }
         }
 
-//        println!("GETVALUE: {}", clamp01(v));
         clamp01(v)
     }
 
@@ -285,11 +270,6 @@ impl UI {
                 },
             }
         }
-        // TODO:
-        //  - calculate box sizes by 1/12th
-        //  - distribute knobs thoughout the box available size.
-        //  - make sure that it is possible to provide a minimal size
-        //  - handle window resizing?
 
         self.needs_redraw_flag = false;
     }

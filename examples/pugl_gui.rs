@@ -11,7 +11,7 @@ use pugl_sys::*;
 fn main() {
     let (cl_hdl, p_hdl) = ui::protocol::UIClientHandle::create();
 
-    let mut view = kickmessvst::pugl::open_window(None, p_hdl);
+    let mut view = kickmessvst::pugl::open_window(None, Some(p_hdl));
 
     cl_hdl.tx.send(UICmd::Define(vec![
         UILayout::Container {

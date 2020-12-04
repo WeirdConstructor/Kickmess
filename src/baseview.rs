@@ -1,7 +1,8 @@
 #[macro_use]
 use baseview::{
-    Size, Event, MouseEvent, MouseButton, Parent, Window, WindowHandle, WindowHandler,
-    WindowOpenOptions, WindowScalePolicy
+    Size, Event, MouseEvent, MouseButton, Parent, Window,
+    WindowHandle, WindowHandler, WindowOpenOptions, WindowScalePolicy,
+    AppRunner,
 };
 
 use raw_window_handle::{
@@ -22,7 +23,7 @@ use crate::ui;
 const WINDOW_WIDTH:  usize = 500;
 const WINDOW_HEIGHT: usize = 500;
 
-struct TestWindowHandler {
+pub struct TestWindowHandler {
 //    ctx:        cairo::Context,
 //    state:      PlugUIState,
     display:    *mut x11::xlib::Display,
@@ -149,8 +150,7 @@ impl WindowHandler for TestWindowHandler {
     }
 }
 
-pub fn open_window(parent: Option<*mut ::std::ffi::c_void>, ui_hdl: UIProviderHandle) -> WindowHandle {
-
+pub fn open_window(parent: Option<*mut ::std::ffi::c_void>, ui_hdl: UIProviderHandle) -> (WindowHandle<TestWindowHandler>, Option<AppRunner>) {
     let options =
         if let Some(parent) = parent {
             let parent = raw_window_handle_from_parent(parent);
@@ -205,7 +205,7 @@ pub fn open_window(parent: Option<*mut ::std::ffi::c_void>, ui_hdl: UIProviderHa
 
 #[derive(Default)]
 struct TestPluginEditor {
-    handle: Option<WindowHandle>,
+    handle: Option<(WindowHandle<TestWindowHandler>, Option<AppRunner>)>,
     cl_hdl: Option<UIClientHandle>,
 }
 

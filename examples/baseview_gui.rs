@@ -142,7 +142,7 @@ Further abstraction:
 fn main() {
     let (cl_hdl, p_hdl) = ui::protocol::UIClientHandle::create();
 
-    let handle = kickmessvst::baseview::open_window(None, p_hdl);
+    let (handle, runner) = kickmessvst::baseview::open_window(None, p_hdl);
 
     cl_hdl.tx.send(UICmd::Define(vec![
         UILayout::Container {
@@ -173,5 +173,5 @@ fn main() {
         }
     });
 
-    handle.app_run_blocking();
+    runner.app_run_blocking();
 }
