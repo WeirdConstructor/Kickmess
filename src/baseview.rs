@@ -124,7 +124,7 @@ impl WindowHandler for TestWindowHandler {
 //        let gui_surf = self.gui_surf.as_ref().unwrap();
 
         if self.ui.needs_redraw() {
-            println!("DRAW {:?}", ext);
+//            println!("DRAW {:?}", ext);
 //            let mut gui_ctx = cairo::Context::new(&gui_surf);
             let mut gui_ctx = front_ctx;
 
