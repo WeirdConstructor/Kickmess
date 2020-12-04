@@ -1,1 +1,1 @@
-cargo run --color=always --release --example gui_test 2>&1 | less -R
+cargo run --color=always --release --example pugl_gui 2>&1 | less -R

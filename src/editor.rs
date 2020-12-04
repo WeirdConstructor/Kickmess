@@ -168,17 +168,11 @@ impl KickmessEditor {
 
 impl Editor for KickmessEditor {
     fn size(&self) -> (i32, i32) {
-//        let hdl = self.view.as_ref().unwrap().as_ref().handle();
         (WINDOW_WIDTH as i32, WINDOW_HEIGHT as i32)
-//        (hdl.get_frame().size.w as i32,
-//         hdl.get_frame().size.h as i32)
     }
 
     fn position(&self) -> (i32, i32) {
         (0, 0)
-//        let hdl = self.view.as_ref().unwrap().as_ref().handle();
-//        (hdl.get_frame().pos.x as i32,
-//         hdl.get_frame().pos.y as i32)
     }
 
     fn open(&mut self, parent: *mut std::ffi::c_void) -> bool {

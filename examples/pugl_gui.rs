@@ -1,0 +1,59 @@
+use kickmessvst;
+use kickmessvst::ui;
+use kickmessvst::ui::protocol::*;
+use std::rc::Rc;
+use std::sync::Arc;
+use std::sync::Mutex;
+
+use kickmessvst::proc::Param;
+use pugl_sys::*;
+
+fn main() {
+    let (cl_hdl, p_hdl) = ui::protocol::UIClientHandle::create();
+
+    let mut view = kickmessvst::pugl::open_window(None, p_hdl);
+
+    cl_hdl.tx.send(UICmd::Define(vec![
+        UILayout::Container {
+            label: String::from("Test"),
+            xv: 1,
+            yv: 1,
+            wv: 10,
+            hv: 10,
+            elements: vec![
+                UIInput::Knob { label: String::from("SFreq."), id: 1, xv: 0, yv: 0, },
+                UIInput::Knob { label: String::from("EFreq."), id: 2, xv: 6, yv: 0, },
+                UIInput::Knob { label: String::from("Noise"), id: 3, xv: 0, yv: 4, },
+                UIInput::Knob { label: String::from("SDist"), id: 4, xv: 6, yv: 4, },
+                UIInput::Knob { label: String::from("EDist."), id: 5, xv: 0, yv: 8, },
+                UIInput::Knob { label: String::from("F Slope"), id: 6, xv: 6, yv: 8, },
+                UIInput::Knob { label: String::from("Env Slope."), id: 7, xv: 3, yv: 0, },
+                UIInput::Knob { label: String::from("SFreq."), id: 8, xv: 3, yv: 4, },
+            ],
+        },
+    ])).expect("mpsc ok");
+
+     // TODO: Send VALUES!
+
+//    std::thread::spawn(move || {
+//        while let Ok(msg) = cl_hdl.rx.recv_timeout(
+//            std::time::Duration::from_millis(1000)) {
+//            println!("MSG FROM UI: {:?}", msg);
+//        }
+//    });
+
+    let mut hdl = view.as_mut().handle();
+    loop {
+        hdl.update(0.01);
+
+        while let Ok(msg) = cl_hdl.rx.try_recv() {
+            println!("MSG FROM UI: {:?}", msg);
+        }
+        hdl.update_ui();
+
+//        if hdl.close_requested {
+//            println!("CLOSE REQ");
+//            self.view = None;
+//        }
+    }
+}
