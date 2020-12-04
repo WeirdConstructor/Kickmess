@@ -181,6 +181,8 @@ impl UI {
             self.element_values.resize(id * 2, 0.0);
         }
 
+//        println!("SETVALUE: {}", value);
+
         self.element_values[id] = value;
     }
 
@@ -194,10 +196,11 @@ impl UI {
         if let Some(drag_tmp_value) = self.drag_tmp_value {
             if drag_tmp_value.0 == id {
                 v = (v as f64 + drag_tmp_value.1) as f32;
-                println!("DRAGOFF {}", drag_tmp_value.1);
+//                println!("DRAGOFF {}", drag_tmp_value.1);
             }
         }
 
+//        println!("GETVALUE: {}", clamp01(v));
         clamp01(v)
     }
 

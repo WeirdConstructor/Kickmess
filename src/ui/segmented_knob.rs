@@ -90,12 +90,15 @@ impl SegmentedKnob {
             UI_TXT_KNOB_CLR.1,
             UI_TXT_KNOB_CLR.2);
 
-        let ext = cr.text_extents(s);
-        println!("BEARING: {}={},{} | {} | {} => {}", s, ext.y_bearing, ext.height, (r.3 - ext.height) / 2.0, r.3, ext.y_bearing + ((r.3 - ext.height) / 1.0).abs());
+        let  ext = cr.text_extents(s);
+        let fext = cr.font_extents();
+        //d// println!("BEARING: {}={},{} | {} | {} => {}", s, ext.y_bearing, ext.height, (r.3 - ext.height) / 2.0, r.3, ext.y_bearing + ((r.3 - ext.height) / 1.0).abs());
+        //d// println!("FEXT: h={}, asc={}, desc={}", fext.height, fext.ascent, fext.descent);
         cr.move_to(
             x + r.0 + ((r.2 - ext.width) / 2.0).abs().round(),
-            (y + r.1 - r.3) - ext.y_bearing
-                    + ((r.3 - ext.y_bearing) / 2.0).abs().round());
+            y + r.1 + fext.height
+                    + ((r.3 - fext.height) / 2.0).abs().round()
+                    - fext.descent);
         cr.show_text(s);
     }
 
