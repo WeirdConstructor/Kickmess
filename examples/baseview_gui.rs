@@ -173,5 +173,5 @@ fn main() {
         }
     });
 
-    runner.app_run_blocking();
+    runner.unwrap().app_run_blocking();
 }
