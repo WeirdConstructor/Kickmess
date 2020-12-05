@@ -102,7 +102,7 @@ impl SegmentedKnob {
 
     pub fn draw_name_bg(&self, cr: &cairo::Context, x: f64, y: f64, s: &str) {
         let r = self.get_label_rect();
-        cr.set_font_size(self.font_size_lbl);
+        cr.set_font_size(12.);
         cr.set_source_rgb(
             UI_TXT_KNOB_CLR.0,
             UI_TXT_KNOB_CLR.1,
@@ -124,7 +124,7 @@ impl SegmentedKnob {
         let r = self.get_value_rect();
         cr.set_font_size(
             if hover_style { self.font_size_data + 1.0 }
-            else           { self.font_size_data });
+                         else           { self.font_size_data });
         if hover_style {
             cr.set_source_rgb(
                 UI_TXT_KNOB_HOVER_CLR.0,

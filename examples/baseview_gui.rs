@@ -167,14 +167,11 @@ fn main() {
             wv: 10,
             hv: 10,
             elements: vec![
-                UIInput::Knob { label: String::from("SFreq."),     id: 0, xv: 0, yv: 0 },
-                UIInput::Knob { label: String::from("EFreq."),     id: 1, xv: 6, yv: 0 },
-                UIInput::Knob { label: String::from("Noise"),      id: 2, xv: 0, yv: 4 },
-                UIInput::Knob { label: String::from("SDist"),      id: 3, xv: 6, yv: 4 },
-                UIInput::Knob { label: String::from("EDist."),     id: 4, xv: 0, yv: 8 },
-                UIInput::Knob { label: String::from("F Slope"),    id: 5, xv: 6, yv: 8 },
-                UIInput::Knob { label: String::from("Env Slope."), id: 6, xv: 3, yv: 0 },
-                UIInput::Knob { label: String::from("SFreq."),     id: 7, xv: 3, yv: 4 },
+                vec![
+                    UIInput::knob(      1, String::from("SFreq."), UIPos::center(2, 6)),
+                    UIInput::knob_small(1, String::from("SFreq."), UIPos::center(2, 6)),
+                    UIInput::knob_huge( 1, String::from("SFreq."), UIPos::center(2, 6)),
+                ],
             ],
         },
     ])).expect("mpsc ok");

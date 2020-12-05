@@ -71,11 +71,57 @@ impl UIValueSpec {
     pub fn fmt(&self, x: f64) -> String     { (self.fmt)(self.v2v(x)) }
 }
 
+#[derive(Debug, Clone, Copy)]
+pub struct UIPos {
+    pub col_size: u8,
+    pub row_size: u8,
+    pub align:    i8,
+}
+
+impl UIPos {
+    pub fn center(col_size: u8, row_size: u8)  -> Self { UIPos { col_size, row_size, align:  0 } }
+    pub fn left(col_size: u8, row_size: u8)    -> Self { UIPos { col_size, row_size, align: -1 } }
+    pub fn right(col_size: u8, row_size: u8)   -> Self { UIPos { col_size, row_size, align:  1 } }
+}
+
+#[derive(Debug, Clone)]
+pub struct UIKnobData {
+    pub pos:         UIPosition,
+    pub id:          usize,
+    pub label:       String,
+}
+
 #[derive(Debug, Clone)]
 pub enum UIInput {
-    KnobSmall { xv: u8, yv: u8, id: usize, label: String },
-    Knob      { xv: u8, yv: u8, id: usize, label: String },
-    KnobHuge  { xv: u8, yv: u8, id: usize, label: String },
+    None(UIPos),
+    KnobSmall(UIKnobData),
+    Knob(UIKnobData),
+    KnobHuge(UIKnobData),
+}
+
+impl UIInput {
+    fn none(pos: UIPos) -> Self { UIInput::None(pos) }
+
+    fn position(&self) -> UIPos {
+        match self {
+            None(p)                             => *p,
+            KnobSmall(UIKnobData { pos, .. })   => *pos,
+            Knob(UIKnobData { pos, .. })        => *pos,
+            KnobHuge(UIKnobData { pos, .. })    => *pos,
+        }
+    }
+
+    fn knob(id: usize, label: String, pos: UIPos) -> Self {
+        UIInput::Knob(KnobData { id, label, pos })
+    }
+
+    fn knob_small(id: usize, label: String, pos: UIPos) -> Self {
+        UIInput::KnobSmall(KnobData { id, label, pos })
+    }
+
+    fn knob_huge(id: usize, label: String, pos: UIPos) -> Self {
+        UIInput::KnobHuge(KnobData { id, label, pos })
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -86,7 +132,7 @@ pub enum UILayout {
         yv:       u8,
         wv:       u8,
         hv:       u8,
-        elements: Vec<UIInput>
+        rows:     Vec<Vec<UIInput>>,
     },
 }
 

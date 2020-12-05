@@ -55,6 +55,27 @@ pub struct UI {
     needs_redraw_flag: bool,
 }
 
+struct Rect {
+    x: f64,
+    y: f64,
+    w: f64,
+    h: f64,
+}
+
+impl Rect {
+    fn calc_element_box(&self, row_offs: u8, col_offs: u8, pos: UIPos) -> (Rect, u8, u8) {
+        let x = self.w * (col_offs as f64);
+        let y = self.h * (row_offs as f64);
+        let w = self.w * (pos.col_size as f64);
+        let h = self.h * (pos.col_size as f64);
+
+        let new_row_offs = row_offs + pos.row_size;
+        let new_col_offs = col_offs + pos.col_size;
+
+        (Rect { x, y, w, h }, new_row_offs, new_col_offs)
+    }
+}
+
 impl UI {
     pub fn new(ui_handle: UIProviderHandle) -> Self {
         Self {
@@ -254,6 +275,37 @@ impl UI {
         self.zones.push(az);
     }
 
+    fn draw_knob(&mut self,
+                 cr: &cairo::Context,
+                 rect: &Rect,
+                 align: i8,
+                 knob: &KnobData,
+                 img: DrawCacheImg) {
+
+        // TODO: Align element to rect, and draw!
+
+        let xe = x + ((xv * w) / 12.0).floor();
+        let ye = y + ((yv * h) / 12.0).floor();
+
+        let az = self.cache.draw_bg(cr, xe, ye, DrawCacheImg::KnobHuge, label);
+        self.add_active_zone(id, az);
+
+        let hover =
+            if let Some(hover_zone) = self.hover_zone {
+                if hover_zone.id == id {
+                    true
+                } else {
+                    false
+                }
+            } else {
+                false
+            };
+
+        let val     = self.get_element_value(id) as f64;
+        let val_str = self.get_formatted_value(id);
+        self.cache.draw_data(cr, xe, ye, DrawCacheImg::KnobHuge, hover, val, &val_str);
+    }
+
     pub fn draw(&mut self, cr: &cairo::Context) {
         let (ww, wh) = self.window_size;
 
@@ -269,11 +321,13 @@ impl UI {
 
         for layout in layout.borrow_mut().iter() {
             match layout {
-                UILayout::Container { label, xv, yv, wv, hv, elements } => {
+                UILayout::Container { label, xv, yv, wv, hv, rows } => {
                     let x = (((*xv as f64) * ww) / 12.0).floor();
                     let y = (((*yv as f64) * wh) / 12.0).floor();
                     let w = (((*wv as f64) * ww) / 12.0).ceil();
                     let h = (((*hv as f64) * wh) / 12.0).ceil();
+
+                    let crect = Rect { x, y, w, h };
 
                     cr.set_source_rgb(
                         UI_GUI_BG_CLR.0,
@@ -290,74 +344,37 @@ impl UI {
                         UI_BORDER_CLR.2);
                     cr.stroke();
 
-                    for el in elements.iter() {
-                        match el {
-                            UIInput::Knob { id, label, xv, yv } => {
-                                let xe = x + (((*xv as f64) * w) / 12.0).floor();
-                                let ye = y + (((*yv as f64) * h) / 12.0).floor();
+                    let mut row_offs = 0;
+                    for row in rows.iter() {
+                        let mut col_offs = 0;
 
-                                let az = self.cache.draw_bg(cr, xe, ye, DrawCacheImg::Knob, label);
-                                self.add_active_zone(*id, az);
+                        for el in row.iter() {
+                            let pos = el.position();
+                            let (el_rect, ro, co) =
+                                crect.calc_element_box(row_offs, col_offs);
 
-                                let hover =
-                                    if let Some(hover_zone) = self.hover_zone {
-                                        if hover_zone.id == *id {
-                                            true
-                                        } else {
-                                            false
-                                        }
-                                    } else {
-                                        false
-                                    };
+                            // TODO: set row and col offs to minimal ro/co
 
-                                let val     = self.get_element_value(*id) as f64;
-                                let val_str = self.get_formatted_value(*id);
-                                self.cache.draw_data(cr, xe, ye, DrawCacheImg::Knob, hover, val, &val_str);
-                            },
-                            UIInput::KnobSmall { id, label, xv, yv } => {
-                                let xe = x + (((*xv as f64) * w) / 12.0).floor();
-                                let ye = y + (((*yv as f64) * h) / 12.0).floor();
-
-                                let az = self.cache.draw_bg(cr, xe, ye, DrawCacheImg::KnobSmall, label);
-                                self.add_active_zone(*id, az);
-
-                                let hover =
-                                    if let Some(hover_zone) = self.hover_zone {
-                                        if hover_zone.id == *id {
-                                            true
-                                        } else {
-                                            false
-                                        }
-                                    } else {
-                                        false
-                                    };
-
-                                let val     = self.get_element_value(*id) as f64;
-                                let val_str = self.get_formatted_value(*id);
-                                self.cache.draw_data(cr, xe, ye, DrawCacheImg::KnobSmall, hover, val, &val_str);
-                            },
-                            UIInput::KnobHuge { id, label, xv, yv } => {
-                                let xe = x + (((*xv as f64) * w) / 12.0).floor();
-                                let ye = y + (((*yv as f64) * h) / 12.0).floor();
-
-                                let az = self.cache.draw_bg(cr, xe, ye, DrawCacheImg::KnobHuge, label);
-                                self.add_active_zone(*id, az);
-
-                                let hover =
-                                    if let Some(hover_zone) = self.hover_zone {
-                                        if hover_zone.id == *id {
-                                            true
-                                        } else {
-                                            false
-                                        }
-                                    } else {
-                                        false
-                                    };
-
-                                let val     = self.get_element_value(*id) as f64;
-                                let val_str = self.get_formatted_value(*id);
-                                self.cache.draw_data(cr, xe, ye, DrawCacheImg::KnobHuge, hover, val, &val_str);
-                            },
+                            match row {
+                                UIInput::Knob(knob_data) => {
+                                    self.draw_knob(
+                                        cr, &el_rect, pos.align,
+                                        knob_data,
+                                        DrawCacheImg::Knob);
+                                },
+                                UIInput::KnobSmall(knob_data) => {
+                                    self.draw_knob(
+                                        cr, &el_rect, pos.align,
+                                        knob_data,
+                                        DrawCacheImg::KnobSmall);
+                                },
+                                UIInput::KnobHuge(knob_data) => {
+                                    self.draw_knob(
+                                        cr, &el_rect, pos.align,
+                                        knob_data,
+                                        DrawCacheImg::KnobHuge);
+                                },
+                            }
                         }
                     }
                     //d// println!("DRAW CONTAINER {},{},{},{}", x, y, w, h);
