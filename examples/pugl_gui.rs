@@ -13,6 +13,21 @@ fn main() {
 
     let mut view = kickmessvst::pugl::open_window(None, Some(p_hdl));
 
+    cl_hdl.tx.send(UICmd::DefineValues(vec![
+        UIValueSpec::new_id(),
+        UIValueSpec::new_min_max(5.0, 5000.0, 6, 1).steps(0.05, 0.001),
+        UIValueSpec::new_id(),
+        UIValueSpec::new_id(),
+        UIValueSpec::new_id(),
+        UIValueSpec::new_id(),
+        UIValueSpec::new_id(),
+        UIValueSpec::new_id(),
+        UIValueSpec::new_id(),
+        UIValueSpec::new_id(),
+        UIValueSpec::new_id(),
+        UIValueSpec::new_id(),
+    ])).expect("mpsc ok");
+
     cl_hdl.tx.send(UICmd::Define(vec![
         UILayout::Container {
             label: String::from("Test"),
@@ -21,14 +36,14 @@ fn main() {
             wv: 10,
             hv: 10,
             elements: vec![
-                UIInput::Knob { label: String::from("SFreq."),     id: 1, xv: 0, yv: 0, },
-                UIInput::Knob { label: String::from("EFreq."),     id: 2, xv: 3, yv: 0, },
-                UIInput::Knob { label: String::from("Noise"),      id: 3, xv: 6, yv: 0, },
-                UIInput::Knob { label: String::from("SDist"),      id: 4, xv: 9, yv: 0, },
-                UIInput::Knob { label: String::from("EDist."),     id: 5, xv: 0, yv: 3, },
-                UIInput::Knob { label: String::from("F Slope"),    id: 6, xv: 3, yv: 3, },
-                UIInput::Knob { label: String::from("Env Slope."), id: 7, xv: 6, yv: 3, },
-                UIInput::Knob { label: String::from("SFreq."),     id: 8, xv: 9, yv: 3, },
+                UIInput::Knob { label: String::from("SFreq."),     id: 1, xv: 0, yv: 0 },
+                UIInput::Knob { label: String::from("EFreq."),     id: 2, xv: 3, yv: 0 },
+                UIInput::Knob { label: String::from("Noise"),      id: 3, xv: 6, yv: 0 },
+                UIInput::Knob { label: String::from("SDist"),      id: 4, xv: 9, yv: 0 },
+                UIInput::Knob { label: String::from("EDist."),     id: 5, xv: 0, yv: 3 },
+                UIInput::Knob { label: String::from("F Slope"),    id: 6, xv: 3, yv: 3 },
+                UIInput::Knob { label: String::from("Env Slope."), id: 7, xv: 6, yv: 3 },
+                UIInput::Knob { label: String::from("SFreq."),     id: 8, xv: 9, yv: 3 },
             ],
         },
     ])).expect("mpsc ok");

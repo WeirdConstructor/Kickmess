@@ -9,7 +9,7 @@ use std::cell::RefCell;
 
 use crate::ui::painting::{Painter, ActiveZone};
 use crate::ui::draw_cache::DrawCache;
-use crate::ui::protocol::{UIMsg, UICmd, UIProviderHandle, UILayout, UIInput};
+use crate::ui::protocol::{UIMsg, UICmd, UIProviderHandle, UILayout, UIInput, UIValueSpec};
 use crate::ui::constants::*;
 
 fn clamp01(x: f32) -> f32 {
@@ -41,6 +41,7 @@ pub struct UI {
     layout:         Rc<RefCell<Vec<UILayout>>>,
 
     element_values: Vec<f32>,
+    value_specs:    Vec<UIValueSpec>,
     window_size:    (f64, f64),
 
     zones:          Vec<ActiveZone>,
@@ -64,6 +65,7 @@ impl UI {
             zones:              vec![],
             cache:              DrawCache::new(),
             element_values:     vec![],
+            value_specs:        vec![],
             hover_zone:         None,
             drag_tmp_value:     None,
             drag_zone:          None,
@@ -92,7 +94,13 @@ impl UI {
                     self.queue_redraw();
                     println!("CLIENT EVENT: LAYOUT!");
                 },
-                UICmd::SetValues(_) => {
+                UICmd::DefineValues(valspecs) => {
+                    self.set_value_specs(valspecs);
+                },
+                UICmd::SetValues(vals) => {
+                    for v in vals.iter() {
+                        self.set_element_value(v.id, v.value);
+                    }
                 },
             }
         }
@@ -105,7 +113,16 @@ impl UI {
             let yd = self.last_mouse_pos.1 - drag_zone.0.1;
             let mut distance = xd + yd; // (xd * xd).sqrt() (yd * yd).sqrt();
 
-            self.drag_tmp_value = Some((drag_zone.1.id, distance / 200.0));
+            let steps = distance / 10.0;
+
+            let step_val =
+                if drag_zone.1.subtype == 0 {
+                    self.calc_coarse_step(drag_zone.1.id, steps)
+                } else {
+                    self.calc_fine_step(drag_zone.1.id, steps)
+                };
+
+            self.drag_tmp_value = Some((drag_zone.1.id, step_val));
         } else {
             self.drag_tmp_value = None;
         }
@@ -170,6 +187,44 @@ impl UI {
         }
     }
 
+    fn set_value_specs(&mut self, valspecs: Vec<UIValueSpec>) {
+        for (i, _) in valspecs.iter().enumerate() {
+            self.touch_element_value(i);
+        }
+
+        self.value_specs = valspecs;
+    }
+
+    fn calc_coarse_step(&self, id: usize, steps: f64) -> f64 {
+        if id >= self.value_specs.len() {
+            return steps;
+        }
+
+        self.value_specs[id].coarse(steps)
+    }
+
+    fn calc_fine_step(&self, id: usize, steps: f64) -> f64 {
+        if id >= self.value_specs.len() {
+            return steps;
+        }
+
+        self.value_specs[id].fine(steps)
+    }
+
+    fn get_formatted_value(&self, id: usize) -> String {
+        if id >= self.value_specs.len() {
+            return String::from("bad valspec id");
+        }
+
+        self.value_specs[id].fmt(self.get_element_value(id) as f64)
+    }
+
+    fn touch_element_value(&mut self, id: usize) {
+        if id >= self.element_values.len() {
+            self.element_values.resize(id * 2, 0.0);
+        }
+    }
+
     fn set_element_value(&mut self, id: usize, value: f32) {
         if id >= self.element_values.len() {
             self.element_values.resize(id * 2, 0.0);
@@ -178,9 +233,9 @@ impl UI {
         self.element_values[id] = value;
     }
 
-    fn get_element_value(&mut self, id: usize) -> f32 {
+    fn get_element_value(&self, id: usize) -> f32 {
         if id >= self.element_values.len() {
-            self.element_values.resize(id * 2, 0.0);
+            return 0.0;
         }
 
         let mut v = self.element_values[id];
@@ -256,7 +311,7 @@ impl UI {
                                     };
 
                                 let val     = self.get_element_value(*id) as f64;
-                                let val_str = format!("{:4.2}", val);
+                                let val_str = self.get_formatted_value(*id);
                                 // TODO: cache strings in a cache structure with inner
                                 //       mutability and pass around Rc<String>!
                                 // TODO: Cache inside draw_knob_data, pass a callback for
