@@ -8,7 +8,7 @@ use std::rc::Rc;
 use std::cell::RefCell;
 
 use crate::ui::painting::{Painter, ActiveZone};
-use crate::ui::draw_cache::DrawCache;
+use crate::ui::draw_cache::{DrawCache, DrawCacheImg};
 use crate::ui::protocol::{UIMsg, UICmd, UIProviderHandle, UILayout, UIInput, UIValueSpec};
 use crate::ui::constants::*;
 
@@ -296,7 +296,7 @@ impl UI {
                                 let xe = x + (((*xv as f64) * w) / 12.0).floor();
                                 let ye = y + (((*yv as f64) * h) / 12.0).floor();
 
-                                let az = self.cache.draw_knob_bg(cr, xe, ye, label);
+                                let az = self.cache.draw_bg(cr, xe, ye, DrawCacheImg::Knob, label);
                                 self.add_active_zone(*id, az);
 
                                 let hover =
@@ -312,17 +312,29 @@ impl UI {
 
                                 let val     = self.get_element_value(*id) as f64;
                                 let val_str = self.get_formatted_value(*id);
-                                // TODO: cache strings in a cache structure with inner
-                                //       mutability and pass around Rc<String>!
-                                // TODO: Cache inside draw_knob_data, pass a callback for
-                                //       string formatting, so that we only allocate new strings
-                                //       when actually drawing new content.
-                                //       The cache inside draw_knob_data should check hover and val
-                                //       for differences! => Otherwise redraw old content.
-                                //       Use rounded int xe/ye as key for cache lookup!
-                                self.cache.draw_knob_data(cr, xe, ye, hover, val, &val_str);
+                                self.cache.draw_data(cr, xe, ye, DrawCacheImg::Knob, hover, val, &val_str);
                             },
                             UIInput::KnobSmall { id, label, xv, yv } => {
+                                let xe = x + (((*xv as f64) * w) / 12.0).floor();
+                                let ye = y + (((*yv as f64) * h) / 12.0).floor();
+
+                                let az = self.cache.draw_bg(cr, xe, ye, DrawCacheImg::KnobSmall, label);
+                                self.add_active_zone(*id, az);
+
+                                let hover =
+                                    if let Some(hover_zone) = self.hover_zone {
+                                        if hover_zone.id == *id {
+                                            true
+                                        } else {
+                                            false
+                                        }
+                                    } else {
+                                        false
+                                    };
+
+                                let val     = self.get_element_value(*id) as f64;
+                                let val_str = self.get_formatted_value(*id);
+                                self.cache.draw_data(cr, xe, ye, DrawCacheImg::KnobSmall, hover, val, &val_str);
                             },
                         }
                     }

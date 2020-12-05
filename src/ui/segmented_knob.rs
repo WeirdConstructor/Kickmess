@@ -1,6 +1,8 @@
 use crate::ui::painting::*;
 use crate::ui::constants::*;
 
+const SAFETY_PAD : f64 = 1.0;
+
 pub struct SegmentedKnob {
     sbottom:        (f64, f64),
     s:              [(f64, f64); 9],
@@ -9,10 +11,12 @@ pub struct SegmentedKnob {
     s1_len:         f64,
     s2_len:         f64,
     radius:         f64,
+    font_size_lbl:  f64,
+    font_size_data: f64,
 }
 
 impl SegmentedKnob {
-    pub fn new(radius: f64) -> Self {
+    pub fn new(radius: f64, font_size_lbl: f64, font_size_data: f64) -> Self {
         let init_rot : f64 = 90.;
         // middle of the new surface
         let (xo, yo) =
@@ -55,7 +59,21 @@ impl SegmentedKnob {
             s1_len,
             s2_len,
             radius,
+            font_size_lbl,
+            font_size_data,
         }
+    }
+
+    pub fn get_center_offset(&self, line_width: f64) -> (f64, f64) {
+        ((self.get_label_rect().2 / 2.0).ceil() + SAFETY_PAD,
+         self.radius + (line_width / 2.0).ceil() + SAFETY_PAD)
+    }
+
+    pub fn size(&self, line_width: f64) -> (f64, f64) {
+        let (lbl_x, lbl_y, lbl_w, lbl_h) = self.get_label_rect();
+
+        (lbl_w + 2.0 * SAFETY_PAD,
+         self.radius + lbl_y + lbl_h + line_width + 2.0 * SAFETY_PAD)
     }
 
     pub fn get_value_rect(&self) -> (f64, f64, f64, f64) {
@@ -84,7 +102,7 @@ impl SegmentedKnob {
 
     pub fn draw_name_bg(&self, cr: &cairo::Context, x: f64, y: f64, s: &str) {
         let r = self.get_label_rect();
-        cr.set_font_size(12.);
+        cr.set_font_size(self.font_size_lbl);
         cr.set_source_rgb(
             UI_TXT_KNOB_CLR.0,
             UI_TXT_KNOB_CLR.1,
@@ -104,7 +122,9 @@ impl SegmentedKnob {
 
     pub fn draw_value(&self, cr: &cairo::Context, x: f64, y: f64, hover_style: bool, s: &str) {
         let r = self.get_value_rect();
-        cr.set_font_size(if hover_style { 11. } else { 10. });
+        cr.set_font_size(
+            if hover_style { self.font_size_data + 1.0 }
+            else           { self.font_size_data });
         if hover_style {
             cr.set_source_rgb(
                 UI_TXT_KNOB_HOVER_CLR.0,

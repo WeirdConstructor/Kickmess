@@ -12,11 +12,10 @@ pub const UI_BORDER_CLR           : (f64, f64, f64) = (145.0 / 255.0, 131.0 / 25
 pub const UI_BORDER_WIDTH         : f64 = 4.0;
 pub const UI_KNOB_RADIUS          : f64 = 30.0;
 pub const UI_KNOB_SMALL_RADIUS    : f64 = 20.0;
+pub const UI_KNOB_FONT_SIZE       : f64 = 12.0;
 
 pub const UI_BOX_H      : f64 = 200.0;
 pub const UI_BOX_BORD   : f64 =   3.0;
-pub const UI_MARGIN     : f64 =   5.0;
-pub const UI_PADDING    : f64 =   3.0;
-pub const UI_ELEM_N_H   : f64 = 120.0;
-pub const UI_ELEM_N_W   : f64 =  80.0;
+//pub const UI_MARGIN     : f64 =   5.0;
+//pub const UI_PADDING    : f64 =   3.0;
 pub const UI_ELEM_TXT_H : f64 =  20.0;
