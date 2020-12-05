@@ -5,25 +5,31 @@ use crate::ui::segmented_knob::*;
 pub enum DrawCacheImg {
     Knob,
     KnobSmall,
+    KnobHuge,
 }
 
 pub struct DrawCache {
     surf:   Vec<Option<cairo::Surface>>,
     knob:   SegmentedKnob,
     knob_s: SegmentedKnob,
+    knob_h: SegmentedKnob,
 }
 
 impl DrawCache {
     pub fn new() -> Self {
         Self {
-            surf:   vec![None, None],
+            surf:   vec![None, None, None],
+            knob_h: SegmentedKnob::new(
+                        (UI_KNOB_RADIUS * 1.3).round(),
+                        (UI_KNOB_FONT_SIZE + 2.0).round(),
+                        UI_KNOB_FONT_SIZE + 1.0),
             knob:   SegmentedKnob::new(
                         UI_KNOB_RADIUS,
                         UI_KNOB_FONT_SIZE,
                         UI_KNOB_FONT_SIZE - 1.0),
             knob_s: SegmentedKnob::new(
-                        (UI_KNOB_RADIUS * 0.8).round(),
-                        (UI_KNOB_FONT_SIZE * 0.8).round(),
+                        (UI_KNOB_RADIUS * 0.75).round(),
+                        (UI_KNOB_FONT_SIZE * 0.75).round(),
                         ((UI_KNOB_FONT_SIZE - 1.0) * 0.8).round()),
         }
     }
@@ -33,6 +39,7 @@ impl DrawCache {
             match size {
                 DrawCacheImg::Knob      => &self.knob,
                 DrawCacheImg::KnobSmall => &self.knob_s,
+                DrawCacheImg::KnobHuge  => &self.knob_h,
             };
 
         let (knob_xo, knob_yo) = knob.get_center_offset(UI_BG_KNOB_STROKE);
@@ -53,6 +60,7 @@ impl DrawCache {
             match size {
                 DrawCacheImg::Knob      => &self.knob,
                 DrawCacheImg::KnobSmall => &self.knob_s,
+                DrawCacheImg::KnobHuge  => &self.knob_h,
             };
         let knob_surface_idx = size as usize;
 

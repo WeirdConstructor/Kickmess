@@ -38,6 +38,7 @@ fn main() {
             elements: vec![
                 UIInput::Knob { label: String::from("SFreq."),      id: 1, xv: 0, yv: 0 },
                 UIInput::KnobSmall { label: String::from("SFreq."), id: 1, xv: 6, yv: 0 },
+                UIInput::KnobHuge  { label: String::from("SFreq."), id: 1, xv: 6, yv: 2 },
 //                UIInput::Knob { label: String::from("EFreq."),     id: 2, xv: 3, yv: 0 },
 //                UIInput::Knob { label: String::from("Noise"),      id: 3, xv: 6, yv: 0 },
 //                UIInput::Knob { label: String::from("SDist"),      id: 4, xv: 9, yv: 0 },

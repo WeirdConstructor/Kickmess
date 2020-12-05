@@ -336,6 +336,28 @@ impl UI {
                                 let val_str = self.get_formatted_value(*id);
                                 self.cache.draw_data(cr, xe, ye, DrawCacheImg::KnobSmall, hover, val, &val_str);
                             },
+                            UIInput::KnobHuge { id, label, xv, yv } => {
+                                let xe = x + (((*xv as f64) * w) / 12.0).floor();
+                                let ye = y + (((*yv as f64) * h) / 12.0).floor();
+
+                                let az = self.cache.draw_bg(cr, xe, ye, DrawCacheImg::KnobHuge, label);
+                                self.add_active_zone(*id, az);
+
+                                let hover =
+                                    if let Some(hover_zone) = self.hover_zone {
+                                        if hover_zone.id == *id {
+                                            true
+                                        } else {
+                                            false
+                                        }
+                                    } else {
+                                        false
+                                    };
+
+                                let val     = self.get_element_value(*id) as f64;
+                                let val_str = self.get_formatted_value(*id);
+                                self.cache.draw_data(cr, xe, ye, DrawCacheImg::KnobHuge, hover, val, &val_str);
+                            },
                         }
                     }
                     //d// println!("DRAW CONTAINER {},{},{},{}", x, y, w, h);

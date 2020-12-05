@@ -75,6 +75,7 @@ impl UIValueSpec {
 pub enum UIInput {
     KnobSmall { xv: u8, yv: u8, id: usize, label: String },
     Knob      { xv: u8, yv: u8, id: usize, label: String },
+    KnobHuge  { xv: u8, yv: u8, id: usize, label: String },
 }
 
 #[derive(Debug, Clone)]
