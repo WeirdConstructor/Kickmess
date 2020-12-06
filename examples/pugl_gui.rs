@@ -37,9 +37,22 @@ fn main() {
             hv: 10,
             rows: vec![
                 vec![
-                    UIInput::knob(      1, String::from("SFreq."), UIPos::center(2, 0)),
-                    UIInput::knob_small(1, String::from("SFreq."), UIPos::center(2, 0)),
-                    UIInput::knob_huge( 1, String::from("SFreq."), UIPos::center(2, 0)),
+                    UIInput::knob(      1, String::from("SFreq."), UIPos::right(3, 4)),
+                    UIInput::knob_small(1, String::from("SFreq."), UIPos::right(2, 4)),
+                    UIInput::knob_huge( 1, String::from("SFreq."), UIPos::right(3, 4)),
+                    UIInput::knob_huge( 1, String::from("SFreq."), UIPos::right(4, 4)),
+                ],
+                vec![
+                    UIInput::knob(      1, String::from("SFreq."), UIPos::center(3, 4)),
+                    UIInput::knob_small(1, String::from("SFreq."), UIPos::center(2, 4)),
+                    UIInput::knob_huge( 1, String::from("SFreq."), UIPos::center(3, 4)),
+                    UIInput::knob_huge( 1, String::from("SFreq."), UIPos::center(4, 4)),
+                ],
+                vec![
+                    UIInput::knob(      1, String::from("SFreq."), UIPos::left(3, 4)),
+                    UIInput::knob_small(1, String::from("SFreq."), UIPos::left(2, 4)),
+                    UIInput::knob_huge( 1, String::from("SFreq."), UIPos::left(3, 4)),
+                    UIInput::knob_huge( 1, String::from("SFreq."), UIPos::left(4, 4)),
                 ],
             ],
         },

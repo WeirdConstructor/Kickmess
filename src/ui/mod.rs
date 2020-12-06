@@ -55,6 +55,7 @@ pub struct UI {
     needs_redraw_flag: bool,
 }
 
+#[derive(Debug, Clone, Copy)]
 struct Rect {
     x: f64,
     y: f64,
@@ -64,10 +65,10 @@ struct Rect {
 
 impl Rect {
     fn calc_element_box(&self, row_offs: u8, col_offs: u8, pos: UIPos) -> (Rect, u8, u8) {
-        let x = self.w * (col_offs as f64);
-        let y = self.h * (row_offs as f64);
-        let w = self.w * (pos.col_size as f64);
-        let h = self.h * (pos.col_size as f64);
+        let x = self.x + ((self.w * (col_offs     as f64)) / 12.0).round();
+        let y = self.y + ((self.h * (row_offs     as f64)) / 12.0).round();
+        let w =          ((self.w * (pos.col_size as f64)) / 12.0).round();
+        let h =          ((self.h * (pos.row_size as f64)) / 12.0).round();
 
         let new_row_offs = row_offs + pos.row_size;
         let new_col_offs = col_offs + pos.col_size;
@@ -287,13 +288,15 @@ impl UI {
         let mut xe = rect.x;
         let mut ye = rect.y;
 
+        println!("DRAWKNOB rect={:?}", rect);
+
         match align {
             1 => { xe += rect.w - size.0; },
             0 => { xe += ((rect.w - size.0) / 2.0).round(); },
             _ => { /* left align is a nop */ },
         }
 
-        ye += ((rect.h - size.1) / 2.0).round();
+        ye += (rect.h - size.1).round();
 
         let id = knob.id;
 
@@ -355,17 +358,21 @@ impl UI {
                     cr.stroke();
 
                     let mut row_offs     = 0;
-                    let mut min_row_offs = 0;
                     for row in rows.iter() {
                         let mut col_offs = 0;
 
-                        let mut min_col_offs = 255;
+                        let mut min_row_offs = 255;
                         for el in row.iter() {
                             let pos = el.position();
                             let (el_rect, ro, co) =
                                 crect.calc_element_box(row_offs, col_offs, pos);
+                            println!("CALC ELEM POS={:?} => row={},col={} => ro={},co={}",
+                                    pos,
+                                    row_offs, col_offs,
+                                    ro, co);
 
-                            if co < min_col_offs { min_col_offs = co; }
+                            col_offs = co;
+
                             if ro < min_row_offs { min_row_offs = ro; }
 
                             match el {
@@ -393,10 +400,8 @@ impl UI {
                             }
                         }
 
-                        col_offs = min_col_offs;
+                        row_offs = min_row_offs;
                     }
-
-                    row_offs = min_row_offs;
                     //d// println!("DRAW CONTAINER {},{},{},{}", x, y, w, h);
                 },
             }
