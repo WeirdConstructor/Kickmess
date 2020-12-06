@@ -35,7 +35,7 @@ fn main() {
             yv: 1,
             wv: 10,
             hv: 10,
-            elements: vec![
+            rows: vec![
                 vec![
                     UIInput::knob(      1, String::from("SFreq."), UIPos::center(2, 0)),
                     UIInput::knob_small(1, String::from("SFreq."), UIPos::center(2, 0)),

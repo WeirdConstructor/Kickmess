@@ -2,6 +2,7 @@ use crate::ui::painting::*;
 use crate::ui::constants::*;
 use crate::ui::segmented_knob::*;
 
+#[derive(Debug, Clone, Copy)]
 pub enum DrawCacheImg {
     Knob,
     KnobSmall,
@@ -31,6 +32,14 @@ impl DrawCache {
                         (UI_KNOB_RADIUS * 0.75).round(),
                         (UI_KNOB_FONT_SIZE * 0.75).round(),
                         ((UI_KNOB_FONT_SIZE - 1.0) * 0.8).round()),
+        }
+    }
+
+    pub fn size_of(&self, size: DrawCacheImg) -> (f64, f64) {
+        match size {
+            DrawCacheImg::Knob      => self.knob.size(UI_BG_KNOB_STROKE),
+            DrawCacheImg::KnobSmall => self.knob_s.size(UI_BG_KNOB_STROKE),
+            DrawCacheImg::KnobHuge  => self.knob_h.size(UI_BG_KNOB_STROKE),
         }
     }
 

@@ -9,7 +9,7 @@ use std::cell::RefCell;
 
 use crate::ui::painting::{Painter, ActiveZone};
 use crate::ui::draw_cache::{DrawCache, DrawCacheImg};
-use crate::ui::protocol::{UIMsg, UICmd, UIProviderHandle, UILayout, UIInput, UIValueSpec};
+use crate::ui::protocol::{UIMsg, UICmd, UIPos, UIKnobData, UIProviderHandle, UILayout, UIInput, UIValueSpec};
 use crate::ui::constants::*;
 
 fn clamp01(x: f32) -> f32 {
@@ -279,15 +279,25 @@ impl UI {
                  cr: &cairo::Context,
                  rect: &Rect,
                  align: i8,
-                 knob: &KnobData,
+                 knob: &UIKnobData,
                  img: DrawCacheImg) {
 
-        // TODO: Align element to rect, and draw!
+        let size = self.cache.size_of(img);
 
-        let xe = x + ((xv * w) / 12.0).floor();
-        let ye = y + ((yv * h) / 12.0).floor();
+        let mut xe = rect.x;
+        let mut ye = rect.y;
 
-        let az = self.cache.draw_bg(cr, xe, ye, DrawCacheImg::KnobHuge, label);
+        match align {
+            1 => { xe += rect.w - size.0; },
+            0 => { xe += ((rect.w - size.0) / 2.0).round(); },
+            _ => { /* left align is a nop */ },
+        }
+
+        ye += ((rect.h - size.1) / 2.0).round();
+
+        let id = knob.id;
+
+        let az = self.cache.draw_bg(cr, xe, ye, img, &knob.label);
         self.add_active_zone(id, az);
 
         let hover =
@@ -303,7 +313,7 @@ impl UI {
 
         let val     = self.get_element_value(id) as f64;
         let val_str = self.get_formatted_value(id);
-        self.cache.draw_data(cr, xe, ye, DrawCacheImg::KnobHuge, hover, val, &val_str);
+        self.cache.draw_data(cr, xe, ye, img, hover, val, &val_str);
     }
 
     pub fn draw(&mut self, cr: &cairo::Context) {
@@ -344,18 +354,24 @@ impl UI {
                         UI_BORDER_CLR.2);
                     cr.stroke();
 
-                    let mut row_offs = 0;
+                    let mut row_offs     = 0;
+                    let mut min_row_offs = 0;
                     for row in rows.iter() {
                         let mut col_offs = 0;
 
+                        let mut min_col_offs = 255;
                         for el in row.iter() {
                             let pos = el.position();
                             let (el_rect, ro, co) =
-                                crect.calc_element_box(row_offs, col_offs);
+                                crect.calc_element_box(row_offs, col_offs, pos);
 
-                            // TODO: set row and col offs to minimal ro/co
+                            if co < min_col_offs { min_col_offs = co; }
+                            if ro < min_row_offs { min_row_offs = ro; }
 
-                            match row {
+                            match el {
+                                UIInput::None(_) => {
+                                    // it's just about co/ro
+                                },
                                 UIInput::Knob(knob_data) => {
                                     self.draw_knob(
                                         cr, &el_rect, pos.align,
@@ -376,7 +392,11 @@ impl UI {
                                 },
                             }
                         }
+
+                        col_offs = min_col_offs;
                     }
+
+                    row_offs = min_row_offs;
                     //d// println!("DRAW CONTAINER {},{},{},{}", x, y, w, h);
                 },
             }

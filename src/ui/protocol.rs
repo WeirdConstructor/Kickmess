@@ -86,7 +86,7 @@ impl UIPos {
 
 #[derive(Debug, Clone)]
 pub struct UIKnobData {
-    pub pos:         UIPosition,
+    pub pos:         UIPos,
     pub id:          usize,
     pub label:       String,
 }
@@ -100,27 +100,27 @@ pub enum UIInput {
 }
 
 impl UIInput {
-    fn none(pos: UIPos) -> Self { UIInput::None(pos) }
+    pub fn none(pos: UIPos) -> Self { UIInput::None(pos) }
 
-    fn position(&self) -> UIPos {
+    pub fn position(&self) -> UIPos {
         match self {
-            None(p)                             => *p,
-            KnobSmall(UIKnobData { pos, .. })   => *pos,
-            Knob(UIKnobData { pos, .. })        => *pos,
-            KnobHuge(UIKnobData { pos, .. })    => *pos,
+            UIInput::None(p)                             => *p,
+            UIInput::KnobSmall(UIKnobData { pos, .. })   => *pos,
+            UIInput::Knob(UIKnobData { pos, .. })        => *pos,
+            UIInput::KnobHuge(UIKnobData { pos, .. })    => *pos,
         }
     }
 
-    fn knob(id: usize, label: String, pos: UIPos) -> Self {
-        UIInput::Knob(KnobData { id, label, pos })
+    pub fn knob(id: usize, label: String, pos: UIPos) -> Self {
+        UIInput::Knob(UIKnobData { id, label, pos })
     }
 
-    fn knob_small(id: usize, label: String, pos: UIPos) -> Self {
-        UIInput::KnobSmall(KnobData { id, label, pos })
+    pub fn knob_small(id: usize, label: String, pos: UIPos) -> Self {
+        UIInput::KnobSmall(UIKnobData { id, label, pos })
     }
 
-    fn knob_huge(id: usize, label: String, pos: UIPos) -> Self {
-        UIInput::KnobHuge(KnobData { id, label, pos })
+    pub fn knob_huge(id: usize, label: String, pos: UIPos) -> Self {
+        UIInput::KnobHuge(UIKnobData { id, label, pos })
     }
 }
 
