@@ -288,8 +288,6 @@ impl UI {
         let mut xe = rect.x;
         let mut ye = rect.y;
 
-        println!("DRAWKNOB rect={:?}", rect);
-
         match align {
             1 => { xe += rect.w - size.0; },
             0 => { xe += ((rect.w - size.0) / 2.0).round(); },
@@ -342,6 +340,13 @@ impl UI {
 
                     let crect = Rect { x, y, w, h };
 
+                    cr.rectangle(x - UI_BORDER_WIDTH, y - UI_BORDER_WIDTH, w + 2.0 * UI_BORDER_WIDTH, h + 2.0 * UI_BORDER_WIDTH);
+                    cr.set_source_rgb(
+                        UI_BORDER_CLR.0,
+                        UI_BORDER_CLR.1,
+                        UI_BORDER_CLR.2);
+                    cr.fill();
+
                     cr.set_source_rgb(
                         UI_GUI_BG_CLR.0,
                         UI_GUI_BG_CLR.1,
@@ -349,13 +354,6 @@ impl UI {
                     cr.rectangle(x, y, w, h);
                     cr.fill();
 
-                    cr.set_line_width(UI_BORDER_WIDTH);
-                    cr.rectangle(x, y, w, h);
-                    cr.set_source_rgb(
-                        UI_BORDER_CLR.0,
-                        UI_BORDER_CLR.1,
-                        UI_BORDER_CLR.2);
-                    cr.stroke();
 
                     let mut row_offs     = 0;
                     for row in rows.iter() {
@@ -366,10 +364,10 @@ impl UI {
                             let pos = el.position();
                             let (el_rect, ro, co) =
                                 crect.calc_element_box(row_offs, col_offs, pos);
-                            println!("CALC ELEM POS={:?} => row={},col={} => ro={},co={}",
-                                    pos,
-                                    row_offs, col_offs,
-                                    ro, co);
+//                            println!("CALC ELEM POS={:?} => row={},col={} => ro={},co={}",
+//                                    pos,
+//                                    row_offs, col_offs,
+//                                    ro, co);
 
                             col_offs = co;
 
