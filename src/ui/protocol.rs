@@ -71,11 +71,14 @@ impl UIValueSpec {
     pub fn fmt(&self, x: f64) -> String     { (self.fmt)(self.v2v(x)) }
 }
 
+// TODO: Define default margin/padding between grid cells
 #[derive(Debug, Clone, Copy)]
 pub struct UIPos {
     pub col_size: u8,
     pub row_size: u8,
     pub align:    i8,
+    // TODO:
+    //      - vertical align
 }
 
 impl UIPos {
@@ -89,6 +92,8 @@ pub struct UIKnobData {
     pub pos:         UIPos,
     pub id:          usize,
     pub label:       String,
+    // TODO:
+    //   - Type:    LeftRight, Center
 }
 
 #[derive(Debug, Clone)]
@@ -97,6 +102,10 @@ pub enum UIInput {
     KnobSmall(UIKnobData),
     Knob(UIKnobData),
     KnobHuge(UIKnobData),
+    // TODO:
+    //      ToggleBtn       (2 or more choices)
+    //      SubContainer    (size always fills)
+    //      Graph           (function for plotting, predefined set of points)
 }
 
 impl UIInput {
