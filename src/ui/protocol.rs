@@ -88,6 +88,13 @@ impl UIPos {
 }
 
 #[derive(Debug, Clone)]
+pub struct UIBtnData {
+    pub pos:         UIPos,
+    pub id:          usize,
+    pub labels:      Vec<(f64, String)>,
+}
+
+#[derive(Debug, Clone)]
 pub struct UIKnobData {
     pub pos:         UIPos,
     pub id:          usize,
@@ -102,6 +109,7 @@ pub enum UIInput {
     KnobSmall(UIKnobData),
     Knob(UIKnobData),
     KnobHuge(UIKnobData),
+    Button(UIBtnData),
     // TODO:
     //      ToggleBtn       (2 or more choices)
     //      SubContainer    (size always fills)
@@ -117,7 +125,15 @@ impl UIInput {
             UIInput::KnobSmall(UIKnobData { pos, .. })   => *pos,
             UIInput::Knob(UIKnobData { pos, .. })        => *pos,
             UIInput::KnobHuge(UIKnobData { pos, .. })    => *pos,
+            UIInput::Button(UIBtnData { pos, .. })       => *pos,
         }
+    }
+
+    pub fn btn_2state(id: usize, on_lbl: String, off_lbl: String, pos: UIPos) -> Self {
+        UIInput::Button(UIBtnData {
+            id, pos, labels: vec![
+                (0.0, off_lbl), (1.0, on_lbl)
+            ] })
     }
 
     pub fn knob(id: usize, label: String, pos: UIPos) -> Self {

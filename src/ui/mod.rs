@@ -1,15 +1,18 @@
 mod segmented_knob;
 mod painting;
 mod draw_cache;
+mod element;
 pub mod constants;
 pub mod protocol;
 
 use std::rc::Rc;
 use std::cell::RefCell;
 
+use crate::ui::element::*;
 use crate::ui::painting::{Painter, ActiveZone};
 use crate::ui::draw_cache::{DrawCache, DrawCacheImg};
-use crate::ui::protocol::{UIMsg, UICmd, UIPos, UIKnobData, UIProviderHandle, UILayout, UIInput, UIValueSpec};
+use crate::ui::protocol::{UIMsg, UICmd, UIPos, UIKnobData, UIProviderHandle,
+                          UILayout, UIBtnData, UIInput, UIValueSpec};
 use crate::ui::constants::*;
 
 fn clamp01(x: f32) -> f32 {
@@ -276,6 +279,13 @@ impl UI {
         self.zones.push(az);
     }
 
+    fn draw_btn(&mut self,
+                 cr: &cairo::Context,
+                 rect: &Rect,
+                 align: i8,
+                 btn: &UIBtnData) {
+    }
+
     fn draw_knob(&mut self,
                  cr: &cairo::Context,
                  rect: &Rect,
@@ -298,8 +308,10 @@ impl UI {
 
         let id = knob.id;
 
-        let az = self.cache.draw_bg(cr, xe, ye, img, &knob.label);
-        self.add_active_zone(id, az);
+        let az = self.cache.draw_bg(cr, xe, ye, img);
+        self.cache.define_active_zones(xe, ye, img, &|az| {
+            self.add_active_zone(id, az);
+        });
 
         let hover =
             if let Some(hover_zone) = self.hover_zone {
@@ -314,7 +326,7 @@ impl UI {
 
         let val     = self.get_element_value(id) as f64;
         let val_str = self.get_formatted_value(id);
-        self.cache.draw_data(cr, xe, ye, img, hover, val, &val_str);
+        self.cache.draw_data(cr, xe, ye, img, hover, &knob.label, val, &val_str);
     }
 
     pub fn draw(&mut self, cr: &cairo::Context) {
@@ -376,6 +388,10 @@ impl UI {
                             match el {
                                 UIInput::None(_) => {
                                     // it's just about co/ro
+                                },
+                                UIInput::Button(btn_data) => {
+                                    self.draw_btn(
+                                        cr, &el_rect, pos.align, btn_data);
                                 },
                                 UIInput::Knob(knob_data) => {
                                     self.draw_knob(

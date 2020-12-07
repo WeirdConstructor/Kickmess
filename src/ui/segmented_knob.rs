@@ -1,4 +1,5 @@
 use crate::ui::painting::*;
+use crate::ui::element::*;
 use crate::ui::constants::*;
 
 const SAFETY_PAD : f64 = 1.0;
@@ -13,6 +14,82 @@ pub struct SegmentedKnob {
     radius:         f64,
     font_size_lbl:  f64,
     font_size_data: f64,
+}
+
+impl UIElement for SegmentedKnob {
+    fn size(&self, line_width: f64) -> (f64, f64) {
+        let (lbl_x, lbl_y, lbl_w, lbl_h) = self.get_label_rect();
+
+        (lbl_w + 2.0 * SAFETY_PAD,
+         self.radius + lbl_y + lbl_h + line_width + 2.0 * SAFETY_PAD)
+    }
+
+    fn define_active_zones(&self, x: f64, y: f64, f: &dyn Fn(ActiveZone)) {
+        let (knob_xo, knob_yo) =
+            self.get_center_offset(UI_BG_KNOB_STROKE);
+        let (xo, yo) = (knob_xo, knob_yo);
+
+        let z1 =
+            ActiveZone::from_rect(x + xo, y + yo, 0, self.get_value_rect());
+        (f)(z1);
+    }
+
+    fn draw_value(&self, cr: &cairo::Context, x: f64, y: f64,
+                  hover_style: bool, name: &str, value: f64, val_s: &str) {
+
+        let (knob_xo, knob_yo) =
+            self.get_center_offset(UI_BG_KNOB_STROKE);
+        let (xo, yo) = (knob_xo, knob_yo);
+
+        self.draw_oct_arc(
+            &cr, x + xo, y + yo,
+            UI_MG_KNOB_STROKE,
+            UI_FG_KNOB_STROKE_CLR,
+            true,
+            value);
+
+        self.draw_value_label(&cr, x + xo, y + yo, hover_style, val_s);
+
+        self.draw_name(&cr, x + xo, y + yo, name);
+    }
+
+    fn draw_bg(&self, cr: &cairo::Context, x: f64, y: f64) {
+        let (knob_xo, knob_yo) = self.get_center_offset(UI_BG_KNOB_STROKE);
+        let (knob_w, knob_h)   = self.size(UI_BG_KNOB_STROKE);
+        let (xo, yo) = (knob_xo, knob_yo);
+
+        self.draw_oct_arc(
+            &cr, xo, yo,
+            UI_BG_KNOB_STROKE,
+            UI_BG_KNOB_STROKE_CLR,
+            false,
+            1.0);
+
+        cr.set_line_width(UI_BG_KNOB_STROKE);
+        cr.set_source_rgb(
+            UI_BG_KNOB_STROKE_CLR.0,
+            UI_BG_KNOB_STROKE_CLR.1,
+            UI_BG_KNOB_STROKE_CLR.2);
+
+        let dc1 = self.get_decor_rect1();
+        cr.rectangle(xo + dc1.0, yo + dc1.1, dc1.2, dc1.3);
+
+        let valrect = self.get_value_rect();
+        cr.rectangle(
+            valrect.0 + xo, valrect.1 + yo, valrect.2, valrect.3);
+
+        let lblrect = self.get_label_rect();
+        cr.rectangle(
+            lblrect.0 + xo, lblrect.1 + yo, lblrect.2, lblrect.3);
+        cr.fill();
+
+        self.draw_oct_arc(
+            &cr, xo, yo,
+            UI_MG_KNOB_STROKE,
+            UI_MG_KNOB_STROKE_CLR,
+            false,
+            1.0);
+    }
 }
 
 impl SegmentedKnob {
@@ -69,13 +146,6 @@ impl SegmentedKnob {
          self.radius + (line_width / 2.0).ceil() + SAFETY_PAD)
     }
 
-    pub fn size(&self, line_width: f64) -> (f64, f64) {
-        let (lbl_x, lbl_y, lbl_w, lbl_h) = self.get_label_rect();
-
-        (lbl_w + 2.0 * SAFETY_PAD,
-         self.radius + lbl_y + lbl_h + line_width + 2.0 * SAFETY_PAD)
-    }
-
     pub fn get_value_rect(&self) -> (f64, f64, f64, f64) {
         let width = self.radius * 2.0;
         ((self.sbottom.0 - self.radius).round(),
@@ -100,7 +170,7 @@ impl SegmentedKnob {
          UI_BG_KNOB_STROKE * 3.0)
     }
 
-    pub fn draw_name_bg(&self, cr: &cairo::Context, x: f64, y: f64, s: &str) {
+    pub fn draw_name(&self, cr: &cairo::Context, x: f64, y: f64, s: &str) {
         let r = self.get_label_rect();
         cr.set_font_size(12.);
         cr.set_source_rgb(
@@ -120,7 +190,7 @@ impl SegmentedKnob {
         cr.show_text(s);
     }
 
-    pub fn draw_value(&self, cr: &cairo::Context, x: f64, y: f64, hover_style: bool, s: &str) {
+    pub fn draw_value_label(&self, cr: &cairo::Context, x: f64, y: f64, hover_style: bool, s: &str) {
         let r = self.get_value_rect();
         cr.set_font_size(
             if hover_style { self.font_size_data + 1.0 }
