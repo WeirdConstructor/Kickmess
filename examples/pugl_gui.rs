@@ -8,6 +8,33 @@ use std::sync::Mutex;
 use kickmessvst::proc::Param;
 use pugl_sys::*;
 
+/*
+
+Modulation Framework for Synth:
+
+    - 2x DAHDSR Envelope
+    - 2x LFO                (Speed)
+    - 1 Filter              (Cutoff, Q)
+    - 1 VCA                 (Gain)
+
+    Env1   o            o Filter Cutoff
+    Env2   o            o Filter Q
+    LFO 1  o            o Osc Gain
+    LFO 2  o            o LFO 1 Speed
+                        o LFO 2 Speed
+
+    Nf Function routes:
+
+    [ F Cut / F Q / VCA / L1 Spd / L2 Spd ]
+    /--------------\    /""\
+    |  Graph plot  |    |  |
+    |              |    \__/
+    \--------------/ [ Amount ]
+    [ x / 1 - x / 1 - x^y / x^y ]
+    [Off / L1   / L2  /  E1  / E2     ]
+
+*/
+
 fn main() {
     let (cl_hdl, p_hdl) = ui::protocol::UIClientHandle::create();
 
