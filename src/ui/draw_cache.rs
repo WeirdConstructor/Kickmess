@@ -60,7 +60,7 @@ impl DrawCache {
         knob.draw_value(cr, x, y, hover_style, name, value, val_s);
     }
 
-    pub fn define_active_zones(&self, x: f64, y: f64, size: DrawCacheImg, f: &dyn Fn(ActiveZone)) {
+    pub fn define_active_zones(&self, x: f64, y: f64, size: DrawCacheImg, f: &mut dyn FnMut(ActiveZone)) {
         let knob =
             match size {
                 DrawCacheImg::Knob      => &self.knob,

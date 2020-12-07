@@ -308,10 +308,20 @@ impl UI {
 
         let id = knob.id;
 
+        let mut zones : [Option<ActiveZone>; 4] = [None; 4];
+        let mut z_idx = 0;
+
         let az = self.cache.draw_bg(cr, xe, ye, img);
-        self.cache.define_active_zones(xe, ye, img, &|az| {
-            self.add_active_zone(id, az);
+        self.cache.define_active_zones(xe, ye, img, &mut |az| {
+            zones[z_idx] = Some(az);
+            z_idx += 1;
         });
+
+        for z in zones.into_iter() {
+            if let Some(az) = z {
+                self.add_active_zone(id, *az);
+            }
+        }
 
         let hover =
             if let Some(hover_zone) = self.hover_zone {
