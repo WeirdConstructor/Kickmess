@@ -437,10 +437,10 @@ impl UI {
                                     // it's just about co/ro
                                 },
                                 UIInput::Button(btn_data) => {
-//                                    self.draw_element(
-//                                        cr, &el_rect, pos.align,
-//                                        btn_data,
-//                                        ElementType::Button);
+                                    self.draw_element(
+                                        cr, &el_rect, pos.align,
+                                        btn_data,
+                                        ElementType::Button);
                                 },
                                 UIInput::Knob(knob_data) => {
                                     self.draw_element(

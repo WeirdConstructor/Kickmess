@@ -53,7 +53,7 @@ impl UIElement for SegmentedKnob {
         self.draw_name(&cr, x + xo, y + yo, name);
     }
 
-    fn draw_bg(&self, cr: &cairo::Context, x: f64, y: f64) {
+    fn draw_bg(&self, cr: &cairo::Context) {
         let (knob_xo, knob_yo) = self.get_center_offset(UI_BG_KNOB_STROKE);
         let (knob_w, knob_h)   = self.size();
         let (xo, yo) = (knob_xo, knob_yo);
@@ -172,7 +172,7 @@ impl SegmentedKnob {
 
     pub fn draw_name(&self, cr: &cairo::Context, x: f64, y: f64, s: &str) {
         let r = self.get_label_rect();
-        cr.set_font_size(12.);
+        cr.set_font_size(self.font_size_lbl);
         cr.set_source_rgb(
             UI_TXT_KNOB_CLR.0,
             UI_TXT_KNOB_CLR.1,

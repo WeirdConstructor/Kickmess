@@ -50,7 +50,7 @@ impl DrawCache {
             let cr =
                 cairo::Context::new(
                     self.surf[idx].as_mut().unwrap());
-            knob.draw_bg(&cr, x, y);
+            knob.draw_bg(&cr);
         }
 
         let surf = &self.surf[idx].as_ref().unwrap();
