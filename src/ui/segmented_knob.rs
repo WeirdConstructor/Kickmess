@@ -1,6 +1,7 @@
 use crate::ui::painting::*;
 use crate::ui::element::{UIElement, UIElementData};
 use crate::ui::constants::*;
+use crate::ui::util::{draw_centered_text};
 
 pub struct SegmentedKnob {
     sbottom:        (f64, f64),
@@ -178,16 +179,7 @@ impl SegmentedKnob {
             UI_TXT_KNOB_CLR.1,
             UI_TXT_KNOB_CLR.2);
 
-        let  ext = cr.text_extents(s);
-        let fext = cr.font_extents();
-        //d// println!("BEARING: {}={},{} | {} | {} => {}", s, ext.y_bearing, ext.height, (r.3 - ext.height) / 2.0, r.3, ext.y_bearing + ((r.3 - ext.height) / 1.0).abs());
-        //d// println!("FEXT: h={}, asc={}, desc={}", fext.height, fext.ascent, fext.descent);
-        cr.move_to(
-            x + r.0 + ((r.2 - ext.width) / 2.0).abs().round(),
-            y + r.1 + fext.height
-                    + ((r.3 - fext.height) / 2.0).abs().round()
-                    - fext.descent);
-        cr.show_text(s);
+        draw_centered_text(cr, x + r.0, y + r.1, r.2, r.3, s);
     }
 
     pub fn draw_value_label(&self, cr: &cairo::Context, x: f64, y: f64, hover_style: bool, s: &str) {

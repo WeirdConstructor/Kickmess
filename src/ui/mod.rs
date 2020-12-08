@@ -3,6 +3,7 @@ mod button;
 mod painting;
 mod draw_cache;
 mod element;
+mod util;
 pub mod constants;
 pub mod protocol;
 

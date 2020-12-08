@@ -37,20 +37,20 @@ impl DrawCache {
     }
 
     pub fn draw_bg(&mut self, cr: &cairo::Context, x: f64, y: f64, idx: usize) {
-        let knob = self.elements.get(idx).unwrap();
+        let element = self.elements.get(idx).unwrap();
 
-        let (knob_w, knob_h) = knob.size();
+        let (elem_w, elem_h) = element.size();
 
         if let None = self.surf[idx] {
             let surf = cr.get_target().create_similar_image(
                 cairo::Format::ARgb32,
-                knob_w as i32,
-                knob_h as i32).expect("Createable new img surface");
+                elem_w as i32,
+                elem_h as i32).expect("Createable new img surface");
             self.surf[idx] = Some(surf);
             let cr =
                 cairo::Context::new(
                     self.surf[idx].as_mut().unwrap());
-            knob.draw_bg(&cr);
+            element.draw_bg(&cr);
         }
 
         let surf = &self.surf[idx].as_ref().unwrap();

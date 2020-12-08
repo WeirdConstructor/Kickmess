@@ -124,6 +124,13 @@ pub enum UIInput {
     Button(UIBtnData),
     // TODO:
     //      ToggleBtn       (2 or more choices)
+    //          => Button for setting a modulation target
+    //             - clicking on the mod button highlights all values (in a diff, color => new highlight mode)
+    //             - clicking on a value field in that mode will set
+    //               the value for the mod button to the ID of the
+    //               target. => The value spec fun() for unit conversion
+    //               gets as input the possible value IDs, and should return
+    //               a non 0.0
     //      SubContainer    (size always fills)
     //      Graph           (function for plotting, predefined set of points)
 }
