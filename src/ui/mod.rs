@@ -10,7 +10,7 @@ use std::cell::RefCell;
 
 use crate::ui::element::*;
 use crate::ui::painting::{Painter, ActiveZone};
-use crate::ui::draw_cache::{DrawCache, DrawCacheImg};
+use crate::ui::draw_cache::{DrawCache};
 use crate::ui::protocol::{UIMsg, UICmd, UIPos, UIKnobData, UIProviderHandle,
                           UILayout, UIBtnData, UIInput, UIValueSpec};
 use crate::ui::constants::*;
@@ -19,6 +19,14 @@ fn clamp01(x: f32) -> f32 {
     if x < 0.0 { return 0.0; }
     if x > 1.0 { return 1.0; }
     x
+}
+
+#[derive(Debug, Clone, Copy)]
+pub enum ElementType {
+    Knob,
+    KnobSmall,
+    KnobHuge,
+//    Button,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -82,21 +90,51 @@ impl Rect {
 
 impl UI {
     pub fn new(ui_handle: UIProviderHandle) -> Self {
-        Self {
-            ui_handle,
-//            painter:        Painter::new(),
-            layout:             Rc::new(RefCell::new(vec![])),
-            window_size:        (0.0, 0.0),
-            zones:              vec![],
-            cache:              DrawCache::new(),
-            element_values:     vec![],
-            value_specs:        vec![],
-            hover_zone:         None,
-            drag_tmp_value:     None,
-            drag_zone:          None,
-            last_mouse_pos:     (0.0, 0.0),
-            needs_redraw_flag:  true,
-        }
+        let mut this =
+            Self {
+                ui_handle,
+    //            painter:        Painter::new(),
+                layout:             Rc::new(RefCell::new(vec![])),
+                window_size:        (0.0, 0.0),
+                zones:              vec![],
+                cache:              DrawCache::new(),
+                element_values:     vec![],
+                value_specs:        vec![],
+                hover_zone:         None,
+                drag_tmp_value:     None,
+                drag_zone:          None,
+                last_mouse_pos:     (0.0, 0.0),
+                needs_redraw_flag:  true,
+            };
+        this.init_draw_cache();
+        this
+    }
+
+    fn init_draw_cache(&mut self) {
+        use crate::ui::segmented_knob::*;
+
+        // ElementType::Knob
+        self.cache.push_element(
+            Box::new(SegmentedKnob::new(
+                UI_KNOB_RADIUS,
+                UI_KNOB_FONT_SIZE,
+                UI_KNOB_FONT_SIZE - 1.0)));
+
+        // ElementType::KnobSmall
+        self.cache.push_element(
+            Box::new(SegmentedKnob::new(
+                (UI_KNOB_RADIUS * 0.75).round(),
+                (UI_KNOB_FONT_SIZE * 0.75).round(),
+                ((UI_KNOB_FONT_SIZE - 1.0) * 0.8).round())));
+
+        // ElementType::KnobHuge
+        self.cache.push_element(
+            Box::new(SegmentedKnob::new(
+                (UI_KNOB_RADIUS * 1.3).round(),
+                (UI_KNOB_FONT_SIZE + 2.0).round(),
+                UI_KNOB_FONT_SIZE + 1.0)));
+
+//            button: SegmentedButton::new(UI_KNOB_FONT_SIZE),
     }
 
     pub fn needs_redraw(&self) -> bool {
@@ -136,7 +174,7 @@ impl UI {
         if let Some(drag_zone) = self.drag_zone {
             let xd = self.last_mouse_pos.0 - drag_zone.0.0;
             let yd = self.last_mouse_pos.1 - drag_zone.0.1;
-            let mut distance = xd + yd; // (xd * xd).sqrt() (yd * yd).sqrt();
+            let mut distance = xd + -yd; // (xd * xd).sqrt() (yd * yd).sqrt();
 
             let steps = distance / 10.0;
 
@@ -279,21 +317,14 @@ impl UI {
         self.zones.push(az);
     }
 
-    fn draw_btn(&mut self,
-                 cr: &cairo::Context,
-                 rect: &Rect,
-                 align: i8,
-                 btn: &UIBtnData) {
-    }
-
-    fn draw_knob(&mut self,
+    fn draw_element(&mut self,
                  cr: &cairo::Context,
                  rect: &Rect,
                  align: i8,
                  knob: &UIKnobData,
-                 img: DrawCacheImg) {
+                 cache_idx: ElementType) {
 
-        let size = self.cache.size_of(img);
+        let size = self.cache.size_of(cache_idx as usize);
 
         let mut xe = rect.x;
         let mut ye = rect.y;
@@ -311,8 +342,8 @@ impl UI {
         let mut zones : [Option<ActiveZone>; 4] = [None; 4];
         let mut z_idx = 0;
 
-        let az = self.cache.draw_bg(cr, xe, ye, img);
-        self.cache.define_active_zones(xe, ye, img, &mut |az| {
+        let az = self.cache.draw_bg(cr, xe, ye, cache_idx as usize);
+        self.cache.define_active_zones(xe, ye, cache_idx as usize, &mut |az| {
             zones[z_idx] = Some(az);
             z_idx += 1;
         });
@@ -336,7 +367,8 @@ impl UI {
 
         let val     = self.get_element_value(id) as f64;
         let val_str = self.get_formatted_value(id);
-        self.cache.draw_data(cr, xe, ye, img, hover, &knob.label, val, &val_str);
+        self.cache.draw_data(cr, xe, ye, cache_idx as usize,
+                             hover, &knob.label, val, &val_str);
     }
 
     pub fn draw(&mut self, cr: &cairo::Context) {
@@ -400,26 +432,26 @@ impl UI {
                                     // it's just about co/ro
                                 },
                                 UIInput::Button(btn_data) => {
-                                    self.draw_btn(
-                                        cr, &el_rect, pos.align, btn_data);
+//                                    self.draw_btn(
+//                                        cr, &el_rect, pos.align, btn_data);
                                 },
                                 UIInput::Knob(knob_data) => {
-                                    self.draw_knob(
+                                    self.draw_element(
                                         cr, &el_rect, pos.align,
                                         knob_data,
-                                        DrawCacheImg::Knob);
+                                        ElementType::Knob);
                                 },
                                 UIInput::KnobSmall(knob_data) => {
-                                    self.draw_knob(
+                                    self.draw_element(
                                         cr, &el_rect, pos.align,
                                         knob_data,
-                                        DrawCacheImg::KnobSmall);
+                                        ElementType::KnobSmall);
                                 },
                                 UIInput::KnobHuge(knob_data) => {
-                                    self.draw_knob(
+                                    self.draw_element(
                                         cr, &el_rect, pos.align,
                                         knob_data,
-                                        DrawCacheImg::KnobHuge);
+                                        ElementType::KnobHuge);
                                 },
                             }
                         }
