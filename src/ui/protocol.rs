@@ -1,5 +1,6 @@
 use std::sync::mpsc::{Sender, Receiver};
 use std::sync::Arc;
+use crate::ui::element::UIElementData;
 
 #[derive(Debug, Clone)]
 pub struct UIInputValue {
@@ -94,6 +95,11 @@ pub struct UIBtnData {
     pub labels:      Vec<(f64, String)>,
 }
 
+impl UIElementData for UIBtnData {
+    fn as_btn_data(&self) -> Option<&UIBtnData> { Some(self) }
+    fn value_id(&self) -> usize { self.id }
+}
+
 #[derive(Debug, Clone)]
 pub struct UIKnobData {
     pub pos:         UIPos,
@@ -101,6 +107,11 @@ pub struct UIKnobData {
     pub label:       String,
     // TODO:
     //   - Type:    LeftRight, Center
+}
+
+impl UIElementData for UIKnobData {
+    fn as_knob_data(&self) -> Option<&UIKnobData> { Some(self) }
+    fn value_id(&self) -> usize { self.id }
 }
 
 #[derive(Debug, Clone)]

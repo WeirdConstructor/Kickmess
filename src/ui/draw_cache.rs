@@ -1,6 +1,6 @@
 use crate::ui::painting::*;
 use crate::ui::constants::*;
-use crate::ui::element::UIElement;
+use crate::ui::element::{UIElement, UIElementData};
 
 pub struct DrawCache {
     surf:       Vec<Option<cairo::Surface>>,
@@ -21,15 +21,15 @@ impl DrawCache {
     }
 
     pub fn size_of(&self, idx: usize) -> (f64, f64) {
-        self.elements.get(idx).unwrap().size(UI_BG_KNOB_STROKE)
+        self.elements.get(idx).unwrap().size()
     }
 
     pub fn draw_data(&mut self, cr: &cairo::Context, x: f64, y: f64,
                      idx: usize, hover_style: bool,
-                     name: &str, value: f64, val_s: &str) {
+                     data: &dyn UIElementData, value: f64, val_s: &str) {
         self.elements.get(idx)
             .unwrap()
-            .draw_value(cr, x, y, hover_style, name, value, val_s);
+            .draw_value(cr, x, y, hover_style, data, value, val_s);
     }
 
     pub fn define_active_zones(&self, x: f64, y: f64, idx: usize, f: &mut dyn FnMut(ActiveZone)) {
@@ -39,7 +39,7 @@ impl DrawCache {
     pub fn draw_bg(&mut self, cr: &cairo::Context, x: f64, y: f64, idx: usize) {
         let knob = self.elements.get(idx).unwrap();
 
-        let (knob_w, knob_h) = knob.size(UI_BG_KNOB_STROKE);
+        let (knob_w, knob_h) = knob.size();
 
         if let None = self.surf[idx] {
             let surf = cr.get_target().create_similar_image(

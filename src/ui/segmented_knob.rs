@@ -1,8 +1,6 @@
 use crate::ui::painting::*;
-use crate::ui::element::*;
+use crate::ui::element::{UIElement, UIElementData};
 use crate::ui::constants::*;
-
-const SAFETY_PAD : f64 = 1.0;
 
 pub struct SegmentedKnob {
     sbottom:        (f64, f64),
@@ -17,11 +15,11 @@ pub struct SegmentedKnob {
 }
 
 impl UIElement for SegmentedKnob {
-    fn size(&self, line_width: f64) -> (f64, f64) {
+    fn size(&self) -> (f64, f64) {
         let (lbl_x, lbl_y, lbl_w, lbl_h) = self.get_label_rect();
 
-        (lbl_w + 2.0 * SAFETY_PAD,
-         self.radius + lbl_y + lbl_h + line_width + 2.0 * SAFETY_PAD)
+        (lbl_w + 2.0 * UI_SAFETY_PAD,
+         self.radius + lbl_y + lbl_h + UI_BG_KNOB_STROKE + 2.0 * UI_SAFETY_PAD)
     }
 
     fn define_active_zones(&self, x: f64, y: f64, f: &mut dyn FnMut(ActiveZone)) {
@@ -35,7 +33,8 @@ impl UIElement for SegmentedKnob {
     }
 
     fn draw_value(&self, cr: &cairo::Context, x: f64, y: f64,
-                  hover_style: bool, name: &str, value: f64, val_s: &str) {
+                  hover_style: bool, data: &dyn UIElementData,
+                  value: f64, val_s: &str) {
 
         let (knob_xo, knob_yo) =
             self.get_center_offset(UI_BG_KNOB_STROKE);
@@ -50,12 +49,13 @@ impl UIElement for SegmentedKnob {
 
         self.draw_value_label(&cr, x + xo, y + yo, hover_style, val_s);
 
+        let name = &data.as_knob_data().unwrap().label;
         self.draw_name(&cr, x + xo, y + yo, name);
     }
 
     fn draw_bg(&self, cr: &cairo::Context, x: f64, y: f64) {
         let (knob_xo, knob_yo) = self.get_center_offset(UI_BG_KNOB_STROKE);
-        let (knob_w, knob_h)   = self.size(UI_BG_KNOB_STROKE);
+        let (knob_w, knob_h)   = self.size();
         let (xo, yo) = (knob_xo, knob_yo);
 
         self.draw_oct_arc(
@@ -142,8 +142,8 @@ impl SegmentedKnob {
     }
 
     pub fn get_center_offset(&self, line_width: f64) -> (f64, f64) {
-        ((self.get_label_rect().2 / 2.0).ceil() + SAFETY_PAD,
-         self.radius + (line_width / 2.0).ceil() + SAFETY_PAD)
+        ((self.get_label_rect().2 / 2.0).ceil() + UI_SAFETY_PAD,
+         self.radius + (line_width / 2.0).ceil() + UI_SAFETY_PAD)
     }
 
     pub fn get_value_rect(&self) -> (f64, f64, f64, f64) {
@@ -194,7 +194,7 @@ impl SegmentedKnob {
         let r = self.get_value_rect();
         cr.set_font_size(
             if hover_style { self.font_size_data + 1.0 }
-                         else           { self.font_size_data });
+            else           { self.font_size_data });
         if hover_style {
             cr.set_source_rgb(
                 UI_TXT_KNOB_HOVER_CLR.0,

@@ -1,4 +1,5 @@
 mod segmented_knob;
+mod button;
 mod painting;
 mod draw_cache;
 mod element;
@@ -26,7 +27,7 @@ pub enum ElementType {
     Knob,
     KnobSmall,
     KnobHuge,
-//    Button,
+    Button,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -111,7 +112,8 @@ impl UI {
     }
 
     fn init_draw_cache(&mut self) {
-        use crate::ui::segmented_knob::*;
+        use crate::ui::segmented_knob::SegmentedKnob;
+        use crate::ui::button::Button;
 
         // ElementType::Knob
         self.cache.push_element(
@@ -133,6 +135,9 @@ impl UI {
                 (UI_KNOB_RADIUS * 1.3).round(),
                 (UI_KNOB_FONT_SIZE + 2.0).round(),
                 UI_KNOB_FONT_SIZE + 1.0)));
+
+        // ElementType::Button
+        self.cache.push_element(Box::new(Button::new()));
 
 //            button: SegmentedButton::new(UI_KNOB_FONT_SIZE),
     }
@@ -318,11 +323,11 @@ impl UI {
     }
 
     fn draw_element(&mut self,
-                 cr: &cairo::Context,
-                 rect: &Rect,
-                 align: i8,
-                 knob: &UIKnobData,
-                 cache_idx: ElementType) {
+        cr: &cairo::Context,
+        rect: &Rect,
+        align: i8,
+        element_data: &dyn UIElementData,
+        cache_idx: ElementType) {
 
         let size = self.cache.size_of(cache_idx as usize);
 
@@ -337,7 +342,7 @@ impl UI {
 
         ye += (rect.h - size.1).round();
 
-        let id = knob.id;
+        let id = element_data.value_id();
 
         let mut zones : [Option<ActiveZone>; 4] = [None; 4];
         let mut z_idx = 0;
@@ -368,7 +373,7 @@ impl UI {
         let val     = self.get_element_value(id) as f64;
         let val_str = self.get_formatted_value(id);
         self.cache.draw_data(cr, xe, ye, cache_idx as usize,
-                             hover, &knob.label, val, &val_str);
+                             hover, element_data, val, &val_str);
     }
 
     pub fn draw(&mut self, cr: &cairo::Context) {
@@ -432,8 +437,10 @@ impl UI {
                                     // it's just about co/ro
                                 },
                                 UIInput::Button(btn_data) => {
-//                                    self.draw_btn(
-//                                        cr, &el_rect, pos.align, btn_data);
+//                                    self.draw_element(
+//                                        cr, &el_rect, pos.align,
+//                                        btn_data,
+//                                        ElementType::Button);
                                 },
                                 UIInput::Knob(knob_data) => {
                                     self.draw_element(
