@@ -45,34 +45,21 @@ impl UIElement for Button {
 
         let w = UI_BTN_WIDTH;
         let h = UI_ELEM_TXT_H * 2.0 + UI_BTN_BORDER_WIDTH;
-        let h = (h / 2.0).round();
 
-        draw_centered_text(cr, x + xo, y + yo, w, h, name);
-//        let  ext = cr.text_extents(name);
-//        let fext = cr.font_extents();
-//        cr.move_to(
-//            x + xo + ((w - ext.width) / 2.0).abs().round(),
-//            y + yo + fext.height
-//              + ((h - fext.height) / 2.0).abs().round()
-//              - fext.descent);
-//        cr.show_text(name);
+        draw_centered_text(
+            cr,
+            x + xo,
+            y + yo + UI_ELEM_TXT_H + UI_BTN_BORDER_WIDTH,
+            w, (h / 2.0).round(), name);
 
         if hover_style {
             cr.set_source_rgb(
-                UI_BTN_TXT_CLR.0,
-                UI_BTN_TXT_CLR.1,
-                UI_BTN_TXT_CLR.2);
+                UI_BTN_TXT_HOVER_CLR.0,
+                UI_BTN_TXT_HOVER_CLR.1,
+                UI_BTN_TXT_HOVER_CLR.2);
         }
-//        self.draw_oct_arc(
-//            &cr, x + xo, y + yo,
-//            UI_MG_KNOB_STROKE,
-//            UI_FG_KNOB_STROKE_CLR,
-//            true,
-//            value);
-//
-//        self.draw_value_label(&cr, x, y, hover_style, val_s);
-//
-//        self.draw_name(&cr, x + xo, y + yo, name);
+
+        draw_centered_text(cr, x + xo, y + yo, w, (h / 2.0).round(), val_s);
     }
 
     fn draw_bg(&self, cr: &cairo::Context) {
