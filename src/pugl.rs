@@ -41,6 +41,15 @@ impl PuglUI {
     }
 }
 
+fn btn_num_to_uievent(num: usize) -> ui::MouseButton {
+    match num {
+        1 => ui::MouseButton::Left,
+        2 => ui::MouseButton::Middle,
+        3 => ui::MouseButton::Right,
+        _ => ui::MouseButton::Left,
+    }
+}
+
 impl PuglViewTrait for PuglUI {
     fn exposed(&mut self, expose: &ExposeArea, cr: &cairo::Context) {
         //d// println!("EXPOSE!");
@@ -56,23 +65,11 @@ impl PuglViewTrait for PuglUI {
                 self.post_redisplay();
             },
             EventType::MouseButtonRelease(btn) => {
-                let ev_btn =
-                    match btn.num {
-                        1 => ui::MouseButton::Left,
-                        2 => ui::MouseButton::Middle,
-                        3 => ui::MouseButton::Right,
-                        _ => ui::MouseButton::Left,
-                    };
+                let ev_btn = btn_num_to_uievent(btn.num as usize);
                 self.ui.handle_ui_event(UIEvent::MouseButtonReleased(ev_btn));
             },
             EventType::MouseButtonPress(btn) => {
-                let ev_btn =
-                    match btn.num {
-                        1 => ui::MouseButton::Left,
-                        3 => ui::MouseButton::Middle,
-                        2 => ui::MouseButton::Right,
-                        _ => ui::MouseButton::Left,
-                    };
+                let ev_btn = btn_num_to_uievent(btn.num as usize);
                 self.ui.handle_ui_event(UIEvent::MouseButtonPressed(ev_btn));
             },
             _ => {

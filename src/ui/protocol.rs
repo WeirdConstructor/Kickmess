@@ -94,6 +94,7 @@ pub struct UIBtnData {
     pub id:          usize,
     pub label:       String,
     pub labels:      Vec<(f64, String)>,
+    pub mod_mode:    bool,
 }
 
 impl UIElementData for UIBtnData {
@@ -150,7 +151,7 @@ impl UIInput {
 
     pub fn btn_2state(id: usize, label: String, on_lbl: String, off_lbl: String, pos: UIPos) -> Self {
         UIInput::Button(UIBtnData {
-            id, pos, label, labels: vec![
+            id, pos, label, mod_mode: false, labels: vec![
                 (0.0, off_lbl), (1.0, on_lbl)
             ] })
     }
