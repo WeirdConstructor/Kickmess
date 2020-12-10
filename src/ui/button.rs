@@ -21,9 +21,15 @@ impl UIElement for Button {
          + UI_BTN_BORDER_WIDTH + UI_SAFETY_PAD)
     }
 
-    fn define_active_zones(&self, x: f64, y: f64, f: &mut dyn FnMut(ActiveZone)) {
-        let size = self.size();
-        let z1 = ActiveZone::from_rect(x, y, 0, (0.0, 0.0, size.0, size.1));
+    fn define_active_zones(&self, x: f64, y: f64, elem_data: &dyn UIElementData, f: &mut dyn FnMut(ActiveZone)) {
+        let size     = self.size();
+        let sub_type =
+            if elem_data.as_btn_data().unwrap().mod_mode {
+                AZ_MOD_SELECT
+            } else {
+                AZ_COARSE_DRAG
+            };
+        let z1 = ActiveZone::from_rect(x, y, sub_type, (0.0, 0.0, size.0, size.1));
         (f)(z1);
     }
 

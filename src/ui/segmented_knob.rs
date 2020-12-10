@@ -23,13 +23,12 @@ impl UIElement for SegmentedKnob {
          self.radius + lbl_y + lbl_h + UI_BG_KNOB_STROKE + 2.0 * UI_SAFETY_PAD)
     }
 
-    fn define_active_zones(&self, x: f64, y: f64, f: &mut dyn FnMut(ActiveZone)) {
+    fn define_active_zones(&self, x: f64, y: f64, _elem_data: &dyn UIElementData, f: &mut dyn FnMut(ActiveZone)) {
         let (knob_xo, knob_yo) =
             self.get_center_offset(UI_BG_KNOB_STROKE);
         let (xo, yo) = (knob_xo, knob_yo);
 
-        let z1 =
-            ActiveZone::from_rect(x + xo, y + yo, 0, self.get_value_rect());
+        let z1 = ActiveZone::from_rect(x + xo, y + yo, AZ_COARSE_DRAG, self.get_value_rect());
         (f)(z1);
     }
 

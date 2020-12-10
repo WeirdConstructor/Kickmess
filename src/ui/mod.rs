@@ -176,6 +176,10 @@ impl UI {
         // check ui_handle
     }
 
+    fn hover_zone_submode(&self) -> i8 {
+        if let Some(hz) = self.hover_zone { hz.subtype as i8 } else { -1 }
+    }
+
     fn recalc_drag_value(&mut self) {
         if let Some(drag_zone) = self.drag_zone {
             let xd = self.last_mouse_pos.0 - drag_zone.0.0;
@@ -224,13 +228,23 @@ impl UI {
                 self.queue_redraw();
             },
             UIEvent::MouseButtonPressed(btn) => {
-                if self.drag_zone.is_none() && self.hover_zone.is_some() {
-                    self.drag_zone = Some((self.last_mouse_pos, self.hover_zone.unwrap()));
-                    self.recalc_drag_value();
-                    self.queue_redraw();
-                    println!("drag start! {:?}", self.drag_zone);
-                } else {
-                    println!("BUTTON PRESS: {:?} @{:?}", btn, self.last_mouse_pos);
+                use crate::ui::painting;
+                match self.hover_zone_submode() {
+                    painting::AZ_COARSE_DRAG | painting::AZ_FINE_DRAG => {
+                        if self.drag_zone.is_none() && self.hover_zone.is_some() {
+                            self.drag_zone = Some((self.last_mouse_pos, self.hover_zone.unwrap()));
+                            self.recalc_drag_value();
+                            self.queue_redraw();
+                            println!("drag start! {:?}", self.drag_zone);
+                        } else {
+                            println!("BUTTON PRESS: {:?} @{:?}", btn, self.last_mouse_pos);
+                        }
+                    },
+                    painting::AZ_MOD_SELECT => {
+                    },
+                    painting::AZ_TOGGLE => {
+                    },
+                    _ => {}
                 }
             },
             UIEvent::MouseButtonReleased(btn) => {
@@ -244,8 +258,10 @@ impl UI {
                     //       value to the client!
                     self.queue_redraw();
                 }
+
                 self.drag_zone      = None;
                 self.drag_tmp_value = None;
+
                 println!("BUTTON RELEASE: {:?} @{:?}", btn, self.last_mouse_pos);
             },
             UIEvent::WindowClose => {
@@ -349,7 +365,7 @@ impl UI {
         let mut z_idx = 0;
 
         let az = self.cache.draw_bg(cr, xe, ye, cache_idx as usize);
-        self.cache.define_active_zones(xe, ye, cache_idx as usize, &mut |az| {
+        self.cache.define_active_zones(xe, ye, element_data, cache_idx as usize, &mut |az| {
             zones[z_idx] = Some(az);
             z_idx += 1;
         });

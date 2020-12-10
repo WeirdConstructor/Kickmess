@@ -151,7 +151,7 @@ impl UIInput {
 
     pub fn btn_2state(id: usize, label: String, on_lbl: String, off_lbl: String, pos: UIPos) -> Self {
         UIInput::Button(UIBtnData {
-            id, pos, label, mod_mode: false, labels: vec![
+            id, pos, label, mod_mode: true, labels: vec![
                 (0.0, off_lbl), (1.0, on_lbl)
             ] })
     }

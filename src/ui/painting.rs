@@ -1,6 +1,11 @@
 use crate::ui::constants::*;
 use crate::ui::draw_cache::DrawCache;
 
+pub const AZ_COARSE_DRAG : i8 = 0;
+pub const AZ_FINE_DRAG   : i8 = 1;
+pub const AZ_MOD_SELECT  : i8 = 2;
+pub const AZ_TOGGLE      : i8 = 3;
+
 #[derive(Debug, Clone, Copy)]
 pub struct ActiveZone {
     pub id:      usize,
@@ -31,10 +36,10 @@ pub enum Connector {
 }
 
 impl ActiveZone {
-    pub fn from_rect(xo: f64, yo: f64, subtype: usize, r: (f64, f64, f64, f64)) -> Self {
+    pub fn from_rect(xo: f64, yo: f64, subtype: i8, r: (f64, f64, f64, f64)) -> Self {
         Self {
             id: 0,
-            subtype,
+            subtype: subtype as usize,
             x: r.0 + xo,
             y: r.1 + yo,
             w: r.2,
