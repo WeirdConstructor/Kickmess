@@ -17,6 +17,8 @@ use crate::ui::protocol::{UIMsg, UICmd, UIPos, UIKnobData, UIProviderHandle,
                           UILayout, UIBtnData, UIInput, UIValueSpec};
 use crate::ui::constants::*;
 
+const IMAGINARY_MAX_ID : usize = 9999999999;
+
 fn clamp01(x: f32) -> f32 {
     if x < 0.0 { return 0.0; }
     if x > 1.0 { return 1.0; }
@@ -46,6 +48,25 @@ pub enum UIEvent {
     WindowClose,
 }
 
+#[derive(Debug, Clone, Copy)]
+enum InputMode {
+    None,
+    DragValue { zone: ActiveZone, orig_pos: (f64, f64) },
+    SelectMod { zone: ActiveZone },
+    ToggleBtn { zone: ActiveZone },
+}
+
+impl InputMode {
+    fn id(&self) -> usize {
+        match self {
+            InputMode::None                   => IMAGINARY_MAX_ID,
+            InputMode::DragValue { zone, .. } => zone.id,
+            InputMode::SelectMod { zone, .. } => zone.id,
+            InputMode::ToggleBtn { zone, .. } => zone.id,
+        }
+    }
+}
+
 pub struct UI {
     ui_handle:      UIProviderHandle,
 
@@ -61,9 +82,9 @@ pub struct UI {
     cache:          DrawCache,
 
     hover_zone:     Option<ActiveZone>,
-    drag_zone:      Option<((f64, f64), ActiveZone)>,
     drag_tmp_value: Option<(usize, f64)>,
     last_mouse_pos: (f64, f64),
+    input_mode:     InputMode,
 
     needs_redraw_flag: bool,
 }
@@ -104,9 +125,9 @@ impl UI {
                 value_specs:        vec![],
                 hover_zone:         None,
                 drag_tmp_value:     None,
-                drag_zone:          None,
                 last_mouse_pos:     (0.0, 0.0),
                 needs_redraw_flag:  true,
+                input_mode:         InputMode::None,
             };
         this.init_draw_cache();
         this
@@ -181,21 +202,21 @@ impl UI {
     }
 
     fn recalc_drag_value(&mut self) {
-        if let Some(drag_zone) = self.drag_zone {
-            let xd = self.last_mouse_pos.0 - drag_zone.0.0;
-            let yd = self.last_mouse_pos.1 - drag_zone.0.1;
+        if let InputMode::DragValue{ zone, orig_pos } = self.input_mode {
+            let xd = self.last_mouse_pos.0 - orig_pos.0;
+            let yd = self.last_mouse_pos.1 - orig_pos.1;
             let mut distance = xd + -yd; // (xd * xd).sqrt() (yd * yd).sqrt();
 
             let steps = distance / 10.0;
 
             let step_val =
-                if drag_zone.1.subtype == 0 {
-                    self.calc_coarse_step(drag_zone.1.id, steps)
+                if zone.subtype == 0 {
+                    self.calc_coarse_step(zone.id, steps)
                 } else {
-                    self.calc_fine_step(drag_zone.1.id, steps)
+                    self.calc_fine_step(zone.id, steps)
                 };
 
-            self.drag_tmp_value = Some((drag_zone.1.id, step_val));
+            self.drag_tmp_value = Some((zone.id, step_val));
         } else {
             self.drag_tmp_value = None;
         }
@@ -206,23 +227,26 @@ impl UI {
             UIEvent::MousePosition(x, y) => {
                 self.last_mouse_pos = (x, y);
 
-                if self.drag_zone.is_none() {
-                    self.hover_zone = None;
+                match self.input_mode {
+                    InputMode::DragValue { .. } => {
+                        self.recalc_drag_value();
+                        // TODO: Send message with the virtually adjusted
+                        //       value to the client!
+                        println!("SENDBACK VALUE CHANGE: {:?}",
+                            self.drag_tmp_value);
+                    },
+                    _ => {
+                        self.hover_zone = None;
 
-                    for zone in self.zones.iter() {
-                        if zone.is_inside(x, y) {
-                            self.hover_zone = Some(*zone);
-                            //d// println!("handle_mouse: {},{} => Hoverzone={}",
-                            //d//          x, y, zone.id);
-                            break;
+                        for zone in self.zones.iter() {
+                            if zone.is_inside(x, y) {
+                                self.hover_zone = Some(*zone);
+                                //d// println!("handle_mouse: {},{} => Hoverzone={}",
+                                //d//          x, y, zone.id);
+                                break;
+                            }
                         }
-                    }
-                } else {
-                    self.recalc_drag_value();
-                    // TODO: Send message with the virtually adjusted
-                    //       value to the client!
-                    println!("SENDBACK VALUE CHANGE: {:?}",
-                        self.drag_tmp_value);
+                    },
                 }
 
                 self.queue_redraw();
@@ -231,38 +255,56 @@ impl UI {
                 use crate::ui::painting;
                 match self.hover_zone_submode() {
                     painting::AZ_COARSE_DRAG | painting::AZ_FINE_DRAG => {
-                        if self.drag_zone.is_none() && self.hover_zone.is_some() {
-                            self.drag_zone = Some((self.last_mouse_pos, self.hover_zone.unwrap()));
+                            self.input_mode =
+                                InputMode::DragValue {
+                                    orig_pos: self.last_mouse_pos,
+                                    zone:     self.hover_zone.unwrap(),
+                                };
                             self.recalc_drag_value();
                             self.queue_redraw();
-                            println!("drag start! {:?}", self.drag_zone);
-                        } else {
-                            println!("BUTTON PRESS: {:?} @{:?}", btn, self.last_mouse_pos);
-                        }
+                            println!("drag start! {:?}", self.input_mode);
                     },
                     painting::AZ_MOD_SELECT => {
+                        println!("MOD SELECT BUTTON PRESS: {:?} @{:?}", btn, self.last_mouse_pos);
+                        self.input_mode =
+                            InputMode::SelectMod {
+                                zone: self.hover_zone.unwrap()
+                            };
+                        self.queue_redraw();
                     },
                     painting::AZ_TOGGLE => {
+                        println!("BUTTON PRESS: {:?} @{:?}", btn, self.last_mouse_pos);
                     },
-                    _ => {}
+                    _ => {
+                        println!("BUTTON PRESS: {:?} @{:?}", btn, self.last_mouse_pos);
+                    }
                 }
             },
             UIEvent::MouseButtonReleased(btn) => {
                 self.recalc_drag_value();
 
-                if let Some(drag_tmp_value) = self.drag_tmp_value {
-                    let id = drag_tmp_value.0;
-                    let v = self.get_element_value(id);
-                    self.set_element_value(id, v);
-                    // TODO: Send message with the virtually adjusted
-                    //       value to the client!
-                    self.queue_redraw();
+                match self.input_mode {
+                    InputMode::None => {},
+                    InputMode::DragValue { .. } => {
+                        let id = self.drag_tmp_value.unwrap().0;
+                        let v = self.get_element_value(id);
+                        self.set_element_value(id, v);
+                        // TODO: Send message with the virtually adjusted
+                        //       value to the client!
+                        self.queue_redraw();
+                    },
+                    InputMode::ToggleBtn { zone, .. } => {
+                    },
+                    InputMode::SelectMod { zone, .. } => {
+                        println!("MOD SELECT RELEASE");
+                    },
                 }
 
-                self.drag_zone      = None;
-                self.drag_tmp_value = None;
+                println!("BUTTON RELEASE: {:?} @{:?} / {:?}",
+                         btn, self.last_mouse_pos, self.input_mode);
 
-                println!("BUTTON RELEASE: {:?} @{:?}", btn, self.last_mouse_pos);
+                self.input_mode     = InputMode::None;
+                self.drag_tmp_value = None;
             },
             UIEvent::WindowClose => {
                 self.ui_handle.tx.send(
@@ -304,6 +346,10 @@ impl UI {
         self.value_specs[id].fmt(self.get_element_value(id) as f64)
     }
 
+    fn is_mod_target_value(&self, id: usize) -> bool {
+        self.value_specs[id].v2v(id as f64) > 0.5
+    }
+
     fn touch_element_value(&mut self, id: usize) {
         if id >= self.element_values.len() {
             self.element_values.resize(id * 2, 0.0);
@@ -325,8 +371,9 @@ impl UI {
 
         let mut v = self.element_values[id];
 
-        if let Some(drag_tmp_value) = self.drag_tmp_value {
-            if drag_tmp_value.0 == id {
+        if let InputMode::DragValue { zone, .. } = self.input_mode {
+            let drag_tmp_value = self.drag_tmp_value.unwrap();
+            if drag_tmp_value.0 == zone.id {
                 v = (v as f64 + drag_tmp_value.1) as f32;
             }
         }
