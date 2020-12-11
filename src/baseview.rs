@@ -87,6 +87,10 @@ impl WindowHandler for TestWindowHandler {
     fn on_frame(&mut self) {
         self.ui.handle_client_command();
 
+        if !self.ui.needs_redraw() {
+            return;
+        }
+
         let surf =
             unsafe {
                 cairo_sys::cairo_xlib_surface_create(
@@ -114,39 +118,30 @@ impl WindowHandler for TestWindowHandler {
               .expect("Createable new img surface");
         let mut front_ctx = cairo::Context::new(&front_surf);
 
-//        if self.gui_surf.is_none() {
-//            self.gui_surf = Some(
-//                surf.create_similar_image(
-//                    cairo::Format::Rgb24,
-//                    (ext.0 - ext.2).abs() as i32,
-//                    (ext.1 - ext.3).abs() as i32).expect("image surface ok"));
-//        }
-//
-//        let gui_surf = self.gui_surf.as_ref().unwrap();
+        let flush =
+            if self.ui.needs_redraw() {
+                let mut gui_ctx = front_ctx;
 
-        if self.ui.needs_redraw() {
-//            println!("DRAW {:?}", ext);
-//            let mut gui_ctx = cairo::Context::new(&gui_surf);
-            let mut gui_ctx = front_ctx;
-
-            let ext = ctx.clip_extents();
-            gui_ctx.set_source_rgb(
-                UI_GUI_CLEAR_CLR.0,
-                UI_GUI_CLEAR_CLR.1,
-                UI_GUI_CLEAR_CLR.2);
-            gui_ctx.rectangle(ext.0, ext.1, ext.2 - ext.0, ext.3 - ext.1);
-            gui_ctx.fill();
-            self.ui.draw(&gui_ctx);
-//            gui_surf.flush();
-        }
-
-//        front_ctx.set_source_surface(&gui_surf, 0.0, 0.0);
-//        front_ctx.paint();
-//        front_surf.flush();
+                let ext = ctx.clip_extents();
+                gui_ctx.set_source_rgb(
+                    UI_GUI_CLEAR_CLR.0,
+                    UI_GUI_CLEAR_CLR.1,
+                    UI_GUI_CLEAR_CLR.2);
+                gui_ctx.rectangle(ext.0, ext.1, ext.2 - ext.0, ext.3 - ext.1);
+                gui_ctx.fill();
+                self.ui.draw(&gui_ctx);
+                true
+            } else {
+                false
+            };
 
         ctx.set_source_surface(&front_surf, 0.0, 0.0);
         ctx.paint();
         surf.flush();
+
+        if flush {
+            unsafe { x11::xlib::XFlush(self.display); }
+        }
     }
 }
 

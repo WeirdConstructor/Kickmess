@@ -146,6 +146,7 @@ fn main() {
 
     cl_hdl.tx.send(UICmd::DefineValues(vec![
         UIValueSpec::new_id(),
+        UIValueSpec::new_min_max(5.0, 9999.0, 6, 1).steps(0.01, 0.001),
         UIValueSpec::new_id(),
         UIValueSpec::new_id(),
         UIValueSpec::new_id(),
@@ -166,7 +167,7 @@ fn main() {
             yv: 1,
             wv: 10,
             hv: 10,
-            elements: vec![
+            rows: vec![
                 vec![
                     UIInput::knob(      1, String::from("SFreq."), UIPos::center(2, 6)),
                     UIInput::knob_small(1, String::from("SFreq."), UIPos::center(2, 6)),

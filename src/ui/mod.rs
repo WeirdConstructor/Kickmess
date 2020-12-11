@@ -477,7 +477,6 @@ impl UI {
                     cr.rectangle(x, y, w, h);
                     cr.fill();
 
-
                     let mut row_offs     = 0;
                     for row in rows.iter() {
                         let mut col_offs = 0;
