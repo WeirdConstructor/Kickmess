@@ -140,6 +140,7 @@ impl WindowHandler for TestWindowHandler {
         surf.flush();
 
         if flush {
+            println!("XFlush!");
             unsafe { x11::xlib::XFlush(self.display); }
         }
     }
