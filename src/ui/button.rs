@@ -34,7 +34,7 @@ impl UIElement for Button {
     }
 
     fn draw_value(&self, cr: &cairo::Context, x: f64, y: f64,
-                  hover_style: bool, data: &dyn UIElementData,
+                  highlight: HLStyle, data: &dyn UIElementData,
                   value: f64, val_s: &str) {
 
         let name = &data.as_btn_data().unwrap().label;
@@ -58,11 +58,20 @@ impl UIElement for Button {
             y + yo + UI_ELEM_TXT_H + UI_BTN_BORDER_WIDTH,
             w, (h / 2.0).round(), name);
 
-        if hover_style {
-            cr.set_source_rgb(
-                UI_BTN_TXT_HOVER_CLR.0,
-                UI_BTN_TXT_HOVER_CLR.1,
-                UI_BTN_TXT_HOVER_CLR.2);
+        match highlight {
+            HLStyle::Hover => {
+                cr.set_source_rgb(
+                    UI_BTN_TXT_HOVER_CLR.0,
+                    UI_BTN_TXT_HOVER_CLR.1,
+                    UI_BTN_TXT_HOVER_CLR.2);
+            },
+            HLStyle::ModTarget => {
+                cr.set_source_rgb(
+                    UI_BTN_TXT_HLIGHT_CLR.0,
+                    UI_BTN_TXT_HLIGHT_CLR.1,
+                    UI_BTN_TXT_HLIGHT_CLR.2);
+            },
+            _ => { },
         }
 
         draw_centered_text(cr, x + xo, y + yo, w, (h / 2.0).round(), val_s);

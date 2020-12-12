@@ -11,7 +11,7 @@ use std::rc::Rc;
 use std::cell::RefCell;
 
 use crate::ui::element::*;
-use crate::ui::painting::{Painter, ActiveZone};
+use crate::ui::painting::{ActiveZone, HLStyle};
 use crate::ui::draw_cache::{DrawCache};
 use crate::ui::protocol::{UIMsg, UICmd, UIPos, UIKnobData, UIProviderHandle,
                           UILayout, UIBtnData, UIInput, UIValueSpec};
@@ -70,8 +70,6 @@ impl InputMode {
 pub struct UI {
     ui_handle:      UIProviderHandle,
 
-//    painter:        Painter,
-
     layout:         Rc<RefCell<Vec<UILayout>>>,
 
     element_values: Vec<f32>,
@@ -116,7 +114,6 @@ impl UI {
         let mut this =
             Self {
                 ui_handle,
-    //            painter:        Painter::new(),
                 layout:             Rc::new(RefCell::new(vec![])),
                 window_size:        (0.0, 0.0),
                 zones:              vec![],
@@ -423,21 +420,21 @@ impl UI {
             }
         }
 
-        let hover =
+        let highlight =
             if let Some(hover_zone) = self.hover_zone {
                 if hover_zone.id == id {
-                    true
+                    HLStyle::Hover
                 } else {
-                    false
+                    HLStyle::None
                 }
             } else {
-                false
+                HLStyle::None
             };
 
         let val     = self.get_element_value(id) as f64;
         let val_str = self.get_formatted_value(id);
         self.cache.draw_data(cr, xe, ye, cache_idx as usize,
-                             hover, element_data, val, &val_str);
+                             highlight, element_data, val, &val_str);
     }
 
     pub fn draw(&mut self, cr: &cairo::Context) {

@@ -16,23 +16,11 @@ pub struct ActiveZone {
     pub h:       f64,
 }
 
-pub enum ElementState {
-    Active(f64),
-    Hover(f64),
-    Disabled(f64),
-    TextEdit(String,u32),
-}
-
-pub enum Element {
-    //   id,            label_idx
-    Knob(usize,         usize),
-    SmallKnob(usize,    usize),
-    Toggle(usize,       usize),
-}
-
-pub enum Connector {
-    Down,
-    Right,
+#[derive(Debug, Clone, Copy)]
+pub enum HLStyle {
+    None,
+    Hover,
+    ModTarget,
 }
 
 impl ActiveZone {
@@ -50,34 +38,5 @@ impl ActiveZone {
     pub fn is_inside(&self, x: f64, y: f64) -> bool {
            x >= self.x && x <= (self.x + self.w)
         && y >= self.y && y <= (self.y + self.h)
-    }
-}
-
-pub struct Painter {
-    pub zones: Vec<ActiveZone>,
-    cache: DrawCache,
-}
-
-impl Painter {
-    pub fn new() -> Self {
-        Self {
-            zones: vec![],
-            cache: DrawCache::new(),
-        }
-    }
-
-    pub fn start_redraw(&mut self)
-    {
-        self.zones.clear();
-    }
-
-    pub fn done_redraw(&mut self)
-    {
-    }
-
-    fn add_active_zone(&mut self, id: usize, mut z: ActiveZone)
-    {
-        z.id = id;
-        self.zones.push(z);
     }
 }

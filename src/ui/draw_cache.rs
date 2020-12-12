@@ -35,11 +35,11 @@ impl DrawCache {
     }
 
     pub fn draw_data(&mut self, cr: &cairo::Context, x: f64, y: f64,
-                     idx: usize, hover_style: bool,
+                     idx: usize, highlight: HLStyle,
                      data: &dyn UIElementData, value: f64, val_s: &str) {
         self.elements.get(idx)
             .unwrap()
-            .draw_value(cr, x, y, hover_style, data, value, val_s);
+            .draw_value(cr, x, y, highlight, data, value, val_s);
     }
 
     pub fn define_active_zones(&self, x: f64, y: f64, elem_data: &dyn UIElementData,

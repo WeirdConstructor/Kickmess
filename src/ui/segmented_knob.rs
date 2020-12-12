@@ -33,21 +33,33 @@ impl UIElement for SegmentedKnob {
     }
 
     fn draw_value(&self, cr: &cairo::Context, x: f64, y: f64,
-                  hover_style: bool, data: &dyn UIElementData,
+                  highlight: HLStyle, data: &dyn UIElementData,
                   value: f64, val_s: &str) {
 
         let (knob_xo, knob_yo) =
             self.get_center_offset(UI_BG_KNOB_STROKE);
         let (xo, yo) = (knob_xo, knob_yo);
 
-        self.draw_oct_arc(
-            &cr, x + xo, y + yo,
-            UI_MG_KNOB_STROKE,
-            UI_FG_KNOB_STROKE_CLR,
-            true,
-            value);
+        match highlight {
+            HLStyle::ModTarget => {
+                self.draw_oct_arc(
+                    &cr, x + xo, y + yo,
+                    UI_MG_KNOB_STROKE * 2.0,
+                    UI_TXT_KNOB_HLIGHT_CLR,
+                    false,
+                    1.0);
+            },
+            _ => {
+                self.draw_oct_arc(
+                    &cr, x + xo, y + yo,
+                    UI_MG_KNOB_STROKE,
+                    UI_FG_KNOB_STROKE_CLR,
+                    true,
+                    value);
+            },
+        }
 
-        self.draw_value_label(&cr, x + xo, y + yo, hover_style, val_s);
+        self.draw_value_label(&cr, x + xo, y + yo, highlight, val_s);
 
         let name = &data.as_knob_data().unwrap().label;
         self.draw_name(&cr, x + xo, y + yo, name);
@@ -181,21 +193,27 @@ impl SegmentedKnob {
         draw_centered_text(cr, x + r.0, y + r.1, r.2, r.3, s);
     }
 
-    pub fn draw_value_label(&self, cr: &cairo::Context, x: f64, y: f64, hover_style: bool, s: &str) {
+    pub fn draw_value_label(&self, cr: &cairo::Context, x: f64, y: f64, highlight: HLStyle, s: &str) {
         let r = self.get_value_rect();
-        cr.set_font_size(
-            if hover_style { self.font_size_data + 1.0 }
-            else           { self.font_size_data });
-        if hover_style {
-            cr.set_source_rgb(
-                UI_TXT_KNOB_HOVER_CLR.0,
-                UI_TXT_KNOB_HOVER_CLR.1,
-                UI_TXT_KNOB_HOVER_CLR.2);
-        } else {
-            cr.set_source_rgb(
-                UI_TXT_KNOB_CLR.0,
-                UI_TXT_KNOB_CLR.1,
-                UI_TXT_KNOB_CLR.2);
+
+        match highlight {
+            HLStyle::Hover => {
+                cr.set_font_size(self.font_size_data + 1.0);
+                cr.set_source_rgb(
+                    UI_TXT_KNOB_HOVER_CLR.0,
+                    UI_TXT_KNOB_HOVER_CLR.1,
+                    UI_TXT_KNOB_HOVER_CLR.2);
+            },
+            HLStyle::ModTarget => {
+                cr.set_font_size(self.font_size_data + 1.0);
+                cr.set_source_rgb(
+                    UI_TXT_KNOB_HLIGHT_CLR.0,
+                    UI_TXT_KNOB_HLIGHT_CLR.1,
+                    UI_TXT_KNOB_HLIGHT_CLR.2);
+            },
+            _ => {
+                cr.set_font_size(self.font_size_data);
+            },
         }
 
         let ext = cr.text_extents(s);
