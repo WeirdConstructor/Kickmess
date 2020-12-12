@@ -477,6 +477,13 @@ impl UI {
                     cr.rectangle(x, y, w, h);
                     cr.fill();
 
+                    if label.len() > 0 {
+                        // Draw container title with some padding in relation
+                        // to the border size.
+                        self.cache.draw_container_label(
+                            cr, x + UI_BORDER_WIDTH, y + UI_BORDER_WIDTH, label);
+                    }
+
                     let mut row_offs     = 0;
                     for row in rows.iter() {
                         let mut col_offs = 0;

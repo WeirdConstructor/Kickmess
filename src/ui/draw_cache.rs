@@ -1,6 +1,7 @@
 use crate::ui::painting::*;
 use crate::ui::constants::*;
 use crate::ui::element::{UIElement, UIElementData};
+use crate::ui::util::draw_left_text;
 
 pub struct DrawCache {
     surf:       Vec<Option<cairo::Surface>>,
@@ -13,6 +14,15 @@ impl DrawCache {
             surf:       vec![],
             elements:   vec![],
         }
+    }
+
+    pub fn draw_container_label(&mut self, cr: &cairo::Context, x: f64, y: f64, lbl: &str) {
+        cr.set_font_size(UI_CONT_FONT_SIZE);
+        cr.set_source_rgb(
+            UI_CONT_FONT_CLR.0,
+            UI_CONT_FONT_CLR.1,
+            UI_CONT_FONT_CLR.2);
+        draw_left_text(cr, x, y, UI_ELEM_TXT_H, lbl);
     }
 
     pub fn push_element(&mut self, el: Box<dyn UIElement>) {
