@@ -198,6 +198,18 @@ impl UI {
         if let Some(hz) = self.hover_zone { hz.subtype as i8 } else { -1 }
     }
 
+    fn hover_highligh_for_id(&self, id: usize) -> HLStyle {
+        if let Some(hover_zone) = self.hover_zone {
+            if hover_zone.id == id {
+                HLStyle::Hover
+            } else {
+                HLStyle::None
+            }
+        } else {
+            HLStyle::None
+        }
+    }
+
     fn recalc_drag_value(&mut self) {
         if let InputMode::DragValue{ zone, orig_pos } = self.input_mode {
             let xd = self.last_mouse_pos.0 - orig_pos.0;
@@ -250,50 +262,84 @@ impl UI {
             },
             UIEvent::MouseButtonPressed(btn) => {
                 use crate::ui::painting;
-                match self.hover_zone_submode() {
-                    painting::AZ_COARSE_DRAG | painting::AZ_FINE_DRAG => {
-                            self.input_mode =
-                                InputMode::DragValue {
-                                    orig_pos: self.last_mouse_pos,
-                                    zone:     self.hover_zone.unwrap(),
-                                };
-                            self.recalc_drag_value();
-                            self.queue_redraw();
-                            println!("drag start! {:?}", self.input_mode);
+
+                match self.input_mode {
+                    InputMode::None => {
+                        match self.hover_zone_submode() {
+                            painting::AZ_COARSE_DRAG | painting::AZ_FINE_DRAG => {
+                                    self.input_mode =
+                                        InputMode::DragValue {
+                                            orig_pos: self.last_mouse_pos,
+                                            zone:     self.hover_zone.unwrap(),
+                                        };
+                                    self.recalc_drag_value();
+                                    self.queue_redraw();
+                                    println!("drag start! {:?}", self.input_mode);
+                            },
+                            painting::AZ_TOGGLE => {
+                                println!("BUTTON PRESS: {:?} @{:?}", btn, self.last_mouse_pos);
+                            },
+                            _ => {
+                                println!("BUTTON PRESS: {:?} @{:?}", btn, self.last_mouse_pos);
+                            }
+                        }
                     },
-                    painting::AZ_MOD_SELECT => {
-                        println!("MOD SELECT BUTTON PRESS: {:?} @{:?}", btn, self.last_mouse_pos);
-                        self.input_mode =
-                            InputMode::SelectMod {
-                                zone: self.hover_zone.unwrap()
-                            };
-                        self.queue_redraw();
-                    },
-                    painting::AZ_TOGGLE => {
-                        println!("BUTTON PRESS: {:?} @{:?}", btn, self.last_mouse_pos);
-                    },
-                    _ => {
-                        println!("BUTTON PRESS: {:?} @{:?}", btn, self.last_mouse_pos);
-                    }
+                    _ => {}
                 }
             },
             UIEvent::MouseButtonReleased(btn) => {
-                self.recalc_drag_value();
-
                 match self.input_mode {
-                    InputMode::None => {},
+                    InputMode::None => {
+                        match self.hover_zone_submode() {
+                            painting::AZ_MOD_SELECT => {
+                                println!("MOD SELECT BUTTON PRESS: {:?} @{:?}", btn, self.last_mouse_pos);
+                                self.input_mode =
+                                    InputMode::SelectMod {
+                                        zone: self.hover_zone.unwrap()
+                                    };
+                                self.queue_redraw();
+
+                                return;
+                            },
+                            _ => { }
+                        }
+                    },
                     InputMode::DragValue { .. } => {
+                        self.recalc_drag_value();
+
                         let id = self.drag_tmp_value.unwrap().0;
-                        let v = self.get_element_value(id);
+                        let v  = self.get_element_value(id);
+
                         self.set_element_value(id, v);
+
                         // TODO: Send message with the virtually adjusted
                         //       value to the client!
                         self.queue_redraw();
                     },
                     InputMode::ToggleBtn { zone, .. } => {
+                        self.queue_redraw();
                     },
                     InputMode::SelectMod { zone, .. } => {
                         println!("MOD SELECT RELEASE");
+                        if let Some(hover_zone) = self.hover_zone {
+                            if hover_zone.id == zone.id {
+                                self.set_element_value(zone.id, 0.0);
+                                self.queue_redraw();
+
+                            } else if self.is_mod_target_value(zone.id, hover_zone.id) {
+                                println!("****** MOD TARGET FOR {} FOUND: {}",
+                                         zone.id,
+                                         hover_zone.id);
+                                self.set_element_value(zone.id, hover_zone.id as f32);
+                                self.queue_redraw();
+                            } else {
+                                // do not exit select modulation mode
+                                return;
+                            }
+                        } else {
+                            // do not exit select modulation mode
+                            return;
+                        }
                     },
                 }
 
@@ -343,8 +389,8 @@ impl UI {
         self.value_specs[id].fmt(self.get_element_value(id) as f64)
     }
 
-    fn is_mod_target_value(&self, id: usize) -> bool {
-        self.value_specs[id].v2v(id as f64) > 0.5
+    fn is_mod_target_value(&self, mod_id: usize, id: usize) -> bool {
+        self.value_specs[mod_id].v2v(id as f64) > 0.5
     }
 
     fn touch_element_value(&mut self, id: usize) {
@@ -370,12 +416,13 @@ impl UI {
 
         if let InputMode::DragValue { zone, .. } = self.input_mode {
             let drag_tmp_value = self.drag_tmp_value.unwrap();
-            if drag_tmp_value.0 == zone.id {
+            if id == zone.id {
                 v = (v as f64 + drag_tmp_value.1) as f32;
+                v = clamp01(v);
             }
         }
 
-        clamp01(v)
+        v
     }
 
     fn add_active_zone(&mut self, id: usize, mut az: ActiveZone) {
@@ -421,14 +468,29 @@ impl UI {
         }
 
         let highlight =
-            if let Some(hover_zone) = self.hover_zone {
-                if hover_zone.id == id {
-                    HLStyle::Hover
-                } else {
-                    HLStyle::None
-                }
-            } else {
-                HLStyle::None
+            match self.input_mode {
+                InputMode::SelectMod { zone } => {
+                    if let HLStyle::Hover = self.hover_highligh_for_id(id) {
+                        if self.is_mod_target_value(zone.id, id) {
+                            HLStyle::HoverModTarget
+                        } else if zone.id == id {
+                            HLStyle::Hover
+                        } else {
+                            HLStyle::None
+                        }
+                    } else {
+                        if self.is_mod_target_value(zone.id, id) {
+                            HLStyle::ModTarget
+                        } else if zone.id == id {
+                            HLStyle::HoverModTarget
+                        } else {
+                            HLStyle::None
+                        }
+                    }
+                },
+                _ => {
+                    self.hover_highligh_for_id(id)
+                },
             };
 
         let val     = self.get_element_value(id) as f64;

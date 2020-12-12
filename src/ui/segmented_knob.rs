@@ -49,6 +49,14 @@ impl UIElement for SegmentedKnob {
                     false,
                     1.0);
             },
+            HLStyle::HoverModTarget => {
+                self.draw_oct_arc(
+                    &cr, x + xo, y + yo,
+                    UI_MG_KNOB_STROKE * 3.0,
+                    UI_TXT_KNOB_HLHOVR_CLR,
+                    false,
+                    1.0);
+            },
             _ => {
                 self.draw_oct_arc(
                     &cr, x + xo, y + yo,

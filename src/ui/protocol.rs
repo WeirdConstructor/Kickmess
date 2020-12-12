@@ -11,7 +11,7 @@ pub struct UIInputValue {
 #[derive(Clone)]
 pub struct UIValueSpec {
     fun: Arc<dyn Fn(f64) -> f64 + Send + Sync>,
-    fmt: Arc<dyn Fn(f64) -> String + Send + Sync>,
+    fmt: Arc<dyn Fn(f64, f64) -> String + Send + Sync>,
     coarse_step:    f64,
     fine_step:      f64,
 }
@@ -26,7 +26,7 @@ impl UIValueSpec {
     pub fn new_id() -> Self {
         Self {
             fun: Arc::new(|x| x),
-            fmt: Arc::new(|x| format!("{:4.2}", x)),
+            fmt: Arc::new(|_, x| format!("{:4.2}", x)),
             coarse_step: 0.05,
             fine_step:   0.001,
         }
@@ -35,16 +35,49 @@ impl UIValueSpec {
     pub fn new(fun: Arc<dyn Fn(f64) -> f64 + Send + Sync>) -> Self {
         Self {
             fun,
-            fmt: Arc::new(|x| format!("{:4.2}", x)),
+            fmt: Arc::new(|_, x| format!("{:4.2}", x)),
             coarse_step: 0.05,
             fine_step:   0.001,
+        }
+    }
+
+    pub fn new_mod_target_list(targets: &[(usize, &str)], empty_label: &str) -> Self {
+        let possible_ids : Vec<usize> =
+            targets.iter().map(|p| p.0).collect();
+
+        let id_2_str_map : Vec<(usize, String)> =
+            targets.iter().map(|p| (p.0, p.1.to_string())).collect();
+
+        let empty_label = empty_label.to_string();
+
+        Self {
+            fun: Arc::new(move |x| {
+                for id in possible_ids.iter() {
+                    if *id == (x.round() as usize) {
+                        return 1.0;
+                    }
+                }
+
+                0.0
+            }),
+            fmt: Arc::new(move |v, _| {
+                for (id, s) in id_2_str_map.iter() {
+                    if *id == (v.round() as usize) {
+                        return s.clone()
+                    }
+                }
+
+                empty_label.clone()
+            }),
+            coarse_step: 0.0,
+            fine_step:   0.0,
         }
     }
 
     pub fn new_min_max(min: f64, max: f64, width: usize, prec: usize) -> Self {
         Self {
             fun: Arc::new(move |x| min * (1.0 - x) + max * x),
-            fmt: Arc::new(move |x| format!("{2:0$.1$}", width, prec, x)),
+            fmt: Arc::new(move |_, x| format!("{2:0$.1$}", width, prec, x)),
             coarse_step: 0.05,
             fine_step:   0.001,
         }
@@ -57,10 +90,10 @@ impl UIValueSpec {
     }
 
     pub fn new_with_fmt(fun: Arc<dyn Fn(f64) -> f64 + Send + Sync>,
-                        fmt: Arc<dyn Fn(f64) -> String + Send + Sync>) -> Self {
+                        fmt: Arc<dyn Fn(f64, f64) -> String + Send + Sync>) -> Self {
         Self {
             fun,
-            fmt: Arc::new(|x| format!("{:4.2}", x)),
+            fmt: Arc::new(|_, x| format!("{:4.2}", x)),
             coarse_step: 0.05,
             fine_step:   0.001,
         }
@@ -69,7 +102,7 @@ impl UIValueSpec {
     pub fn fine(&self, steps: f64) -> f64   { self.fine_step   * steps }
     pub fn coarse(&self, steps: f64) -> f64 { self.coarse_step * steps }
     pub fn v2v(&self, x: f64) -> f64        { (self.fun)(x) }
-    pub fn fmt(&self, x: f64) -> String     { (self.fmt)(self.v2v(x)) }
+    pub fn fmt(&self, x: f64) -> String     { (self.fmt)(x, self.v2v(x)) }
 }
 
 // TODO: Define default margin/padding between grid cells

@@ -65,6 +65,12 @@ impl UIElement for Button {
                     UI_BTN_TXT_HOVER_CLR.1,
                     UI_BTN_TXT_HOVER_CLR.2);
             },
+            HLStyle::HoverModTarget => {
+                cr.set_source_rgb(
+                    UI_BTN_TXT_HLHOVR_CLR.0,
+                    UI_BTN_TXT_HLHOVR_CLR.1,
+                    UI_BTN_TXT_HLHOVR_CLR.2);
+            },
             HLStyle::ModTarget => {
                 cr.set_source_rgb(
                     UI_BTN_TXT_HLIGHT_CLR.0,

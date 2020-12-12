@@ -21,6 +21,7 @@ pub enum HLStyle {
     None,
     Hover,
     ModTarget,
+    HoverModTarget,
 }
 
 impl ActiveZone {

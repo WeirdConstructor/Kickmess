@@ -62,7 +62,6 @@ impl PuglViewTrait for PuglUI {
                 let pos = ev.pos();
                 //d// println!("MOUSEMOVE: {}:{}", pos.x, pos.y);
                 self.ui.handle_ui_event(UIEvent::MousePosition(pos.x, pos.y));
-                self.post_redisplay();
             },
             EventType::MouseButtonRelease(btn) => {
                 let ev_btn = btn_num_to_uievent(btn.num as usize);
@@ -75,6 +74,10 @@ impl PuglViewTrait for PuglUI {
             _ => {
                 println!("EVENT: {:?}", ev);
             },
+        }
+
+        if self.ui.needs_redraw() {
+            self.post_redisplay();
         }
 
         Status::Success
