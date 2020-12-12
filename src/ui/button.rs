@@ -13,6 +13,20 @@ impl Button {
     }
 }
 
+impl Button {
+    fn define_border_path(&self, cr: &cairo::Context, x: f64, y: f64, w: f64, h: f64) {
+        cr.move_to(x,                      y + UI_BTN_BEVEL);
+        cr.line_to(x + UI_BTN_BEVEL,       y);
+        cr.line_to(x + (w - UI_BTN_BEVEL), y);
+        cr.line_to(x + w,                  y + UI_BTN_BEVEL);
+        cr.line_to(x + w,                  y + (h - UI_BTN_BEVEL));
+        cr.line_to(x + (w - UI_BTN_BEVEL), y + h);
+        cr.line_to(x + UI_BTN_BEVEL,       y + h);
+        cr.line_to(x,                      y + (h - UI_BTN_BEVEL));
+        cr.close_path();
+    }
+}
+
 impl UIElement for Button {
     fn size(&self) -> (f64, f64) {
         (UI_BTN_WIDTH
@@ -70,12 +84,22 @@ impl UIElement for Button {
                     UI_BTN_TXT_HLHOVR_CLR.0,
                     UI_BTN_TXT_HLHOVR_CLR.1,
                     UI_BTN_TXT_HLHOVR_CLR.2);
+
+                cr.set_line_width(UI_BTN_BORDER_WIDTH);
+                self.define_border_path(cr, x + xo, y + yo, w, h);
+                cr.close_path();
+                cr.stroke();
             },
             HLStyle::ModTarget => {
                 cr.set_source_rgb(
                     UI_BTN_TXT_HLIGHT_CLR.0,
                     UI_BTN_TXT_HLIGHT_CLR.1,
                     UI_BTN_TXT_HLIGHT_CLR.2);
+
+                cr.set_line_width(UI_BTN_BORDER2_WIDTH);
+                self.define_border_path(cr, x + xo, y + yo, w, h);
+                cr.close_path();
+                cr.stroke();
             },
             _ => { },
         }
@@ -107,15 +131,7 @@ impl UIElement for Button {
             UI_BTN_BORDER_CLR.2);
 
         // border
-        cr.move_to(x,                      y + UI_BTN_BEVEL);
-        cr.line_to(x + UI_BTN_BEVEL,       y);
-        cr.line_to(x + (w - UI_BTN_BEVEL), y);
-        cr.line_to(x + w,                  y + UI_BTN_BEVEL);
-        cr.line_to(x + w,                  y + (h - UI_BTN_BEVEL));
-        cr.line_to(x + (w - UI_BTN_BEVEL), y + h);
-        cr.line_to(x + UI_BTN_BEVEL,       y + h);
-        cr.line_to(x,                      y + (h - UI_BTN_BEVEL));
-        cr.close_path();
+        self.define_border_path(cr, x, y, w, h);
         cr.stroke();
 
         cr.set_line_width(UI_BTN_BORDER2_WIDTH);
@@ -124,16 +140,8 @@ impl UIElement for Button {
             UI_BTN_BORDER2_CLR.1,
             UI_BTN_BORDER2_CLR.2);
 
-        cr.move_to(x,                      y + UI_BTN_BEVEL);
-        cr.line_to(x + UI_BTN_BEVEL,       y);
-        cr.line_to(x + (w - UI_BTN_BEVEL), y);
-        cr.line_to(x + w,                  y + UI_BTN_BEVEL);
-        cr.line_to(x + w,                  y + (h - UI_BTN_BEVEL));
-        cr.line_to(x + (w - UI_BTN_BEVEL), y + h);
-        cr.line_to(x + UI_BTN_BEVEL,       y + h);
-        cr.line_to(x,                      y + (h - UI_BTN_BEVEL));
+        self.define_border_path(cr, x, y, w, h);
         cr.close_path();
-
         cr.stroke();
 
         cr.set_source_rgb(
@@ -141,16 +149,7 @@ impl UIElement for Button {
             UI_BTN_BG_CLR.1,
             UI_BTN_BG_CLR.2);
 
-        cr.move_to(x,                      y + UI_BTN_BEVEL);
-        cr.line_to(x + UI_BTN_BEVEL,       y);
-        cr.line_to(x + (w - UI_BTN_BEVEL), y);
-        cr.line_to(x + w,                  y + UI_BTN_BEVEL);
-        cr.line_to(x + w,                  y + (h - UI_BTN_BEVEL));
-        cr.line_to(x + (w - UI_BTN_BEVEL), y + h);
-        cr.line_to(x + UI_BTN_BEVEL,       y + h);
-        cr.line_to(x,                      y + (h - UI_BTN_BEVEL));
-        cr.close_path();
-
+        self.define_border_path(cr, x, y, w, h);
         cr.fill();
 
         // divider

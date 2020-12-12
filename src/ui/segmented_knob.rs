@@ -44,7 +44,7 @@ impl UIElement for SegmentedKnob {
             HLStyle::ModTarget => {
                 self.draw_oct_arc(
                     &cr, x + xo, y + yo,
-                    UI_MG_KNOB_STROKE * 2.0,
+                    UI_MG_KNOB_STROKE,
                     UI_TXT_KNOB_HLIGHT_CLR,
                     false,
                     1.0);
@@ -52,7 +52,7 @@ impl UIElement for SegmentedKnob {
             HLStyle::HoverModTarget => {
                 self.draw_oct_arc(
                     &cr, x + xo, y + yo,
-                    UI_MG_KNOB_STROKE * 3.0,
+                    UI_MG_KNOB_STROKE * 2.0,
                     UI_TXT_KNOB_HLHOVR_CLR,
                     false,
                     1.0);

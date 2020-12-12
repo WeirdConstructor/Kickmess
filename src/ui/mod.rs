@@ -474,7 +474,7 @@ impl UI {
                         if self.is_mod_target_value(zone.id, id) {
                             HLStyle::HoverModTarget
                         } else if zone.id == id {
-                            HLStyle::Hover
+                            HLStyle::HoverModTarget
                         } else {
                             HLStyle::None
                         }
@@ -482,7 +482,7 @@ impl UI {
                         if self.is_mod_target_value(zone.id, id) {
                             HLStyle::ModTarget
                         } else if zone.id == id {
-                            HLStyle::HoverModTarget
+                            HLStyle::ModTarget
                         } else {
                             HLStyle::None
                         }
@@ -522,7 +522,11 @@ impl UI {
 
                     let crect = Rect { x, y, w, h };
 
-                    cr.rectangle(x - UI_BORDER_WIDTH, y - UI_BORDER_WIDTH, w + 2.0 * UI_BORDER_WIDTH, h + 2.0 * UI_BORDER_WIDTH);
+                    cr.rectangle(
+                        x - UI_BORDER_WIDTH,
+                        y - UI_BORDER_WIDTH,
+                        w + 2.0 * UI_BORDER_WIDTH,
+                        h + 2.0 * UI_BORDER_WIDTH);
                     cr.set_source_rgb(
                         UI_BORDER_CLR.0,
                         UI_BORDER_CLR.1,

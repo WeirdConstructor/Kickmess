@@ -40,48 +40,66 @@ fn main() {
 
     let mut view = kickmessvst::pugl::open_window(None, Some(p_hdl));
 
+//        ps.add(ParamDefinition::from(Param::Freq1,      5.0,   3000.0, 150.0, "Start Freq."));
+//        ps.add(ParamDefinition::from(Param::Freq2,      5.0,   2000.0,  40.0, "End Freq."));
+//        ps.add(ParamDefinition::from(Param::Decay1,     5.0,   5000.0, 440.0, "Length"));
+//        ps.add(ParamDefinition::from(Param::Dist1,      0.0,   100.0,    0.8, "Dist. Start"));
+//        ps.add(ParamDefinition::from(Param::Dist2,      0.0,   100.0,    0.8, "Dist. End"));
+//        ps.add(ParamDefinition::from(Param::Gain1,      0.1,   5.0,      1.0, "Dist. Gain"));
+//        ps.add(ParamDefinition::from(Param::Env1,       0.01,  1.0,    0.163, "Env. slope"));
+//        ps.add(ParamDefinition::from(Param::Release1,   0.001, 1.0,     0.06, "Freq. slope"));
+//        ps.add(ParamDefinition::from(Param::Noise1,     0.0,   1.0,      0.0, "Noise"));
+//        ps.add(ParamDefinition::from(Param::S1,         0.0,   1.0,      1.0, "Start from note"));
+//        ps.add(ParamDefinition::from(Param::Release2,   1.0,1000.0,      5.0, "Env Release"));
+//        ps.add(ParamDefinition::from(Param::Phase1,     0.0,   1.0,      0.0, "Click"));
+
     cl_hdl.tx.send(UICmd::DefineValues(vec![
         UIValueSpec::new_id(),
+        UIValueSpec::new_min_max(5.0, 3000.0, 6, 1).steps(0.05, 0.001),
+        UIValueSpec::new_min_max(5.0, 2000.0, 6, 1).steps(0.05, 0.001),
         UIValueSpec::new_min_max(5.0, 5000.0, 6, 1).steps(0.05, 0.001),
-        UIValueSpec::new_min_max(5.0, 5000.0, 6, 1).steps(0.05, 0.001),
+        UIValueSpec::new_min_max(0.0, 100.0, 5, 1).steps(0.05, 0.001),
+        UIValueSpec::new_min_max(0.0, 100.0, 5, 1).steps(0.05, 0.001),
+        UIValueSpec::new_id(),
         UIValueSpec::new_id(),
         UIValueSpec::new_id(),
         UIValueSpec::new_mod_target_list(&[
-            (1, "SFreq"),
-            (2, "EFreq"),
+            (1, "Start (Hz)"),
+            (2, "End (Hz)"),
+            (3, "Length (ms)"),
         ], "?"),
-        UIValueSpec::new_id(),
-        UIValueSpec::new_id(),
-        UIValueSpec::new_id(),
-        UIValueSpec::new_id(),
+        UIValueSpec::new_mod_target_list(&[
+            (4, "Dist S."),
+            (5, "Dist E."),
+        ], "?"),
         UIValueSpec::new_id(),
         UIValueSpec::new_id(),
     ])).expect("mpsc ok");
 
     cl_hdl.tx.send(UICmd::Define(vec![
         UILayout::Container {
-            label: String::from("Test"),
+            label: String::from("Test GUI"),
             xv: 1,
             yv: 1,
             wv: 10,
             hv: 10,
             rows: vec![
                 vec![
-                    UIInput::knob(      1, String::from("SFreq."), UIPos::right(3, 4)),
-                    UIInput::knob_small(2, String::from("EFreq."), UIPos::right(2, 4)),
-                    UIInput::knob_huge( 1, String::from("SFreq."), UIPos::right(3, 4)),
-                    UIInput::btn_2state(5,
-                        String::from("Dist"),
+                    UIInput::knob(      1, String::from("Start (Hz)"),  UIPos::right(3, 4)),
+                    UIInput::knob_small(2, String::from("End (Hz)"),    UIPos::right(2, 4)),
+                    UIInput::knob_huge( 3, String::from("Length (ms)"), UIPos::right(3, 4)),
+                    UIInput::btn_2state(9,
+                        String::from("Mod1"),
                         String::from("On"),
                         String::from("Off"),
                         UIPos::right(4, 4)),
                 ],
                 vec![
-                    UIInput::knob(      1, String::from("SFreq."), UIPos::center(3, 4)),
-                    UIInput::knob_small(1, String::from("SFreq."), UIPos::center(2, 4)),
+                    UIInput::knob(      4, String::from("Dist S."), UIPos::center(3, 4)),
+                    UIInput::knob_small(5, String::from("Dist E."), UIPos::center(2, 4)),
                     UIInput::knob_huge( 1, String::from("SFreq."), UIPos::center(3, 4)),
-                    UIInput::btn_2state(6,
-                        String::from("Dist"),
+                    UIInput::btn_2state(10,
+                        String::from("Mod2"),
                         String::from("On"),
                         String::from("Off"),
                         UIPos::center(4, 4)),
@@ -91,7 +109,7 @@ fn main() {
                     UIInput::knob_small(1, String::from("SFreq."), UIPos::left(2, 4)),
                     UIInput::knob_huge( 1, String::from("SFreq."), UIPos::left(3, 4)),
                     UIInput::btn_2state(7,
-                        String::from("Dist"),
+                        String::from("Mod3"),
                         String::from("On"),
                         String::from("Off"),
                         UIPos::left(4, 4)),
