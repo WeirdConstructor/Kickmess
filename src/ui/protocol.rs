@@ -227,9 +227,9 @@ pub enum UICmd {
 /// See also `UICmd`.
 #[derive(Debug, Clone)]
 pub enum UIMsg {
-    ValueChangeStart { id: usize, value: f64 },
-    ValueChangeEnd   { id: usize, value: f64 },
-    ValueChanged     { id: usize, value: f64 },
+    ValueChangeStart { id: usize, value: f32 },
+    ValueChangeEnd   { id: usize, value: f32 },
+    ValueChanged     { id: usize, value: f32, single_change: bool },
     WindowClosed,
 }
 

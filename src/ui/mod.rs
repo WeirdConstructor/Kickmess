@@ -70,6 +70,8 @@ impl InputMode {
 pub struct UI {
     ui_handle:      UIProviderHandle,
 
+    font:           Option<cairo::FontFace>,
+
     layout:         Rc<RefCell<Vec<UILayout>>>,
 
     element_values: Vec<f32>,
@@ -125,6 +127,7 @@ impl UI {
                 last_mouse_pos:     (0.0, 0.0),
                 needs_redraw_flag:  true,
                 input_mode:         InputMode::None,
+                font:               None,
             };
         this.init_draw_cache();
         this
@@ -237,12 +240,17 @@ impl UI {
                 self.last_mouse_pos = (x, y);
 
                 match self.input_mode {
-                    InputMode::DragValue { .. } => {
+                    InputMode::DragValue { zone, .. } => {
                         self.recalc_drag_value();
-                        // TODO: Send message with the virtually adjusted
-                        //       value to the client!
-                        println!("SENDBACK VALUE CHANGE: {:?}",
-                            self.drag_tmp_value);
+
+                        let id = zone.id;
+                        self.ui_handle.tx
+                            .send(UIMsg::ValueChanged {
+                                id:            id,
+                                value:         self.get_element_value(id),
+                                single_change: false,
+                            })
+                            .expect("Sending works");
                     },
                     _ => {
                         self.hover_zone = None;
@@ -267,14 +275,23 @@ impl UI {
                     InputMode::None => {
                         match self.hover_zone_submode() {
                             painting::AZ_COARSE_DRAG | painting::AZ_FINE_DRAG => {
-                                    self.input_mode =
-                                        InputMode::DragValue {
-                                            orig_pos: self.last_mouse_pos,
-                                            zone:     self.hover_zone.unwrap(),
-                                        };
-                                    self.recalc_drag_value();
-                                    self.queue_redraw();
-                                    println!("drag start! {:?}", self.input_mode);
+                                let id = self.hover_zone.unwrap().id;
+
+                                self.input_mode =
+                                    InputMode::DragValue {
+                                        orig_pos: self.last_mouse_pos,
+                                        zone:     self.hover_zone.unwrap(),
+                                    };
+                                self.recalc_drag_value();
+
+                                self.ui_handle.tx
+                                    .send(UIMsg::ValueChangeStart {
+                                        id: id, value: self.get_element_value(id)
+                                    })
+                                    .expect("Sending works");
+                                self.queue_redraw();
+
+                                //d// println!("drag start! {:?}", self.input_mode);
                             },
                             painting::AZ_TOGGLE => {
                                 println!("BUTTON PRESS: {:?} @{:?}", btn, self.last_mouse_pos);
@@ -292,7 +309,7 @@ impl UI {
                     InputMode::None => {
                         match self.hover_zone_submode() {
                             painting::AZ_MOD_SELECT => {
-                                println!("MOD SELECT BUTTON PRESS: {:?} @{:?}", btn, self.last_mouse_pos);
+                                //d// println!("MOD SELECT BUTTON PRESS: {:?} @{:?}", btn, self.last_mouse_pos);
                                 self.input_mode =
                                     InputMode::SelectMod {
                                         zone: self.hover_zone.unwrap()
@@ -312,25 +329,42 @@ impl UI {
 
                         self.set_element_value(id, v);
 
-                        // TODO: Send message with the virtually adjusted
-                        //       value to the client!
+                        self.ui_handle.tx
+                            .send(UIMsg::ValueChangeEnd { id: id, value: v })
+                            .expect("Sending works");
+
                         self.queue_redraw();
                     },
                     InputMode::ToggleBtn { zone, .. } => {
                         self.queue_redraw();
                     },
                     InputMode::SelectMod { zone, .. } => {
-                        println!("MOD SELECT RELEASE");
+                        //d// println!("MOD SELECT RELEASE");
                         if let Some(hover_zone) = self.hover_zone {
                             if hover_zone.id == zone.id {
                                 self.set_element_value(zone.id, 0.0);
+
+                                self.ui_handle.tx
+                                    .send(UIMsg::ValueChanged {
+                                        id:            zone.id,
+                                        value:         0.0,
+                                        single_change: true
+                                    })
+                                    .expect("Sending works");
                                 self.queue_redraw();
 
                             } else if self.is_mod_target_value(zone.id, hover_zone.id) {
-                                println!("****** MOD TARGET FOR {} FOUND: {}",
-                                         zone.id,
-                                         hover_zone.id);
+                                //d// println!("****** MOD TARGET FOR {} FOUND: {}",
+                                //d//          zone.id,
+                                //d//          hover_zone.id);
                                 self.set_element_value(zone.id, hover_zone.id as f32);
+                                self.ui_handle.tx
+                                    .send(UIMsg::ValueChanged {
+                                        id:            zone.id,
+                                        value:         hover_zone.id as f32,
+                                        single_change: true
+                                    })
+                                    .expect("Sending works");
                                 self.queue_redraw();
                             } else {
                                 // do not exit select modulation mode
@@ -502,11 +536,16 @@ impl UI {
     pub fn draw(&mut self, cr: &cairo::Context) {
         let (ww, wh) = self.window_size;
 
-        let ff = cairo::FontFace::toy_create(
-            "serif",
-            cairo::FontSlant::Normal,
-            cairo::FontWeight::Normal);
-        cr.set_font_face(&ff);
+        if let Some(ff) = self.font.as_ref() {
+            cr.set_font_face(ff);
+        } else {
+            let ff = cairo::FontFace::toy_create(
+                "serif",
+                cairo::FontSlant::Normal,
+                cairo::FontWeight::Normal);
+            cr.set_font_face(&ff);
+            self.font = Some(ff);
+        }
 
         self.zones.clear();
 
