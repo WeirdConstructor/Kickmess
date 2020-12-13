@@ -51,7 +51,7 @@ pub enum UIEvent {
 #[derive(Debug, Clone, Copy)]
 enum InputMode {
     None,
-    DragValue { zone: ActiveZone, orig_pos: (f64, f64) },
+    ValueDrag { zone: ActiveZone, orig_pos: (f64, f64) },
     SelectMod { zone: ActiveZone },
     ToggleBtn { zone: ActiveZone },
 }
@@ -60,7 +60,7 @@ impl InputMode {
     fn id(&self) -> usize {
         match self {
             InputMode::None                   => IMAGINARY_MAX_ID,
-            InputMode::DragValue { zone, .. } => zone.id,
+            InputMode::ValueDrag { zone, .. } => zone.id,
             InputMode::SelectMod { zone, .. } => zone.id,
             InputMode::ToggleBtn { zone, .. } => zone.id,
         }
@@ -214,7 +214,7 @@ impl UI {
     }
 
     fn recalc_drag_value(&mut self) {
-        if let InputMode::DragValue{ zone, orig_pos } = self.input_mode {
+        if let InputMode::ValueDrag{ zone, orig_pos } = self.input_mode {
             let xd = self.last_mouse_pos.0 - orig_pos.0;
             let yd = self.last_mouse_pos.1 - orig_pos.1;
             let mut distance = xd + -yd; // (xd * xd).sqrt() (yd * yd).sqrt();
@@ -240,7 +240,7 @@ impl UI {
                 self.last_mouse_pos = (x, y);
 
                 match self.input_mode {
-                    InputMode::DragValue { zone, .. } => {
+                    InputMode::ValueDrag { zone, .. } => {
                         self.recalc_drag_value();
 
                         let id = zone.id;
@@ -278,7 +278,7 @@ impl UI {
                                 let id = self.hover_zone.unwrap().id;
 
                                 self.input_mode =
-                                    InputMode::DragValue {
+                                    InputMode::ValueDrag {
                                         orig_pos: self.last_mouse_pos,
                                         zone:     self.hover_zone.unwrap(),
                                     };
@@ -294,6 +294,10 @@ impl UI {
                                 //d// println!("drag start! {:?}", self.input_mode);
                             },
                             painting::AZ_TOGGLE => {
+                                self.input_mode =
+                                    InputMode::ToggleBtn {
+                                        zone:     self.hover_zone.unwrap(),
+                                    };
                                 println!("BUTTON PRESS: {:?} @{:?}", btn, self.last_mouse_pos);
                             },
                             _ => {
@@ -321,7 +325,7 @@ impl UI {
                             _ => { }
                         }
                     },
-                    InputMode::DragValue { .. } => {
+                    InputMode::ValueDrag { .. } => {
                         self.recalc_drag_value();
 
                         let id = self.drag_tmp_value.unwrap().0;
@@ -336,6 +340,30 @@ impl UI {
                         self.queue_redraw();
                     },
                     InputMode::ToggleBtn { zone, .. } => {
+                        println!("TOGGGGGGGGGGGGGGGGGGGGGGGGGGGG {:?}", btn);
+                        if let Some(hover_zone) = self.hover_zone {
+                            if hover_zone.id == zone.id {
+                                let next =
+                                    match btn {
+                                        MouseButton::Left =>
+                                            self.get_next_toggle_value(zone.id),
+                                        MouseButton::Right =>
+                                            self.get_prev_toggle_value(zone.id),
+                                        _ =>
+                                            self.get_element_default_value(zone.id),
+                                    };
+
+                                self.set_element_value(zone.id, next);
+                                self.ui_handle.tx
+                                    .send(UIMsg::ValueChanged {
+                                        id:            zone.id,
+                                        value:         0.0,
+                                        single_change: true
+                                    })
+                                    .expect("Sending works");
+                            }
+                        }
+
                         self.queue_redraw();
                     },
                     InputMode::SelectMod { zone, .. } => {
@@ -423,6 +451,22 @@ impl UI {
         self.value_specs[id].fmt(self.get_element_value(id) as f64)
     }
 
+    fn get_prev_toggle_value(&self, id: usize) -> f32 {
+        let cur = self.get_element_value(id);
+        let new_x = cur + self.value_specs[id].fine(1.0) as f32;
+
+        if new_x < -0.001 { 1.0 }
+        else              { new_x }
+    }
+
+    fn get_next_toggle_value(&self, id: usize) -> f32 {
+        let cur = self.get_element_value(id);
+        let new_x = cur + self.value_specs[id].coarse(1.0) as f32;
+
+        if (new_x - 1.0) > 0.001 { 0.0 }
+        else                     { new_x }
+    }
+
     fn is_mod_target_value(&self, mod_id: usize, id: usize) -> bool {
         self.value_specs[mod_id].v2v(id as f64) > 0.5
     }
@@ -441,6 +485,14 @@ impl UI {
         self.element_values[id] = value;
     }
 
+    fn get_element_default_value(&self, id: usize) -> f32 {
+        if id >= self.element_values.len() {
+            return 0.0;
+        }
+
+        self.value_specs[id].get_default() as f32
+    }
+
     fn get_element_value(&self, id: usize) -> f32 {
         if id >= self.element_values.len() {
             return 0.0;
@@ -448,7 +500,7 @@ impl UI {
 
         let mut v = self.element_values[id];
 
-        if let InputMode::DragValue { zone, .. } = self.input_mode {
+        if let InputMode::ValueDrag { zone, .. } = self.input_mode {
             let drag_tmp_value = self.drag_tmp_value.unwrap();
             if id == zone.id {
                 v = (v as f64 + drag_tmp_value.1) as f32;

@@ -1,4 +1,5 @@
 use crate::ui::painting::*;
+use crate::ui::protocol::UIBtnMode;
 use crate::ui::element::{UIElement, UIElementData};
 use crate::ui::constants::*;
 use crate::ui::util::{draw_centered_text};
@@ -38,10 +39,10 @@ impl UIElement for Button {
     fn define_active_zones(&self, x: f64, y: f64, elem_data: &dyn UIElementData, f: &mut dyn FnMut(ActiveZone)) {
         let size     = self.size();
         let sub_type =
-            if elem_data.as_btn_data().unwrap().mod_mode {
-                AZ_MOD_SELECT
-            } else {
-                AZ_COARSE_DRAG
+            match elem_data.as_btn_data().unwrap().mode {
+                UIBtnMode::Toggle    => AZ_TOGGLE,
+                UIBtnMode::ValueDrag => AZ_COARSE_DRAG,
+                UIBtnMode::ModTarget => AZ_MOD_SELECT,
             };
         let z1 = ActiveZone::from_rect(x, y, sub_type, (0.0, 0.0, size.0, size.1));
         (f)(z1);

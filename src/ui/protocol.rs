@@ -14,6 +14,7 @@ pub struct UIValueSpec {
     fmt: Arc<dyn Fn(f64, f64) -> String + Send + Sync>,
     coarse_step:    f64,
     fine_step:      f64,
+    default:        f64,
 }
 
 impl std::fmt::Debug for UIValueSpec {
@@ -29,6 +30,7 @@ impl UIValueSpec {
             fmt: Arc::new(|_, x| format!("{:4.2}", x)),
             coarse_step: 0.05,
             fine_step:   0.001,
+            default:     0.0,
         }
     }
 
@@ -38,6 +40,35 @@ impl UIValueSpec {
             fmt: Arc::new(|_, x| format!("{:4.2}", x)),
             coarse_step: 0.05,
             fine_step:   0.001,
+            default:     0.0,
+        }
+    }
+
+    pub fn new_toggle(targets: &[&str]) -> Self {
+        let max_idx = (targets.len() as f64) - 1.0;
+
+//        let idx_fracts : Vec<f64> =
+//            targets.iter().enumerate().map(
+//                |(i, p)| ((i as f64) / max_idx)).collect();
+
+        let strings : Vec<String> =
+            targets.iter().map(|p| p.to_string()).collect();
+
+        Self {
+            fun: Arc::new(move |_x| {
+                0.0
+            }),
+            fmt: Arc::new(move |v, _| {
+                let mut idx : usize = (v * max_idx).round() as usize;
+                if idx > strings.len() {
+                    "?".to_string()
+                } else {
+                    strings[idx].clone()
+                }
+            }),
+            coarse_step: (1.0 / max_idx),
+            fine_step:  -(1.0 / max_idx),
+            default:     0.0,
         }
     }
 
@@ -71,6 +102,7 @@ impl UIValueSpec {
             }),
             coarse_step: 0.0,
             fine_step:   0.0,
+            default:     0.0,
         }
     }
 
@@ -80,7 +112,13 @@ impl UIValueSpec {
             fmt: Arc::new(move |_, x| format!("{2:0$.1$}", width, prec, x)),
             coarse_step: 0.05,
             fine_step:   0.001,
+            default:     0.0,
         }
+    }
+
+    pub fn default(mut self, default: f64) -> Self {
+        self.default = default;
+        self
     }
 
     pub fn steps(mut self, coarse: f64, fine: f64) -> Self {
@@ -96,6 +134,7 @@ impl UIValueSpec {
             fmt: Arc::new(|_, x| format!("{:4.2}", x)),
             coarse_step: 0.05,
             fine_step:   0.001,
+            default:     0.0,
         }
     }
 
@@ -103,6 +142,7 @@ impl UIValueSpec {
     pub fn coarse(&self, steps: f64) -> f64 { self.coarse_step * steps }
     pub fn v2v(&self, x: f64) -> f64        { (self.fun)(x) }
     pub fn fmt(&self, x: f64) -> String     { (self.fmt)(x, self.v2v(x)) }
+    pub fn get_default(&self) -> f64        { self.default }
 }
 
 // TODO: Define default margin/padding between grid cells
@@ -121,13 +161,19 @@ impl UIPos {
     pub fn right(col_size: u8, row_size: u8)   -> Self { UIPos { col_size, row_size, align:  1 } }
 }
 
+#[derive(Debug, Clone, Copy)]
+pub enum UIBtnMode {
+    Toggle,
+    ModTarget,
+    ValueDrag,
+}
+
 #[derive(Debug, Clone)]
 pub struct UIBtnData {
     pub pos:         UIPos,
     pub id:          usize,
     pub label:       String,
-    pub labels:      Vec<(f64, String)>,
-    pub mod_mode:    bool,
+    pub mode:        UIBtnMode,
 }
 
 impl UIElementData for UIBtnData {
@@ -182,11 +228,16 @@ impl UIInput {
         }
     }
 
-    pub fn btn_2state(id: usize, label: String, on_lbl: String, off_lbl: String, pos: UIPos) -> Self {
-        UIInput::Button(UIBtnData {
-            id, pos, label, mod_mode: true, labels: vec![
-                (0.0, off_lbl), (1.0, on_lbl)
-            ] })
+    pub fn btn_drag_value(id: usize, label: String, pos: UIPos) -> Self {
+        UIInput::Button(UIBtnData { id, pos, label, mode: UIBtnMode::ValueDrag })
+    }
+
+    pub fn btn_toggle(id: usize, label: String, pos: UIPos) -> Self {
+        UIInput::Button(UIBtnData { id, pos, label, mode: UIBtnMode::Toggle })
+    }
+
+    pub fn btn_mod_target(id: usize, label: String, pos: UIPos) -> Self {
+        UIInput::Button(UIBtnData { id, pos, label, mode: UIBtnMode::ModTarget })
     }
 
     pub fn knob(id: usize, label: String, pos: UIPos) -> Self {
