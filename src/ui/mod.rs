@@ -692,6 +692,11 @@ impl UI {
                                         ElementType::KnobHuge);
                                 },
                                 UIInput::Graph(graph_data) => {
+                                    {
+                                        let mut data_buf = graph_data.data.borrow_mut();
+                                        (graph_data.fun)(&self.element_values[..], &mut data_buf);
+                                    }
+
                                     self.draw_element(
                                         cr, &el_rect, pos.align,
                                         graph_data,

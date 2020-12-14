@@ -200,8 +200,8 @@ pub struct UIGraphData {
     pub pos:         UIPos,
     pub id:          usize,
     pub label:       String,
-    pub points:      usize,
-    pub fun:         Arc<dyn Fn(&[f32], &mut [(f32,f32)]) + Send + Sync>,
+    pub data:        Box<std::cell::RefCell<Vec<(f32,f32)>>>,
+    pub fun:         Arc<dyn Fn(&[f32], &mut Vec<(f32,f32)>) + Send + Sync>,
 }
 
 impl std::fmt::Debug for UIGraphData {
@@ -216,7 +216,7 @@ impl UIGraphData {
             id,
             label,
             pos,
-            points: 0,
+            data: Box::new(std::cell::RefCell::new(vec![])),
             fun: Arc::new(|_, _| ()),
         }
     }
