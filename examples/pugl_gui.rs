@@ -78,10 +78,7 @@ fn main() {
     cl_hdl.tx.send(UICmd::Define(vec![
         UILayout::Container {
             label: String::from("Test GUI"),
-            xv: 1,
-            yv: 1,
-            wv: 7,
-            hv: 10,
+            xv: 1, yv: 1, wv: 7, hv: 10,
             rows: vec![
                 vec![
                     UIInput::knob(      1, String::from("Start (Hz)"),  UIPos::right(3, 4)),
@@ -105,10 +102,7 @@ fn main() {
         },
         UILayout::Container {
             label: String::from("Graph Test"),
-            xv: 8,
-            yv: 1,
-            wv: 3,
-            hv: 10,
+            xv: 8, yv: 1, wv: 3, hv: 10,
             rows: vec![
                 vec![
                     UIInput::graph(      1, String::from("Slope"),  UIPos::center(12, 3)),
@@ -116,22 +110,6 @@ fn main() {
                 vec![
                     UIInput::knob(      11, String::from("w"),      UIPos::center(12, 3)),
                 ],
-//                    UIInput::knob_small(2, String::from("End (Hz)"),    UIPos::right(2, 4)),
-//                    UIInput::knob_huge( 3, String::from("Length (ms)"), UIPos::right(3, 4)),
-//                    UIInput::btn_mod_target(9, String::from("Mod1"), UIPos::right(4, 4)),
-//                ],
-//                vec![
-//                    UIInput::knob(      4, String::from("Dist S."), UIPos::center(3, 4)),
-//                    UIInput::knob_small(5, String::from("Dist E."), UIPos::center(2, 4)),
-//                    UIInput::knob_huge( 1, String::from("SFreq."), UIPos::center(3, 4)),
-//                    UIInput::btn_toggle(10, String::from("Mod2"), UIPos::center(4, 4)),
-//                ],
-//                vec![
-//                    UIInput::knob(      1, String::from("SFreq."), UIPos::left(3, 4)),
-//                    UIInput::knob_small(1, String::from("SFreq."), UIPos::left(2, 4)),
-//                    UIInput::knob_huge( 1, String::from("SFreq."), UIPos::left(3, 4)),
-//                    UIInput::btn_drag_value(7, String::from("Mod3"), UIPos::left(4, 4)),
-//                ],
             ],
         },
     ])).expect("mpsc ok");

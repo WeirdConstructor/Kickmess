@@ -195,7 +195,6 @@ impl UI {
                 UICmd::Define(layout) => {
                     self.layout = Rc::new(RefCell::new(layout));
                     self.queue_redraw();
-                    println!("CLIENT EVENT: LAYOUT!");
                 },
                 UICmd::DefineValues(valspecs) => {
                     self.set_value_specs(valspecs);
@@ -311,7 +310,6 @@ impl UI {
                                     InputMode::ToggleBtn {
                                         zone:     self.hover_zone.unwrap(),
                                     };
-                                println!("BUTTON PRESS: {:?} @{:?}", btn, self.last_mouse_pos);
                             },
                             _ => {
                                 println!("BUTTON PRESS: {:?} @{:?}", btn, self.last_mouse_pos);
@@ -353,7 +351,6 @@ impl UI {
                         self.queue_redraw();
                     },
                     InputMode::ToggleBtn { zone, .. } => {
-                        println!("TOGGGGGGGGGGGGGGGGGGGGGGGGGGGG {:?}", btn);
                         if let Some(hover_zone) = self.hover_zone {
                             if hover_zone.id == zone.id {
                                 let next =
@@ -418,8 +415,8 @@ impl UI {
                     },
                 }
 
-                println!("BUTTON RELEASE: {:?} @{:?} / {:?}",
-                         btn, self.last_mouse_pos, self.input_mode);
+                //d// println!("BUTTON RELEASE: {:?} @{:?} / {:?}",
+                //d//          btn, self.last_mouse_pos, self.input_mode);
 
                 self.input_mode     = InputMode::None;
                 self.drag_tmp_value = None;
