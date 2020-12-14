@@ -71,6 +71,8 @@ fn main() {
         UIValueSpec::new_toggle(&[ "Off", "On", "Left", "Right" ]),
         UIValueSpec::new_id(),
         UIValueSpec::new_id(),
+        UIValueSpec::new_id(),
+        UIValueSpec::new_id(),
     ])).expect("mpsc ok");
 
     cl_hdl.tx.send(UICmd::Define(vec![
@@ -110,6 +112,9 @@ fn main() {
             rows: vec![
                 vec![
                     UIInput::graph(      1, String::from("Slope"),  UIPos::center(12, 3)),
+                ],
+                vec![
+                    UIInput::knob(      11, String::from("w"),      UIPos::center(12, 3)),
                 ],
 //                    UIInput::knob_small(2, String::from("End (Hz)"),    UIPos::right(2, 4)),
 //                    UIInput::knob_huge( 3, String::from("Length (ms)"), UIPos::right(3, 4)),

@@ -195,13 +195,17 @@ impl UIElementData for UIKnobData {
     fn value_id(&self) -> usize { self.id }
 }
 
+pub trait UIGraphValueSource {
+    fn param_value(&mut self, idx: usize) -> f32;
+}
+
 #[derive(Clone)]
 pub struct UIGraphData {
     pub pos:         UIPos,
     pub id:          usize,
     pub label:       String,
     pub data:        Box<std::cell::RefCell<Vec<(f32,f32)>>>,
-    pub fun:         Arc<dyn Fn(&[f32], &mut Vec<(f32,f32)>) + Send + Sync>,
+    pub fun:         Arc<dyn Fn(&mut dyn UIGraphValueSource, &mut Vec<(f32,f32)>) + Send + Sync>,
 }
 
 impl std::fmt::Debug for UIGraphData {
@@ -217,7 +221,18 @@ impl UIGraphData {
             label,
             pos,
             data: Box::new(std::cell::RefCell::new(vec![])),
-            fun: Arc::new(|_, _| ()),
+            fun: Arc::new(|src, out| {
+                let samples = 40;
+                for x in 0..(samples + 1) {
+                    let x = x as f32 / (samples as f32);
+                    out.push((
+                        x,
+                        ((x
+                         * (4.0 * src.param_value(11) + 1.0)
+                         * 2.0 * std::f32::consts::PI)
+                        .sin() + 1.0) / 2.0));
+                }
+            }),
         }
     }
 }

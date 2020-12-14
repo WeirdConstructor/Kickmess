@@ -15,7 +15,7 @@ use crate::ui::element::*;
 use crate::ui::painting::{ActiveZone, HLStyle};
 use crate::ui::draw_cache::{DrawCache};
 use crate::ui::protocol::{UIMsg, UICmd, UIPos, UIKnobData, UIProviderHandle,
-                          UILayout, UIBtnData, UIInput, UIValueSpec};
+                          UILayout, UIBtnData, UIInput, UIValueSpec, UIGraphValueSource};
 use crate::ui::constants::*;
 
 const IMAGINARY_MAX_ID : usize = 9999999999;
@@ -110,6 +110,12 @@ impl Rect {
         let new_col_offs = col_offs + pos.col_size;
 
         (Rect { x, y, w, h }, new_row_offs, new_col_offs)
+    }
+}
+
+impl UIGraphValueSource for UI {
+    fn param_value(&mut self, idx: usize) -> f32 {
+        self.get_element_value(idx)
     }
 }
 
@@ -618,6 +624,11 @@ impl UI {
                     let w = (((*wv as f64) * ww) / 12.0).ceil();
                     let h = (((*hv as f64) * wh) / 12.0).ceil();
 
+                    let x = x + UI_BORDER_WIDTH;
+                    let y = y + UI_BORDER_WIDTH;
+                    let w = w - 2.0 * UI_BORDER_WIDTH;
+                    let h = h - 2.0 * UI_BORDER_WIDTH;
+
                     let crect = Rect { x, y, w, h };
 
                     cr.rectangle(
@@ -694,7 +705,8 @@ impl UI {
                                 UIInput::Graph(graph_data) => {
                                     {
                                         let mut data_buf = graph_data.data.borrow_mut();
-                                        (graph_data.fun)(&self.element_values[..], &mut data_buf);
+                                        data_buf.clear();
+                                        (graph_data.fun)(self, &mut data_buf);
                                     }
 
                                     self.draw_element(

@@ -11,7 +11,7 @@ pub const UI_TXT_KNOB_HLHOVR_CLR  : (f64, f64, f64) = ( 64.0 / 255.0, 149.0 / 25
 pub const UI_GUI_BG_CLR           : (f64, f64, f64) = (54.0  / 255.0,  48.0 / 255.0,  53.0 / 255.0);
 pub const UI_GUI_CLEAR_CLR        : (f64, f64, f64) = (54.0  / 255.0,  48.0 / 255.0,  53.0 / 255.0);
 pub const UI_BORDER_CLR           : (f64, f64, f64) = (145.0 / 255.0, 131.0 / 255.0, 131.0 / 255.0);
-pub const UI_BORDER_WIDTH         : f64 = 4.0;
+pub const UI_BORDER_WIDTH         : f64 = 2.0;
 pub const UI_KNOB_RADIUS          : f64 = 30.0;
 pub const UI_KNOB_SMALL_RADIUS    : f64 = 20.0;
 pub const UI_KNOB_FONT_SIZE       : f64 = 12.0;
@@ -27,6 +27,9 @@ pub const UI_BTN_WIDTH            : f64 = 3.0 * UI_KNOB_RADIUS;
 pub const UI_BTN_BORDER_WIDTH     : f64 = 4.0;
 pub const UI_BTN_BORDER2_WIDTH    : f64 = 1.0;
 pub const UI_BTN_BEVEL            : f64 = UI_ELEM_TXT_H / 2.0;
+
+pub const UI_GRPH_BORDER          : f64 = 2.0;
+pub const UI_GRPH_BORDER_CLR      : (f64, f64, f64) = UI_BORDER_CLR;
 
 pub const UI_BOX_H          : f64 = 200.0;
 pub const UI_BOX_BORD       : f64 =   3.0;
