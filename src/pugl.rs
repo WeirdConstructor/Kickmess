@@ -6,7 +6,7 @@ use crate::ui::constants::*;
 use crate::ui::{UI, UIEvent};
 use crate::ui;
 
-const WINDOW_WIDTH:  usize = 500;
+const WINDOW_WIDTH:  usize = 700;
 const WINDOW_HEIGHT: usize = 500;
 
 pub struct PuglUI {

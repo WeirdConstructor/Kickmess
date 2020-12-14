@@ -1,6 +1,7 @@
 use crate::ui::painting::*;
 use crate::ui::protocol::UIKnobData;
 use crate::ui::protocol::UIBtnData;
+use crate::ui::protocol::UIGraphData;
 
 pub trait UIElement {
     fn size(&self) -> (f64, f64);
@@ -11,6 +12,7 @@ pub trait UIElement {
 
 pub trait UIElementData {
     fn as_knob_data(&self) -> Option<&UIKnobData> { None }
+    fn as_graph_data(&self) -> Option<&UIGraphData> { None }
     fn as_btn_data(&self) -> Option<&UIBtnData> { None }
     fn value_id(&self) -> usize;
 }

@@ -195,6 +195,38 @@ impl UIElementData for UIKnobData {
     fn value_id(&self) -> usize { self.id }
 }
 
+#[derive(Clone)]
+pub struct UIGraphData {
+    pub pos:         UIPos,
+    pub id:          usize,
+    pub label:       String,
+    pub points:      usize,
+    pub fun:         Arc<dyn Fn(&[f32], &mut [(f32,f32)]) + Send + Sync>,
+}
+
+impl std::fmt::Debug for UIGraphData {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str("UIGraphData")
+    }
+}
+
+impl UIGraphData {
+    pub fn new(id: usize, label: String, pos: UIPos) -> Self {
+        Self {
+            id,
+            label,
+            pos,
+            points: 0,
+            fun: Arc::new(|_, _| ()),
+        }
+    }
+}
+
+impl UIElementData for UIGraphData {
+    fn as_graph_data(&self) -> Option<&UIGraphData> { Some(self) }
+    fn value_id(&self) -> usize { self.id }
+}
+
 #[derive(Debug, Clone)]
 pub enum UIInput {
     None(UIPos),
@@ -202,15 +234,7 @@ pub enum UIInput {
     Knob(UIKnobData),
     KnobHuge(UIKnobData),
     Button(UIBtnData),
-    // TODO:
-    //      ToggleBtn       (2 or more choices)
-    //          => Button for setting a modulation target
-    //             - clicking on the mod button highlights all values (in a diff, color => new highlight mode)
-    //             - clicking on a value field in that mode will set
-    //               the value for the mod button to the ID of the
-    //               target. => The value spec fun() for unit conversion
-    //               gets as input the possible value IDs, and should return
-    //               a non 0.0
+    Graph(UIGraphData),
     //      SubContainer    (size always fills)
     //      Graph           (function for plotting, predefined set of points)
 }
@@ -225,6 +249,7 @@ impl UIInput {
             UIInput::Knob(UIKnobData { pos, .. })        => *pos,
             UIInput::KnobHuge(UIKnobData { pos, .. })    => *pos,
             UIInput::Button(UIBtnData { pos, .. })       => *pos,
+            UIInput::Graph(UIGraphData { pos, .. })      => *pos,
         }
     }
 
@@ -242,6 +267,10 @@ impl UIInput {
 
     pub fn knob(id: usize, label: String, pos: UIPos) -> Self {
         UIInput::Knob(UIKnobData { id, label, pos })
+    }
+
+    pub fn graph(id: usize, label: String, pos: UIPos) -> Self {
+        UIInput::Graph(UIGraphData::new(id, label, pos))
     }
 
     pub fn knob_small(id: usize, label: String, pos: UIPos) -> Self {

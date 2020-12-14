@@ -4,6 +4,7 @@ mod painting;
 mod draw_cache;
 mod element;
 mod util;
+mod graph;
 pub mod constants;
 pub mod protocol;
 
@@ -31,6 +32,7 @@ pub enum ElementType {
     KnobSmall,
     KnobHuge,
     Button,
+    Graph,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -136,6 +138,7 @@ impl UI {
     fn init_draw_cache(&mut self) {
         use crate::ui::segmented_knob::SegmentedKnob;
         use crate::ui::button::Button;
+        use crate::ui::graph::Graph;
 
         // ElementType::Knob
         self.cache.push_element(
@@ -160,6 +163,10 @@ impl UI {
 
         // ElementType::Button
         self.cache.push_element(Box::new(Button::new()));
+
+        // ElementType::Graph
+        self.cache.push_element(
+            Box::new(Graph::new()));
 
 //            button: SegmentedButton::new(UI_KNOB_FONT_SIZE),
     }
@@ -683,6 +690,12 @@ impl UI {
                                         cr, &el_rect, pos.align,
                                         knob_data,
                                         ElementType::KnobHuge);
+                                },
+                                UIInput::Graph(graph_data) => {
+                                    self.draw_element(
+                                        cr, &el_rect, pos.align,
+                                        graph_data,
+                                        ElementType::Graph);
                                 },
                             }
                         }
