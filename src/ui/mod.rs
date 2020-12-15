@@ -33,6 +33,8 @@ pub enum ElementType {
     KnobHuge,
     Button,
     Graph,
+    GraphHuge,
+    GraphSmall,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -172,7 +174,22 @@ impl UI {
 
         // ElementType::Graph
         self.cache.push_element(
-            Box::new(Graph::new()));
+            Box::new(Graph::new(
+                UI_GRPH_W, UI_GRPH_H, UI_GRPH_FONT_SIZE)));
+
+        // ElementType::GraphHuge
+        self.cache.push_element(
+            Box::new(Graph::new(
+                (UI_GRPH_W * 1.5).round(),
+                (UI_GRPH_H * 1.5).round(),
+                UI_GRPH_FONT_SIZE + 1.0)));
+
+        // ElementType::GraphSmall
+        self.cache.push_element(
+            Box::new(Graph::new(
+                (UI_GRPH_W * 0.6).round(),
+                (UI_GRPH_H * 0.6).round(),
+                ((UI_GRPH_FONT_SIZE - 1.0) * 0.8).round())));
 
 //            button: SegmentedButton::new(UI_KNOB_FONT_SIZE),
     }
@@ -699,7 +716,7 @@ impl UI {
                                         knob_data,
                                         ElementType::KnobHuge);
                                 },
-                                UIInput::Graph(graph_data) => {
+                                UIInput::Graph(graph_data) | UIInput::GraphSmall(graph_data) | UIInput::GraphHuge(graph_data) => {
                                     {
                                         let mut data_buf = graph_data.data.borrow_mut();
                                         data_buf.clear();
@@ -709,7 +726,11 @@ impl UI {
                                     self.draw_element(
                                         cr, &el_rect, pos.align,
                                         graph_data,
-                                        ElementType::Graph);
+                                        match el {
+                                            UIInput::Graph(_)      => ElementType::Graph,
+                                            UIInput::GraphSmall(_) => ElementType::GraphSmall,
+                                            _                      => ElementType::GraphHuge,
+                                        });
                                 },
                             }
                         }

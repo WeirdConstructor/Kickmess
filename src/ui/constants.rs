@@ -28,8 +28,11 @@ pub const UI_BTN_BORDER_WIDTH     : f64 = 4.0;
 pub const UI_BTN_BORDER2_WIDTH    : f64 = 1.0;
 pub const UI_BTN_BEVEL            : f64 = UI_ELEM_TXT_H / 2.0;
 
+pub const UI_GRPH_W               : f64 = 90.0;
+pub const UI_GRPH_H               : f64 = 40.0;
 pub const UI_GRPH_BORDER          : f64 = 2.0;
 pub const UI_GRPH_BORDER_CLR      : (f64, f64, f64) = UI_BORDER_CLR;
+pub const UI_GRPH_FONT_SIZE       : f64 = UI_KNOB_FONT_SIZE;
 
 pub const UI_BOX_H          : f64 = 200.0;
 pub const UI_BOX_BORD       : f64 =   3.0;

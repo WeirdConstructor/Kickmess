@@ -105,7 +105,13 @@ fn main() {
             xv: 8, yv: 1, wv: 3, hv: 10,
             rows: vec![
                 vec![
-                    UIInput::graph(      1, String::from("Slope"),  UIPos::center(12, 3)),
+                    UIInput::graph(      1, String::from("Wavey"),  UIPos::center(12, 3)),
+                ],
+                vec![
+                    UIInput::graph_huge(      1, String::from("Wavey (h)"),  UIPos::center(12, 3)),
+                ],
+                vec![
+                    UIInput::graph_small(      1, String::from("Wavey (s)"),  UIPos::center(12, 3)),
                 ],
                 vec![
                     UIInput::knob(      11, String::from("w"),      UIPos::center(12, 3)),
@@ -133,7 +139,7 @@ fn main() {
                 UIMsg::WindowClosed => { closed = true; break; },
                 _ => {},
             }
-            println!("MSG FROM UI: {:?}", msg);
+//            println!("MSG FROM UI: {:?}", msg);
         }
 
         hdl.update_ui();

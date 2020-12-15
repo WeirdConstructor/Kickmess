@@ -250,8 +250,9 @@ pub enum UIInput {
     KnobHuge(UIKnobData),
     Button(UIBtnData),
     Graph(UIGraphData),
+    GraphHuge(UIGraphData),
+    GraphSmall(UIGraphData),
     //      SubContainer    (size always fills)
-    //      Graph           (function for plotting, predefined set of points)
 }
 
 impl UIInput {
@@ -265,6 +266,8 @@ impl UIInput {
             UIInput::KnobHuge(UIKnobData { pos, .. })    => *pos,
             UIInput::Button(UIBtnData { pos, .. })       => *pos,
             UIInput::Graph(UIGraphData { pos, .. })      => *pos,
+            UIInput::GraphHuge(UIGraphData { pos, .. })  => *pos,
+            UIInput::GraphSmall(UIGraphData { pos, .. }) => *pos,
         }
     }
 
@@ -286,6 +289,14 @@ impl UIInput {
 
     pub fn graph(id: usize, label: String, pos: UIPos) -> Self {
         UIInput::Graph(UIGraphData::new(id, label, pos))
+    }
+
+    pub fn graph_huge(id: usize, label: String, pos: UIPos) -> Self {
+        UIInput::GraphHuge(UIGraphData::new(id, label, pos))
+    }
+
+    pub fn graph_small(id: usize, label: String, pos: UIPos) -> Self {
+        UIInput::GraphSmall(UIGraphData::new(id, label, pos))
     }
 
     pub fn knob_small(id: usize, label: String, pos: UIPos) -> Self {
