@@ -136,6 +136,10 @@ pub fn note_to_freq(note: f32) -> f32 {
     440.0 * (2.0_f32).powf((note - 69.0) / 12.0)
 }
 
+// Ported from LMMS under GPLv2
+// * DspEffectLibrary.h - library with template-based inline-effects
+// * Copyright (c) 2006-2014 Tobias Doerffel <tobydox/at/users.sourceforge.net>
+//
 // Signal distortion
 // gain:        0.1 - 5.0       default = 1.0
 // threshold:   0.0 - 100.0     default = 0.8
@@ -144,6 +148,26 @@ pub fn f_distort(gain: f32, threshold: f32, i: f32) -> f32 {
     gain * (
         i * ( i.abs() + threshold )
         / ( i * i + (threshold - 1.0) * i.abs() + 1.0 ))
+}
+
+// Ported from LMMS under GPLv2
+// * DspEffectLibrary.h - library with template-based inline-effects
+// * Copyright (c) 2006-2014 Tobias Doerffel <tobydox/at/users.sourceforge.net>
+//
+// Foldback Signal distortion
+// gain:        0.1 - 5.0       default = 1.0
+// threshold:   0.0 - 100.0     default = 0.8
+// i:           signal
+pub fn f_fold_distort(gain: f32, threshold: f32, i: f32) -> f32 {
+    if i >= threshold || i < -threshold {
+        gain
+        * ((
+            ((i - threshold) % threshold * 4.0).abs()
+            - threshold * 2.0).abs()
+           - threshold)
+    } else {
+        gain * i
+    }
 }
 
 pub fn p2range(x: f32, a: f32, b: f32) -> f32 {
