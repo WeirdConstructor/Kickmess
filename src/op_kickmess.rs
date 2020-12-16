@@ -31,42 +31,6 @@ use crate::env::*;
 use crate::MAX_BLOCKSIZE;
 const PI2 : f64 = std::f64::consts::PI * 2.0;
 
-macro_rules! opKickmessParams {
-    ($x: ident) => {
-        // ($idx: literal, $id: ident, $type: ident, $init: expr, $param: expr,
-        //  $min: expr, $max: expr, $default: expr, $name: literal)
-        $x!{0,  freq_start,      f32, 0.0, Param::Freq1,      5.0,   3000.0, 150.0, "Start Freq."}
-        $x!{1,  freq_end,        f32, 0.0, Param::Freq2,      5.0,   2000.0,  40.0, "End Freq."}
-        $x!{2,  length,          f32, 0.0, Param::Decay1,     5.0,   5000.0, 440.0, "Length"}
-        $x!{3,  dist_start,      f32, 0.0, Param::Dist1,      0.0,   100.0,    0.8, "Dist. Start"}
-        $x!{4,  dist_end,        f32, 0.0, Param::Dist2,      0.0,   100.0,    0.8, "Dist. End"}
-        $x!{5,  dist_gain,       f32, 0.0, Param::Gain1,      0.1,   5.0,      1.0, "Dist. Gain"}
-        $x!{6,  env_slope,       f32, 0.0, Param::Env1,       0.01,  1.0,    0.163, "Env. slope"}
-        $x!{7,  freq_slope,      f32, 0.0, Param::Release1,   0.001, 1.0,     0.06, "Freq. slope"}
-        $x!{8,  noise,           f32, 0.0, Param::Noise1,     0.0,   1.0,      0.0, "Noise"}
-        $x!{9,  freq_note_start, f32, 0.0, Param::S1,         0.0,   1.0,      1.0, "Start from note"}
-        $x!{10, release,         f32, 0.0, Param::Release2,   1.0,1000.0,      5.0, "Env Release"}
-        $x!{11, phase_offs,      f32, 0.0, Param::Phase1,     0.0,   1.0,      0.0, "Click"}
-    }
-}
-
-macro_rules! defineFields {
-    ($idx: literal, $id: ident, $type: ident, $init: expr, $param: expr,
-     $min: expr, $max: expr, $default: expr, $name: literal) => {
-        $id : $type,
-    }
-}
-
-
-macro_rules! defineIdxConstants {
-    ($idx: literal, $id: ident, $type: ident, $init: expr, $param: expr,
-     $min: expr, $max: expr, $default: expr, $name: literal) => {
-        const $id : usize = $idx;
-    }
-}
-
-opKickmessParams!{defineIdxConstants}
-
 pub struct OpKickmess {
     freq_start:      f32,
     freq_end:        f32,
@@ -80,7 +44,7 @@ pub struct OpKickmess {
     phase_offs:      f64,
 
     rng:             RandGen,
-    attack:          REnv,
+    f_env:           REnv,
     release:         REnv,
     srate:           f32,
 
@@ -103,7 +67,7 @@ impl OpKickmess {
             phase_offs:      0.0,
 
             rng:             RandGen::new(),
-            attack:          REnv::new(),
+            f_env:           REnv::new(),
             release:         REnv::new(),
 
             note_freq:       0.0,
@@ -132,13 +96,13 @@ impl MonoProcessor for OpKickmess {
     fn set_sample_rate(&mut self, sr: f32) {
         self.srate = sr;
         self.release.set_sample_rate(sr);
-        self.attack.set_sample_rate(sr);
+        self.f_env.set_sample_rate(sr);
     }
 
     fn read_params(&mut self, ps: &ParamSet, pp: &dyn ParamProvider) {
         self.freq_start       = ps.get( 0, pp);
         self.freq_end         = ps.get( 1, pp);
-        self.attack.set_release(ps.get( 2, pp));
+        self.f_env.set_release( ps.get( 2, pp));
         self.dist_start       = ps.get( 3, pp);
         self.dist_end         = ps.get( 4, pp);
         self.dist_gain        = ps.get( 5, pp);
@@ -159,7 +123,7 @@ impl MonoProcessor for OpKickmess {
             for (offs, os) in o.iter_mut().enumerate() {
                 let mut kick_sample : f64 = 0.0;
 
-                if let EnvPos::Release(pos, env_value) = self.attack.next(offs) {
+                if let EnvPos::Release(pos, env_value) = self.f_env.next(offs) {
                     if pos == 0 {
                         self.release.reset();
                         self.cur_phase = 0.0;
@@ -203,7 +167,7 @@ impl MonoProcessor for OpKickmess {
                             gain
                         },
                         EnvPos::End => {
-                            self.attack.reset();
+                            self.f_env.reset();
                             self.release.reset();
                             0.0
                         }
@@ -217,7 +181,7 @@ impl MonoProcessor for OpKickmess {
 
 impl MonoVoice for OpKickmess {
     fn start_note(&mut self, offs: usize, freq: f32, _vel: f32) {
-        self.attack.trigger(offs);
+        self.f_env.trigger(offs);
 
         if self.freq_note_start >= 0.5 {
             self.note_freq = freq as f64;
@@ -227,13 +191,13 @@ impl MonoVoice for OpKickmess {
     }
 
     fn end_note(&mut self, offs: usize) {
-        if self.attack.active() {
+        if self.f_env.active() {
             self.release.trigger(offs);
         }
     }
 
     fn is_playing(&self) -> bool {
-        self.attack.active()
+        self.f_env.active()
         || self.release.active()
     }
 
