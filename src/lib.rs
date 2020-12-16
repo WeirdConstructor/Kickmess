@@ -48,27 +48,80 @@ impl Default for Kickmess {
             host:   HostCallback::default(),
             params: Arc::new(KickmessVSTParams::default()),
             voices: vec![],
+            events: vec![],
         }
     }
+}
+
+enum VoiceEvent {
+    Start { note: u8, vel: u8, delta_frames: usize },
+    End   { note: u8, delta_frames: usize },
 }
 
 struct Kickmess {
     host:      HostCallback,
     params:    Arc<KickmessVSTParams>,
     voices:    Vec<OpKickmess>,
+    events:    Vec<VoiceEvent>,
+}
+
+impl Kickmess {
+    fn process_voice_events(&mut self) {
+        while !self.events.is_empty() {
+            match self.events.pop().unwrap() {
+                VoiceEvent::Start { note, delta_frames, vel } => {
+//                    let mut playing = 0;
+//                    let mut release = 0;
+//                    for voice in self.voices.iter_mut() {
+//                        if voice.is_playing() {
+//                            playing += 1;
+//                            if voice.in_release() {
+//                                release += 1;
+//                            }
+//                        }
+//                    }
+
+                    for (i, voice) in self.voices.iter_mut().enumerate() {
+                        if !voice.is_playing() {
+                            voice.read_params(&self.params.ps, &*self.params);
+                            voice.start_note(
+                                note as usize,
+                                delta_frames as usize,
+                                note_to_freq(note as f32),
+                                vel as f32);
+                            break;
+                        }
+                    }
+                },
+                VoiceEvent::End { note, delta_frames } => {
+                    for (i, voice) in self.voices.iter_mut().enumerate() {
+                        if voice.id() == (note as usize) {
+                            voice.end_note(delta_frames);
+                            break;
+                        }
+                    }
+                },
+            }
+        }
+    }
+
 }
 
 impl Plugin for Kickmess {
     fn new(host: HostCallback) -> Self {
+        let max_poly = 10;
         let mut voices = vec![];
-        for _ in 0..10 {
+        for _ in 0..max_poly {
             voices.push(OpKickmess::new());
         }
+
+        let events = std::vec::Vec::with_capacity(2 * max_poly);
 
         Self {
             host,
             voices,
             params: Arc::new(KickmessVSTParams::default()),
+            events,
         }
     }
 
@@ -108,6 +161,10 @@ impl Plugin for Kickmess {
 
         let mut channel = AB::from_buffers((&inbuf, outputbuf.get_mut(0)));
 
+        if !self.events.is_empty() {
+            self.process_voice_events();
+        }
+
         for voice in self.voices.iter_mut() {
             if voice.is_playing() {
                 voice.read_params(&self.params.ps, &*self.params);
@@ -121,34 +178,20 @@ impl Plugin for Kickmess {
             match e {
                 Event::Midi(MidiEvent { data, delta_frames, .. }) => {
                     if data[0] == 144 {
-                        let mut playing = 0;
-                        let mut release = 0;
-                        for voice in self.voices.iter_mut() {
-                            if voice.is_playing() {
-                                playing += 1;
-                                if voice.in_release() {
-                                    release += 1;
-                                }
-                            }
-                        }
-                        //d// println!("P VOICES: p={}, r={}", playing, release);
-
-                        for (i, voice) in self.voices.iter_mut().enumerate() {
-                            if !voice.is_playing() {
-                                //d// println!("[VOICE {}] START", i);
-                                voice.start_note(
-                                    delta_frames as usize,
-                                    note_to_freq(data[1] as f32),
-                                    data[2] as f32);
-                                break;
-                            }
-                        }
+                        self.events.push(VoiceEvent::Start {
+                            note:         data[1],
+                            vel:          data[2],
+                            delta_frames: delta_frames as usize,
+                        });
 
                     } else if data[0] == 128 {
                         for (i, voice) in self.voices.iter_mut().enumerate() {
                             if voice.is_playing() && !voice.in_release() {
                                 //d// println!("[VOICE {}] END", i);
-                                voice.end_note(delta_frames as usize);
+                                self.events.push(VoiceEvent::End {
+                                    note:         data[1],
+                                    delta_frames: delta_frames as usize,
+                                });
                                 break;
                             }
                         }
@@ -195,6 +238,8 @@ pub(crate) struct KickmessVSTParams {
     freq_slope:      AtomicFloat,
     env_release:     AtomicFloat,
     freq_note_start: AtomicFloat,
+    freq_note_end:   AtomicFloat,
+    phase_offs:      AtomicFloat,
 }
 
 impl KickmessVSTParams {
@@ -211,6 +256,8 @@ impl KickmessVSTParams {
             Param::Release2 => Some(&self.env_release),
             Param::Noise1   => Some(&self.noise),
             Param::S1       => Some(&self.freq_note_start),
+            Param::S2       => Some(&self.freq_note_end),
+            Param::Phase1   => Some(&self.phase_offs),
             _               => None,
         }
     }
@@ -248,6 +295,8 @@ impl Default for KickmessVSTParams {
             freq_slope:      new_default_atom(&mut ps, Param::Release1),
             env_release:     new_default_atom(&mut ps, Param::Release2),
             freq_note_start: new_default_atom(&mut ps, Param::S1),
+            freq_note_end:   new_default_atom(&mut ps, Param::S2),
+            phase_offs:      new_default_atom(&mut ps, Param::Phase1),
             ps,
         }
     }

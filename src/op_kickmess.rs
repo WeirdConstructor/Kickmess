@@ -32,6 +32,7 @@ use crate::MAX_BLOCKSIZE;
 const PI2 : f64 = std::f64::consts::PI * 2.0;
 
 pub struct OpKickmess {
+    id:              usize,
     freq_start:      f32,
     freq_end:        f32,
     dist_start:      f32,
@@ -41,20 +42,25 @@ pub struct OpKickmess {
     noise:           f32,
     freq_slope:      f32,
     freq_note_start: f32,
+    freq_note_end:   f32,
     phase_offs:      f64,
+
+    cur_f_start:     f64,
+    cur_f_end:       f64,
+
+    note_freq:       f64,
+    cur_phase:       f32,
+    srate:           f32,
 
     rng:             RandGen,
     f_env:           REnv,
     release:         REnv,
-    srate:           f32,
-
-    note_freq:       f64,
-    cur_phase:       f32,
 }
 
 impl OpKickmess {
     pub fn new() -> Self {
         Self {
+            id:              0,
             freq_start:      0.0,
             freq_end:        0.0,
             dist_start:      0.0,
@@ -64,15 +70,20 @@ impl OpKickmess {
             noise:           0.0,
             freq_slope:      0.0,
             freq_note_start: 0.0,
+            freq_note_end:   0.0,
             phase_offs:      0.0,
+
+            cur_f_start:     0.0,
+            cur_f_end:       0.0,
+
+            note_freq:       0.0,
+            cur_phase:       0.0,
+            srate:           0.0,
 
             rng:             RandGen::new(),
             f_env:           REnv::new(),
             release:         REnv::new(),
 
-            note_freq:       0.0,
-            srate:           0.0,
-            cur_phase:       0.0,
         }
     }
 }
@@ -89,6 +100,7 @@ impl MonoProcessor for OpKickmess {
         ps.add(ParamDefinition::from(Param::Release1,   0.001, 1.0,     0.06, "Freq. slope"));
         ps.add(ParamDefinition::from(Param::Noise1,     0.0,   1.0,      0.0, "Noise"));
         ps.add(ParamDefinition::from(Param::S1,         0.0,   1.0,      1.0, "Start from note"));
+        ps.add(ParamDefinition::from(Param::S2,         0.0,   1.0,      1.0, "End from note"));
         ps.add(ParamDefinition::from(Param::Release2,   1.0,1000.0,      5.0, "Env Release"));
         ps.add(ParamDefinition::from(Param::Phase1,     0.0,   1.0,      0.0, "Click"));
     }
@@ -110,8 +122,9 @@ impl MonoProcessor for OpKickmess {
         self.freq_slope       = ps.get( 7, pp);
         self.noise            = ps.get( 8, pp);
         self.freq_note_start  = ps.get( 9, pp);
-        self.release.set_release(ps.get(10, pp));
-        self.phase_offs       = ps.get(11, pp) as f64 * PI2;
+        self.freq_note_end    = ps.get(10, pp);
+        self.release.set_release(ps.get(11, pp));
+        self.phase_offs       = ps.get(12, pp) as f64 * PI2;
 
         self.noise = self.noise * self.noise;
     }
@@ -146,16 +159,17 @@ impl MonoProcessor for OpKickmess {
 
                     self.cur_phase +=
                         (self.note_freq / (self.srate as f64)) as f32;
+//                    println!("nf: {:5.3}", self.note_freq);
 
                     let change : f64 =
                         if env_value <= 1.0 {
-                            (self.freq_start - self.freq_end) as f64
+                            (self.cur_f_start - self.cur_f_end) as f64
                             * (1.0 - env_value.powf(self.freq_slope as f64))
                         } else {
                             0.0
                         };
 
-                    self.note_freq = self.freq_end as f64 + change;
+                    self.note_freq = self.cur_f_end as f64 + change;
                 }
 
                 let release_env_gain =
@@ -179,15 +193,31 @@ impl MonoProcessor for OpKickmess {
 }
 
 impl MonoVoice for OpKickmess {
-    fn start_note(&mut self, offs: usize, freq: f32, _vel: f32) {
+    fn start_note(&mut self, id: usize, offs: usize, freq: f32, _vel: f32) {
+        self.id = id;
         self.f_env.trigger(offs);
 
         if self.freq_note_start >= 0.5 {
-            self.note_freq = freq as f64;
+            self.cur_f_start = freq as f64;
         } else {
-            self.note_freq = self.freq_start as f64;
+            self.cur_f_start = self.freq_start as f64;
         }
+
+        if self.freq_note_end >= 0.5 {
+            self.cur_f_end = freq as f64;
+        } else {
+            self.cur_f_end = self.freq_end as f64;
+        }
+//        println!("{} freq: {:5.3}, fs: {:5.3}, fe: {:5.3}",
+//                 self.id,
+//                 self.note_freq,
+//                 self.cur_f_start,
+//                 self.cur_f_end);
+
+        self.note_freq = self.cur_f_start as f64;
     }
+
+    fn id(&self) -> usize { self.id }
 
     fn end_note(&mut self, offs: usize) {
         if self.f_env.active() {

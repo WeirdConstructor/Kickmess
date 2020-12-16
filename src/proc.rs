@@ -20,6 +20,7 @@ pub enum Param {
     Env1,
     Phase1,
     S1,
+    S2,
     Threshold1,
     Threshold2,
     Tmp1,
@@ -142,7 +143,8 @@ pub trait MonoProcessor {
 }
 
 pub trait MonoVoice : MonoProcessor {
-    fn start_note(&mut self, offs: usize, freq: f32, vel: f32);
+    fn id(&self) -> usize;
+    fn start_note(&mut self, id: usize, offs: usize, freq: f32, vel: f32);
     fn end_note(&mut self, offs: usize);
     fn is_playing(&self) -> bool;
     fn in_release(&self) -> bool;
