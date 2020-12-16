@@ -52,6 +52,17 @@ pub fn fast_sin(x: f64) -> f64 {
     fast_cos(x - (std::f64::consts::PI / 2.0))
 }
 
+static mut WHITE_NOISE_TAB: [f64; 1024] = [0.0; 1024];
+
+pub fn init_white_noise_tab() {
+    let mut rng = RandGen::new();
+    unsafe {
+        for i in 0..WHITE_NOISE_TAB.len() {
+            WHITE_NOISE_TAB[i as usize] = rng.next_open01();
+        }
+    }
+}
+
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct RandGen {
     r: [u64; 2],

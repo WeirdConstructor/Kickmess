@@ -133,8 +133,7 @@ impl MonoProcessor for OpKickmess {
 
                     let mut s =
                         fast_sin(self.cur_phase as f64 * PI2 + self.phase_offs)
-                        * (1.0_f64 - self.noise as f64)
-                        ; // TODO: + rng.noise...
+                        * (1.0_f64 - self.noise as f64);
 
                     s += self.rng.next_open01() * gain * gain * self.noise as f64;
 
