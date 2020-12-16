@@ -55,18 +55,20 @@ pub enum UIEvent {
 #[derive(Debug, Clone, Copy)]
 enum InputMode {
     None,
-    ValueDrag { zone: ActiveZone, orig_pos: (f64, f64) },
-    SelectMod { zone: ActiveZone },
-    ToggleBtn { zone: ActiveZone },
+    ValueDrag  { zone: ActiveZone, orig_pos: (f64, f64) },
+    SelectMod  { zone: ActiveZone },
+    ToggleBtn  { zone: ActiveZone },
+    SetDefault { zone: ActiveZone },
 }
 
 impl InputMode {
     fn id(&self) -> usize {
         match self {
-            InputMode::None                   => IMAGINARY_MAX_ID,
-            InputMode::ValueDrag { zone, .. } => zone.id,
-            InputMode::SelectMod { zone, .. } => zone.id,
-            InputMode::ToggleBtn { zone, .. } => zone.id,
+            InputMode::None                    => IMAGINARY_MAX_ID,
+            InputMode::ValueDrag  { zone, .. } => zone.id,
+            InputMode::SelectMod  { zone, .. } => zone.id,
+            InputMode::ToggleBtn  { zone, .. } => zone.id,
+            InputMode::SetDefault { zone, .. } => zone.id,
         }
     }
 }
@@ -302,6 +304,17 @@ impl UI {
 
                 match self.input_mode {
                     InputMode::None => {
+                        if let Some(hz) = self.hover_zone {
+                            match btn {
+                                MouseButton::Middle => {
+                                    self.input_mode = InputMode::SetDefault { zone: hz };
+                                    self.queue_redraw();
+                                    return;
+                                },
+                                _ => {}
+                            }
+                        }
+
                         match self.hover_zone_submode() {
                             painting::AZ_COARSE_DRAG | painting::AZ_FINE_DRAG => {
                                 let id = self.hover_zone.unwrap().id;
@@ -364,6 +377,17 @@ impl UI {
                         self.ui_handle.tx
                             .send(UIMsg::ValueChangeEnd { id: id, value: v })
                             .expect("Sending works");
+
+                        self.queue_redraw();
+                    },
+                    InputMode::SetDefault { zone } => {
+                        if let Some(hover_zone) = self.hover_zone {
+                            if hover_zone.id == zone.id {
+                                self.set_element_value(
+                                    zone.id,
+                                    self.get_element_default_value(zone.id));
+                            }
+                        }
 
                         self.queue_redraw();
                     },
