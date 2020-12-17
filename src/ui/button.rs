@@ -74,7 +74,7 @@ impl UIElement for Button {
             w, (h / 2.0).round(), name);
 
         match highlight {
-            HLStyle::Hover => {
+            HLStyle::Hover(_) => {
                 cr.set_source_rgb(
                     UI_BTN_TXT_HOVER_CLR.0,
                     UI_BTN_TXT_HOVER_CLR.1,

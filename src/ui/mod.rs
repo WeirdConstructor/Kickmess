@@ -235,7 +235,7 @@ impl UI {
     fn hover_highligh_for_id(&self, id: usize) -> HLStyle {
         if let Some(hover_zone) = self.hover_zone {
             if hover_zone.id == id {
-                HLStyle::Hover
+                HLStyle::Hover(hover_zone.subtype as i8)
             } else {
                 HLStyle::None
             }
@@ -618,7 +618,7 @@ impl UI {
         let highlight =
             match self.input_mode {
                 InputMode::SelectMod { zone } => {
-                    if let HLStyle::Hover = self.hover_highligh_for_id(id) {
+                    if let HLStyle::Hover(_) = self.hover_highligh_for_id(id) {
                         if self.is_mod_target_value(zone.id, id) {
                             HLStyle::HoverModTarget
                         } else if zone.id == id {

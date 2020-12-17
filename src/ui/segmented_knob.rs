@@ -28,8 +28,10 @@ impl UIElement for SegmentedKnob {
             self.get_center_offset(UI_BG_KNOB_STROKE);
         let (xo, yo) = (knob_xo, knob_yo);
 
-        let z1 = ActiveZone::from_rect(x + xo, y + yo, AZ_COARSE_DRAG, self.get_value_rect());
+        let z1 = ActiveZone::from_rect(x + xo, y + yo, AZ_COARSE_DRAG, self.get_coarse_adjustment_rect());
         (f)(z1);
+        let z2 = ActiveZone::from_rect(x + xo, y + yo, AZ_FINE_DRAG, self.get_fine_adjustment_rect());
+        (f)(z2);
     }
 
     fn draw_value(&self, cr: &cairo::Context, x: f64, y: f64,
@@ -166,6 +168,31 @@ impl SegmentedKnob {
          self.radius + (line_width / 2.0).ceil() + UI_SAFETY_PAD)
     }
 
+    pub fn get_fine_adjustment_mark(&self) -> (f64, f64, f64, f64) {
+        let r = self.get_fine_adjustment_rect();
+        let UI_KNOB_FINE_SIZE = self.font_size_lbl;
+        (r.0 + (r.2 * 0.5).round(),
+         r.1 + (r.3 * 0.5).round(),
+         UI_KNOB_FINE_SIZE,
+         UI_KNOB_FINE_SIZE)
+    }
+
+    pub fn get_fine_adjustment_rect(&self) -> (f64, f64, f64, f64) {
+        let width = self.radius * 2.0;
+        ((self.sbottom.0 - self.radius).round(),
+         (self.sbottom.1 - self.radius).round(),
+         width.round(),
+         (self.radius).round())
+    }
+
+    pub fn get_coarse_adjustment_rect(&self) -> (f64, f64, f64, f64) {
+        let width = self.radius * 2.0;
+        ((self.sbottom.0 - self.radius).round(),
+         -self.radius,
+         width.round(),
+         (self.radius).round())
+    }
+
     pub fn get_value_rect(&self) -> (f64, f64, f64, f64) {
         let width = self.radius * 2.0;
         ((self.sbottom.0 - self.radius).round(),
@@ -205,7 +232,22 @@ impl SegmentedKnob {
         let r = self.get_value_rect();
 
         match highlight {
-            HLStyle::Hover => {
+            HLStyle::Hover(subtype) => {
+
+                if subtype == AZ_FINE_DRAG {
+        let r = self.get_fine_adjustment_mark();
+        cr.set_source_rgb(1.0, 1.0, 1.0);
+        cr.set_line_width(1.0);
+        cr.rectangle(x + r.0, y + r.1, r.2, r.3);
+        cr.stroke();
+                } else {
+//        let r = self.get_coarse_adjustment_mark();
+//        cr.set_source_rgb(1.0, 1.0, 1.0);
+//        cr.set_line_width(1.0);
+//        cr.rectangle(x + r.0, y + r.1, r.2, r.3);
+//        cr.stroke();
+                }
+
                 cr.set_font_size(self.font_size_data + 1.0);
                 cr.set_source_rgb(
                     UI_TXT_KNOB_HOVER_CLR.0,
@@ -230,6 +272,7 @@ impl SegmentedKnob {
             y + r.1 + ext.height
                     + ((r.3 - ext.height) / 2.0).abs().round());
         cr.show_text(s);
+
     }
 
     pub fn draw_oct_arc(&self, cr: &cairo::Context, x: f64, y: f64, line_w: f64, color: (f64, f64, f64), with_dot: bool, value: f64) {
@@ -287,6 +330,24 @@ impl SegmentedKnob {
         }
 
         cr.stroke();
+
+        let r = self.get_coarse_adjustment_rect();
+        cr.set_source_rgb(0.0, 1.0, 1.0);
+        cr.set_line_width(1.0);
+        cr.rectangle(x + r.0, y + r.1, r.2, r.3);
+        cr.stroke();
+
+        let r = self.get_fine_adjustment_rect();
+        cr.set_source_rgb(1.0, 0.0, 1.0);
+        cr.set_line_width(1.0);
+        cr.rectangle(x + r.0, y + r.1, r.2, r.3);
+        cr.stroke();
+
+        let r = self.get_fine_adjustment_mark();
+        cr.set_source_rgb(1.0, 0.0, 1.0);
+        cr.set_line_width(1.0);
+        cr.rectangle(x + r.0, y + r.1, r.2, r.3);
+        cr.fill();
     }
 }
 

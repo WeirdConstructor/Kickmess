@@ -19,7 +19,7 @@ pub struct ActiveZone {
 #[derive(Debug, Clone, Copy)]
 pub enum HLStyle {
     None,
-    Hover,
+    Hover(i8),
     ModTarget,
     HoverModTarget,
 }
