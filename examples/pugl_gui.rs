@@ -67,11 +67,11 @@ fn main() {
 
     cl_hdl.tx.send(UICmd::DefineValues(vec![
         UIValueSpec::new_id(),
-        UIValueSpec::new_min_max(5.0, 3000.0, 6, 1).steps(0.05, 0.001),
-        UIValueSpec::new_min_max(5.0, 2000.0, 6, 1).steps(0.05, 0.001),
-        UIValueSpec::new_min_max(5.0, 5000.0, 6, 1).steps(0.05, 0.001),
-        UIValueSpec::new_min_max(0.0, 100.0, 5, 1).steps(0.05, 0.001),
-        UIValueSpec::new_min_max(0.0, 100.0, 5, 1).steps(0.05, 0.001),
+        UIValueSpec::new_min_max(5.0, 3000.0, 6, 1).steps(0.04, 0.01),
+        UIValueSpec::new_min_max(5.0, 2000.0, 6, 1).steps(0.04, 0.01),
+        UIValueSpec::new_min_max(5.0, 5000.0, 6, 1).steps(0.04, 0.01),
+        UIValueSpec::new_min_max(0.0, 100.0, 5, 1).steps(0.04, 0.01),
+        UIValueSpec::new_min_max(0.0, 100.0, 5, 1).steps(0.04, 0.01),
         UIValueSpec::new_id(),
         UIValueSpec::new_id(),
         UIValueSpec::new_id(),

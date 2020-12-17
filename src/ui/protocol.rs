@@ -29,7 +29,7 @@ impl UIValueSpec {
             fun: Arc::new(|x| x),
             fmt: Arc::new(|_, x| format!("{:4.2}", x)),
             coarse_step: 0.05,
-            fine_step:   0.001,
+            fine_step:   0.01,
             default:     0.0,
         }
     }
@@ -39,7 +39,7 @@ impl UIValueSpec {
             fun,
             fmt: Arc::new(|_, x| format!("{:4.2}", x)),
             coarse_step: 0.05,
-            fine_step:   0.001,
+            fine_step:   0.01,
             default:     0.0,
         }
     }

@@ -59,7 +59,26 @@ impl UIElement for SegmentedKnob {
                     false,
                     1.0);
             },
-            _ => {
+            HLStyle::Hover(subtype) => {
+                if subtype == AZ_FINE_DRAG {
+                    let r = self.get_fine_adjustment_mark();
+                    cr.set_source_rgb(
+                        UI_TXT_KNOB_HOVER_CLR.0,
+                        UI_TXT_KNOB_HOVER_CLR.1,
+                        UI_TXT_KNOB_HOVER_CLR.2);
+                    cr.rectangle(x + xo + r.0, y + yo + r.1, r.2, r.3);
+                    cr.fill();
+
+                } else {
+                    let r = self.get_coarse_adjustment_mark();
+                    cr.set_source_rgb(
+                        UI_TXT_KNOB_HOVER_CLR.0,
+                        UI_TXT_KNOB_HOVER_CLR.1,
+                        UI_TXT_KNOB_HOVER_CLR.2);
+                    cr.rectangle(x + xo + r.0, y + yo + r.1, r.2, r.3);
+                    cr.fill();
+                }
+
                 self.draw_oct_arc(
                     &cr, x + xo, y + yo,
                     UI_MG_KNOB_STROKE,
@@ -67,6 +86,14 @@ impl UIElement for SegmentedKnob {
                     true,
                     value);
             },
+            HLStyle::None => {
+                self.draw_oct_arc(
+                    &cr, x + xo, y + yo,
+                    UI_MG_KNOB_STROKE,
+                    UI_FG_KNOB_STROKE_CLR,
+                    true,
+                    value);
+            }
         }
 
         self.draw_value_label(&cr, x + xo, y + yo, highlight, val_s);
@@ -103,6 +130,27 @@ impl UIElement for SegmentedKnob {
         let lblrect = self.get_label_rect();
         cr.rectangle(
             lblrect.0 + xo, lblrect.1 + yo, lblrect.2, lblrect.3);
+        cr.fill();
+
+//        let r = self.get_coarse_adjustment_rect();
+//        cr.set_source_rgb(0.0, 1.0, 1.0);
+//        cr.set_line_width(1.0);
+//        cr.rectangle(x + r.0, y + r.1, r.2, r.3);
+//        cr.stroke();
+
+        let r = self.get_coarse_adjustment_mark();
+        cr.set_line_width(1.0);
+        cr.rectangle(xo + r.0, yo + r.1, r.2, r.3);
+        cr.fill();
+
+//        let r = self.get_fine_adjustment_rect();
+//        cr.set_source_rgb(1.0, 0.0, 1.0);
+//        cr.set_line_width(1.0);
+//        cr.rectangle(x + r.0, y + r.1, r.2, r.3);
+//        cr.stroke();
+
+        let r = self.get_fine_adjustment_mark();
+        cr.rectangle(xo + r.0, yo + r.1, r.2, r.3);
         cr.fill();
 
         self.draw_oct_arc(
@@ -170,11 +218,14 @@ impl SegmentedKnob {
 
     pub fn get_fine_adjustment_mark(&self) -> (f64, f64, f64, f64) {
         let r = self.get_fine_adjustment_rect();
-        let UI_KNOB_FINE_SIZE = self.font_size_lbl;
-        (r.0 + (r.2 * 0.5).round(),
-         r.1 + (r.3 * 0.5).round(),
-         UI_KNOB_FINE_SIZE,
-         UI_KNOB_FINE_SIZE)
+        let mut size = (self.font_size_lbl * 0.25).round();
+        if (size as i32) % 2 != 0 {
+            size += 1.0;
+        }
+        (r.0 + (r.2 * 0.5 - size * 0.5).round(),
+         r.1 + (r.3 * 0.5 + size * 0.5).round(),
+         size,
+         size)
     }
 
     pub fn get_fine_adjustment_rect(&self) -> (f64, f64, f64, f64) {
@@ -187,11 +238,14 @@ impl SegmentedKnob {
 
     pub fn get_coarse_adjustment_mark(&self) -> (f64, f64, f64, f64) {
         let r = self.get_coarse_adjustment_rect();
-        let UI_KNOB_FINE_SIZE = self.font_size_lbl;
-        (r.0 + (r.2 * 0.5).round(),
-         r.1 + (r.3 * 0.5).round(),
-         UI_KNOB_FINE_SIZE,
-         UI_KNOB_FINE_SIZE)
+        let mut size = (self.font_size_lbl * 0.5).round();
+        if (size as i32) % 2 != 0 {
+            size += 1.0;
+        }
+        (r.0 + (r.2 * 0.5 - size * 0.5).round(),
+         r.1 + (r.3 * 0.5 - size).round(),
+         size,
+         size)
     }
 
     pub fn get_coarse_adjustment_rect(&self) -> (f64, f64, f64, f64) {
@@ -241,21 +295,7 @@ impl SegmentedKnob {
         let r = self.get_value_rect();
 
         match highlight {
-            HLStyle::Hover(subtype) => {
-
-                if subtype == AZ_FINE_DRAG {
-                    let r = self.get_fine_adjustment_mark();
-                    cr.set_source_rgb(1.0, 1.0, 1.0);
-                    cr.set_line_width(1.0);
-                    cr.rectangle(x + r.0, y + r.1, r.2, r.3);
-                    cr.stroke();
-                } else {
-                    let r = self.get_coarse_adjustment_mark();
-                    cr.set_source_rgb(1.0, 1.0, 1.0);
-                    cr.set_line_width(1.0);
-                    cr.rectangle(x + r.0, y + r.1, r.2, r.3);
-                    cr.stroke();
-                }
+            HLStyle::Hover(_subtype) => {
 
                 cr.set_font_size(self.font_size_data + 1.0);
                 cr.set_source_rgb(
@@ -340,29 +380,6 @@ impl SegmentedKnob {
 
         cr.stroke();
 
-        let r = self.get_coarse_adjustment_rect();
-        cr.set_source_rgb(0.0, 1.0, 1.0);
-        cr.set_line_width(1.0);
-        cr.rectangle(x + r.0, y + r.1, r.2, r.3);
-        cr.stroke();
-
-        let r = self.get_coarse_adjustment_mark();
-        cr.set_source_rgb(1.0, 0.0, 1.0);
-        cr.set_line_width(1.0);
-        cr.rectangle(x + r.0, y + r.1, r.2, r.3);
-        cr.fill();
-
-        let r = self.get_fine_adjustment_rect();
-        cr.set_source_rgb(1.0, 0.0, 1.0);
-        cr.set_line_width(1.0);
-        cr.rectangle(x + r.0, y + r.1, r.2, r.3);
-        cr.stroke();
-
-        let r = self.get_fine_adjustment_mark();
-        cr.set_source_rgb(1.0, 0.0, 1.0);
-        cr.set_line_width(1.0);
-        cr.rectangle(x + r.0, y + r.1, r.2, r.3);
-        cr.fill();
     }
 }
 
