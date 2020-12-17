@@ -185,6 +185,15 @@ impl SegmentedKnob {
          (self.radius).round())
     }
 
+    pub fn get_coarse_adjustment_mark(&self) -> (f64, f64, f64, f64) {
+        let r = self.get_coarse_adjustment_rect();
+        let UI_KNOB_FINE_SIZE = self.font_size_lbl;
+        (r.0 + (r.2 * 0.5).round(),
+         r.1 + (r.3 * 0.5).round(),
+         UI_KNOB_FINE_SIZE,
+         UI_KNOB_FINE_SIZE)
+    }
+
     pub fn get_coarse_adjustment_rect(&self) -> (f64, f64, f64, f64) {
         let width = self.radius * 2.0;
         ((self.sbottom.0 - self.radius).round(),
@@ -235,17 +244,17 @@ impl SegmentedKnob {
             HLStyle::Hover(subtype) => {
 
                 if subtype == AZ_FINE_DRAG {
-        let r = self.get_fine_adjustment_mark();
-        cr.set_source_rgb(1.0, 1.0, 1.0);
-        cr.set_line_width(1.0);
-        cr.rectangle(x + r.0, y + r.1, r.2, r.3);
-        cr.stroke();
+                    let r = self.get_fine_adjustment_mark();
+                    cr.set_source_rgb(1.0, 1.0, 1.0);
+                    cr.set_line_width(1.0);
+                    cr.rectangle(x + r.0, y + r.1, r.2, r.3);
+                    cr.stroke();
                 } else {
-//        let r = self.get_coarse_adjustment_mark();
-//        cr.set_source_rgb(1.0, 1.0, 1.0);
-//        cr.set_line_width(1.0);
-//        cr.rectangle(x + r.0, y + r.1, r.2, r.3);
-//        cr.stroke();
+                    let r = self.get_coarse_adjustment_mark();
+                    cr.set_source_rgb(1.0, 1.0, 1.0);
+                    cr.set_line_width(1.0);
+                    cr.rectangle(x + r.0, y + r.1, r.2, r.3);
+                    cr.stroke();
                 }
 
                 cr.set_font_size(self.font_size_data + 1.0);
@@ -336,6 +345,12 @@ impl SegmentedKnob {
         cr.set_line_width(1.0);
         cr.rectangle(x + r.0, y + r.1, r.2, r.3);
         cr.stroke();
+
+        let r = self.get_coarse_adjustment_mark();
+        cr.set_source_rgb(1.0, 0.0, 1.0);
+        cr.set_line_width(1.0);
+        cr.rectangle(x + r.0, y + r.1, r.2, r.3);
+        cr.fill();
 
         let r = self.get_fine_adjustment_rect();
         cr.set_source_rgb(1.0, 0.0, 1.0);
