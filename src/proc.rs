@@ -56,6 +56,7 @@ impl ParamProvider for f32 {
     fn param(&self, _p: Param) -> f32 { *self }
 }
 
+#[derive(Debug, Clone, Copy)]
 pub struct ParamDefinition(Param, f32, f32, f32, &'static str);
 
 impl ParamDefinition {
@@ -89,6 +90,11 @@ impl ParamSet {
     }
 
     pub fn add(&mut self, pd: ParamDefinition) {
+        self.defines.push(pd)
+    }
+
+    pub fn add2(&mut self, other: &mut Self, pd: ParamDefinition) {
+        other.add(pd);
         self.defines.push(pd)
     }
 
@@ -136,7 +142,7 @@ impl ParamSet {
 //    return in * m_gain;
 
 pub trait MonoProcessor {
-    fn init_params(ps: &mut ParamSet);
+    fn init_params(ps: &mut ParamSet, public_ps: &mut ParamSet);
     fn read_params(&mut self, ps: &ParamSet, pp: &dyn ParamProvider);
     fn process(&mut self, c: &mut dyn Channel);
     fn set_sample_rate(&mut self, srate: f32);

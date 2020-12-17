@@ -137,7 +137,7 @@ impl Plugin for Kickmess {
             outputs:      1,
             midi_inputs:  1,
             midi_outputs: 0,
-            parameters:   self.params.ps.param_count() as i32,
+            parameters:   self.params.public_ps.param_count() as i32,
             unique_id:    934843292,
             version:      0001,
             category:     Category::Synth,
@@ -226,6 +226,7 @@ impl Plugin for Kickmess {
 
 pub(crate) struct KickmessVSTParams {
     ps:             ParamSet,
+    public_ps:      ParamSet,
 
     freq_start:      AtomicFloat,
     freq_end:        AtomicFloat,
@@ -280,8 +281,9 @@ fn new_default_atom(ps: &mut ParamSet, p: Param) -> AtomicFloat {
 
 impl Default for KickmessVSTParams {
     fn default() -> KickmessVSTParams {
-        let mut ps = ParamSet::new();
-        OpKickmess::init_params(&mut ps);
+        let mut ps        = ParamSet::new();
+        let mut public_ps = ParamSet::new();
+        OpKickmess::init_params(&mut ps, &mut public_ps);
 
         KickmessVSTParams {
             freq_start:      new_default_atom(&mut ps, Param::Freq1),
@@ -298,17 +300,18 @@ impl Default for KickmessVSTParams {
             freq_note_end:   new_default_atom(&mut ps, Param::S2),
             phase_offs:      new_default_atom(&mut ps, Param::Phase1),
             ps,
+            public_ps,
         }
     }
 }
 
 impl PluginParameters for KickmessVSTParams {
     fn get_parameter(&self, index: i32) -> f32 {
-        self.ps.get_raw(index as usize, self)
+        self.public_ps.get_raw(index as usize, self)
     }
 
     fn set_parameter(&self, index: i32, val: f32) {
-        if let Some(pd) = self.ps.definition(index as usize) {
+        if let Some(pd) = self.public_ps.definition(index as usize) {
             if let Some(af) = self.atom_float(pd.param()) {
                 af.set(val);
             }
@@ -316,17 +319,17 @@ impl PluginParameters for KickmessVSTParams {
     }
 
     fn get_parameter_text(&self, index: i32) -> String {
-        if index > self.ps.param_count() as i32 {
+        if index > self.public_ps.param_count() as i32 {
             return "".to_string();
         }
 
         let v = self.get_parameter(index);
-        let pd = self.ps.definition(index as usize).unwrap();
+        let pd = self.public_ps.definition(index as usize).unwrap();
         format!("{} >= {:.2} >= {}", pd.min(), pd.map(v), pd.max())
     }
 
     fn get_parameter_name(&self, index: i32) -> String {
-        if let Some(pd) = self.ps.definition(index as usize) {
+        if let Some(pd) = self.public_ps.definition(index as usize) {
             pd.name().to_string()
         } else {
             "".to_string()
