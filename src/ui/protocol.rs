@@ -151,14 +151,21 @@ pub struct UIPos {
     pub col_size: u8,
     pub row_size: u8,
     pub align:    i8,
+    pub valign:   i8,
     // TODO:
     //      - vertical align
 }
 
 impl UIPos {
-    pub fn center(col_size: u8, row_size: u8)  -> Self { UIPos { col_size, row_size, align:  0 } }
-    pub fn left(col_size: u8, row_size: u8)    -> Self { UIPos { col_size, row_size, align: -1 } }
-    pub fn right(col_size: u8, row_size: u8)   -> Self { UIPos { col_size, row_size, align:  1 } }
+    pub fn center(col_size: u8, row_size: u8)  -> Self { UIPos { col_size, row_size, align:  0, valign: 0 } }
+    pub fn left(col_size: u8, row_size: u8)    -> Self { UIPos { col_size, row_size, align: -1, valign: 0 } }
+    pub fn right(col_size: u8, row_size: u8)   -> Self { UIPos { col_size, row_size, align:  1, valign: 0 } }
+    pub fn middle(mut self) -> Self { self.valign = 0;  self }
+    pub fn top(mut self) -> Self    { self.valign = -1; self }
+    pub fn bottom(mut self) -> Self { self.valign = 1;  self }
+    pub fn alignment(&self) -> (i8, i8) {
+        (self.align, self.valign)
+    }
 }
 
 #[derive(Debug, Clone, Copy)]

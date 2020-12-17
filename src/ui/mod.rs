@@ -570,7 +570,7 @@ impl UI {
     fn draw_element(&mut self,
         cr: &cairo::Context,
         rect: &Rect,
-        align: i8,
+        align: (i8, i8),
         element_data: &dyn UIElementData,
         cache_idx: ElementType) {
 
@@ -579,18 +579,29 @@ impl UI {
         let mut xe = rect.x;
         let mut ye = rect.y;
 
-        match align {
+        match align.0 {
             1 => { xe += rect.w - size.0; },
             0 => { xe += ((rect.w - size.0) / 2.0).round(); },
             _ => { /* left align is a nop */ },
         }
 
-        ye += (rect.h - size.1).round();
+        match align.1 {
+            1 => { ye += rect.h - size.1; },
+            0 => { ye += ((rect.h - size.1) / 2.0).round(); },
+            _ => { /* left align is a nop */ },
+        }
 
         let id = element_data.value_id();
 
         let mut zones : [Option<ActiveZone>; 4] = [None; 4];
         let mut z_idx = 0;
+
+        if false {
+            cr.set_line_width(1.0);
+            cr.set_source_rgb(1.0, 0.0, 1.0);
+            cr.rectangle(xe, ye, size.0, size.1);
+            cr.stroke();
+        }
 
         let az = self.cache.draw_bg(cr, xe, ye, cache_idx as usize);
         self.cache.define_active_zones(xe, ye, element_data, cache_idx as usize, &mut |az| {
@@ -661,25 +672,25 @@ impl UI {
                     },
                     UIInput::Button(btn_data) => {
                         self.draw_element(
-                            cr, &el_rect, pos.align,
+                            cr, &el_rect, pos.alignment(),
                             btn_data,
                             ElementType::Button);
                     },
                     UIInput::Knob(knob_data) => {
                         self.draw_element(
-                            cr, &el_rect, pos.align,
+                            cr, &el_rect, pos.alignment(),
                             knob_data,
                             ElementType::Knob);
                     },
                     UIInput::KnobSmall(knob_data) => {
                         self.draw_element(
-                            cr, &el_rect, pos.align,
+                            cr, &el_rect, pos.alignment(),
                             knob_data,
                             ElementType::KnobSmall);
                     },
                     UIInput::KnobHuge(knob_data) => {
                         self.draw_element(
-                            cr, &el_rect, pos.align,
+                            cr, &el_rect, pos.alignment(),
                             knob_data,
                             ElementType::KnobHuge);
                     },
@@ -691,7 +702,7 @@ impl UI {
                         }
 
                         self.draw_element(
-                            cr, &el_rect, pos.align,
+                            cr, &el_rect, pos.alignment(),
                             graph_data,
                             match el {
                                 UIInput::Graph(_)      => ElementType::Graph,

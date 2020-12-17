@@ -20,7 +20,7 @@ impl UIElement for SegmentedKnob {
         let (lbl_x, lbl_y, lbl_w, lbl_h) = self.get_label_rect();
 
         (lbl_w + 2.0 * UI_SAFETY_PAD,
-         self.radius + lbl_y + lbl_h + UI_BG_KNOB_STROKE + 2.0 * UI_SAFETY_PAD)
+         (self.radius + lbl_y + lbl_h + 0.5 * UI_BG_KNOB_STROKE).round() + UI_SAFETY_PAD)
     }
 
     fn define_active_zones(&self, x: f64, y: f64, _elem_data: &dyn UIElementData, f: &mut dyn FnMut(ActiveZone)) {
