@@ -245,6 +245,7 @@ impl UIElementData for UIGraphData {
 #[derive(Debug, Clone)]
 pub enum UIInput {
     None(UIPos),
+    Container(UIPos, Vec<Vec<UIInput>>),
     KnobSmall(UIKnobData),
     Knob(UIKnobData),
     KnobHuge(UIKnobData),
@@ -261,6 +262,7 @@ impl UIInput {
     pub fn position(&self) -> UIPos {
         match self {
             UIInput::None(p)                             => *p,
+            UIInput::Container(p, _)                     => *p,
             UIInput::KnobSmall(UIKnobData { pos, .. })   => *pos,
             UIInput::Knob(UIKnobData { pos, .. })        => *pos,
             UIInput::KnobHuge(UIKnobData { pos, .. })    => *pos,
@@ -305,6 +307,10 @@ impl UIInput {
 
     pub fn knob_huge(id: usize, label: String, pos: UIPos) -> Self {
         UIInput::KnobHuge(UIKnobData { id, label, pos })
+    }
+
+    pub fn container(pos: UIPos, childs: Vec<Vec<UIInput>>) -> Self {
+        UIInput::Container(pos, childs)
     }
 }
 

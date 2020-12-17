@@ -636,6 +636,80 @@ impl UI {
                              highlight, element_data, val, &val_str);
     }
 
+    fn layout_container(&mut self, cr: &cairo::Context, crect: Rect, rows: &Vec<Vec<UIInput>>) {
+        let mut row_offs = 0;
+        for row in rows.iter() {
+            let mut col_offs = 0;
+
+            let mut min_row_offs = 255;
+            for el in row.iter() {
+                let pos = el.position();
+                let (el_rect, ro, co) =
+                    crect.calc_element_box(row_offs, col_offs, pos);
+//                            println!("CALC ELEM POS={:?} => row={},col={} => ro={},co={}",
+//                                    pos,
+//                                    row_offs, col_offs,
+//                                    ro, co);
+
+                col_offs = co;
+
+                if ro < min_row_offs { min_row_offs = ro; }
+
+                match el {
+                    UIInput::None(_) => {
+                        // it's just about co/ro
+                    },
+                    UIInput::Button(btn_data) => {
+                        self.draw_element(
+                            cr, &el_rect, pos.align,
+                            btn_data,
+                            ElementType::Button);
+                    },
+                    UIInput::Knob(knob_data) => {
+                        self.draw_element(
+                            cr, &el_rect, pos.align,
+                            knob_data,
+                            ElementType::Knob);
+                    },
+                    UIInput::KnobSmall(knob_data) => {
+                        self.draw_element(
+                            cr, &el_rect, pos.align,
+                            knob_data,
+                            ElementType::KnobSmall);
+                    },
+                    UIInput::KnobHuge(knob_data) => {
+                        self.draw_element(
+                            cr, &el_rect, pos.align,
+                            knob_data,
+                            ElementType::KnobHuge);
+                    },
+                    UIInput::Graph(graph_data) | UIInput::GraphSmall(graph_data) | UIInput::GraphHuge(graph_data) => {
+                        {
+                            let mut data_buf = graph_data.data.borrow_mut();
+                            data_buf.clear();
+                            (graph_data.fun)(self, &mut data_buf);
+                        }
+
+                        self.draw_element(
+                            cr, &el_rect, pos.align,
+                            graph_data,
+                            match el {
+                                UIInput::Graph(_)      => ElementType::Graph,
+                                UIInput::GraphSmall(_) => ElementType::GraphSmall,
+                                _                      => ElementType::GraphHuge,
+                            });
+                    },
+                    UIInput::Container(_, childs) => {
+                        let crect = el_rect;
+                        self.layout_container(cr, crect, childs);
+                    },
+                }
+            }
+
+            row_offs = min_row_offs;
+        }
+    }
+
     pub fn draw(&mut self, cr: &cairo::Context) {
         let (ww, wh) = self.window_size;
 
@@ -694,73 +768,8 @@ impl UI {
                             cr, x + UI_BORDER_WIDTH, y + UI_BORDER_WIDTH, label);
                     }
 
-                    let mut row_offs     = 0;
-                    for row in rows.iter() {
-                        let mut col_offs = 0;
+                    self.layout_container(cr, crect, rows);
 
-                        let mut min_row_offs = 255;
-                        for el in row.iter() {
-                            let pos = el.position();
-                            let (el_rect, ro, co) =
-                                crect.calc_element_box(row_offs, col_offs, pos);
-//                            println!("CALC ELEM POS={:?} => row={},col={} => ro={},co={}",
-//                                    pos,
-//                                    row_offs, col_offs,
-//                                    ro, co);
-
-                            col_offs = co;
-
-                            if ro < min_row_offs { min_row_offs = ro; }
-
-                            match el {
-                                UIInput::None(_) => {
-                                    // it's just about co/ro
-                                },
-                                UIInput::Button(btn_data) => {
-                                    self.draw_element(
-                                        cr, &el_rect, pos.align,
-                                        btn_data,
-                                        ElementType::Button);
-                                },
-                                UIInput::Knob(knob_data) => {
-                                    self.draw_element(
-                                        cr, &el_rect, pos.align,
-                                        knob_data,
-                                        ElementType::Knob);
-                                },
-                                UIInput::KnobSmall(knob_data) => {
-                                    self.draw_element(
-                                        cr, &el_rect, pos.align,
-                                        knob_data,
-                                        ElementType::KnobSmall);
-                                },
-                                UIInput::KnobHuge(knob_data) => {
-                                    self.draw_element(
-                                        cr, &el_rect, pos.align,
-                                        knob_data,
-                                        ElementType::KnobHuge);
-                                },
-                                UIInput::Graph(graph_data) | UIInput::GraphSmall(graph_data) | UIInput::GraphHuge(graph_data) => {
-                                    {
-                                        let mut data_buf = graph_data.data.borrow_mut();
-                                        data_buf.clear();
-                                        (graph_data.fun)(self, &mut data_buf);
-                                    }
-
-                                    self.draw_element(
-                                        cr, &el_rect, pos.align,
-                                        graph_data,
-                                        match el {
-                                            UIInput::Graph(_)      => ElementType::Graph,
-                                            UIInput::GraphSmall(_) => ElementType::GraphSmall,
-                                            _                      => ElementType::GraphHuge,
-                                        });
-                                },
-                            }
-                        }
-
-                        row_offs = min_row_offs;
-                    }
                     //d// println!("DRAW CONTAINER {},{},{},{}", x, y, w, h);
                 },
             }

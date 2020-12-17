@@ -111,10 +111,16 @@ fn main() {
                     UIInput::graph_huge(      1, String::from("Wavey (h)"),  UIPos::center(12, 3)),
                 ],
                 vec![
-                    UIInput::graph_small(      1, String::from("Wavey (s)"),  UIPos::center(12, 3)),
+                    UIInput::container(UIPos::center(12, 5), vec![
+                        vec![
+                            UIInput::graph_small(1, String::from("Wavey (s)"),  UIPos::left(12, 5)),
+                        ],
+                        vec![
+                            UIInput::knob_small(11, String::from("w"),          UIPos::left(12, 7)),
+                        ]
+                    ])
                 ],
                 vec![
-                    UIInput::knob(      11, String::from("w"),      UIPos::center(12, 3)),
                 ],
             ],
         },
