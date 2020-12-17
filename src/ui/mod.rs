@@ -698,7 +698,7 @@ impl UI {
                         {
                             let mut data_buf = graph_data.data.borrow_mut();
                             data_buf.clear();
-                            (graph_data.fun)(self, &mut data_buf);
+                            (graph_data.fun)(graph_data.id, self, &mut data_buf);
                         }
 
                         self.draw_element(

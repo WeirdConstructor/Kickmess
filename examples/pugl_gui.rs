@@ -52,6 +52,18 @@ fn main() {
 //        ps.add(ParamDefinition::from(Param::S1,         0.0,   1.0,      1.0, "Start from note"));
 //        ps.add(ParamDefinition::from(Param::Release2,   1.0,1000.0,      5.0, "Env Release"));
 //        ps.add(ParamDefinition::from(Param::Phase1,     0.0,   1.0,      0.0, "Click"));
+    let graph_fun = Arc::new(|id: usize, src: &mut dyn UIGraphValueSource, out: &mut Vec<(f32, f32)>| {
+        let samples = 40;
+        for x in 0..(samples + 1) {
+            let x = x as f32 / (samples as f32);
+            out.push((
+                x,
+                ((x
+                 * (4.0 * src.param_value(11) + 1.0)
+                 * 2.0 * std::f32::consts::PI)
+                .sin() + 1.0) / 2.0));
+        }
+    });
 
     cl_hdl.tx.send(UICmd::DefineValues(vec![
         UIValueSpec::new_id(),
@@ -105,15 +117,15 @@ fn main() {
             xv: 8, yv: 1, wv: 3, hv: 10,
             rows: vec![
                 vec![
-                    UIInput::graph(      1, String::from("Wavey"),  UIPos::center(12, 3)),
+                    UIInput::graph(      1, String::from("Wavey"),  UIPos::center(12, 3), graph_fun.clone()),
                 ],
                 vec![
-                    UIInput::graph_huge(      1, String::from("Wavey (h)"),  UIPos::center(12, 3)),
+                    UIInput::graph_huge(      1, String::from("Wavey (h)"),  UIPos::center(12, 3), graph_fun.clone()),
                 ],
                 vec![
                     UIInput::container(UIPos::center(12, 5), vec![
                         vec![
-                            UIInput::graph_small(1, String::from("Wavey (s)"),  UIPos::left(12, 5)),
+                            UIInput::graph_small(1, String::from("Wavey (s)"),  UIPos::left(12, 5), graph_fun),
                         ],
                         vec![
                             UIInput::knob_small(11, String::from("w"),          UIPos::left(12, 7)),
