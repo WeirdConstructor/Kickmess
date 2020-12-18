@@ -106,6 +106,16 @@ impl UIValueSpec {
         }
     }
 
+    pub fn new_min_max_exp(min: f64, max: f64, width: usize, prec: usize) -> Self {
+        Self {
+            fun: Arc::new(move |x| min * (1.0 - (x * x)) + max * (x * x)),
+            fmt: Arc::new(move |_, x| format!("{2:0$.1$}", width, prec, x)),
+            coarse_step: 0.05,
+            fine_step:   0.001,
+            default:     0.0,
+        }
+    }
+
     pub fn new_min_max(min: f64, max: f64, width: usize, prec: usize) -> Self {
         Self {
             fun: Arc::new(move |x| min * (1.0 - x) + max * x),

@@ -57,11 +57,16 @@ impl ParamProvider for f32 {
 }
 
 #[derive(Debug, Clone, Copy)]
-pub struct ParamDefinition(Param, f32, f32, f32, &'static str);
+pub struct ParamDefinition(Param, f32, f32, f32, &'static str, bool);
 
 impl ParamDefinition {
     pub fn from(p: Param, min: f32, max: f32, def: f32, desc: &'static str) -> Self {
-        Self(p, min, max, def, desc)
+        Self(p, min, max, def, desc, false)
+    }
+
+    pub fn exp(mut self) -> Self {
+        self.5 = true;
+        self
     }
 
     pub fn param(&self) -> Param { self.0 }
@@ -72,11 +77,19 @@ impl ParamDefinition {
     pub fn max(&self)       -> f32 { self.2 }
 
     pub fn default_p(&self) -> f32 {
-        crate::helpers::range2p(self.3, self.1, self.2)
+        if self.5 {
+            crate::helpers::range2p_exp(self.3, self.1, self.2)
+        } else {
+            crate::helpers::range2p(self.3, self.1, self.2)
+        }
     }
 
     pub fn map(&self, p: f32) -> f32 {
-        crate::helpers::p2range(p, self.1, self.2)
+        if self.5 {
+            crate::helpers::p2range_exp(p, self.1, self.2)
+        } else {
+            crate::helpers::p2range(p, self.1, self.2)
+        }
     }
 }
 

@@ -90,9 +90,9 @@ impl OpKickmess {
 
 impl MonoProcessor for OpKickmess {
     fn init_params(ps: &mut ParamSet, public_ps: &mut ParamSet) {
-        public_ps.add2(ps, ParamDefinition::from(Param::Freq1,      5.0,   3000.0, 150.0, "Start Freq."));
-        public_ps.add2(ps, ParamDefinition::from(Param::Freq2,      5.0,   2000.0,  40.0, "End Freq."));
-        public_ps.add2(ps, ParamDefinition::from(Param::Decay1,     5.0,   5000.0, 440.0, "Length"));
+        public_ps.add2(ps, ParamDefinition::from(Param::Freq1,      5.0,   3000.0, 150.0, "Start Freq.").exp());
+        public_ps.add2(ps, ParamDefinition::from(Param::Freq2,      5.0,   2000.0,  40.0, "End Freq.").exp());
+        public_ps.add2(ps, ParamDefinition::from(Param::Decay1,     5.0,   5000.0, 440.0, "Length").exp());
         public_ps.add2(ps, ParamDefinition::from(Param::Dist1,      0.0,   100.0,    0.8, "Dist. Start"));
         public_ps.add2(ps, ParamDefinition::from(Param::Dist2,      0.0,   100.0,    0.8, "Dist. End"));
         public_ps.add2(ps, ParamDefinition::from(Param::Gain1,      0.1,   5.0,      1.0, "Dist. Gain"));

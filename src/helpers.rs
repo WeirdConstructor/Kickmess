@@ -174,7 +174,16 @@ pub fn p2range(x: f32, a: f32, b: f32) -> f32 {
     (a * (1.0 - x)) + (b * x)
 }
 
+pub fn p2range_exp(x: f32, a: f32, b: f32) -> f32 {
+    let x = x * x;
+    (a * (1.0 - x)) + (b * x)
+}
+
 pub fn range2p(v: f32, a: f32, b: f32) -> f32 {
+    (v - b) / (a - b)
+}
+
+pub fn range2p_exp(v: f32, a: f32, b: f32) -> f32 {
     (v - b) / (a - b)
 }
 

@@ -302,7 +302,7 @@ impl UI {
         if let InputMode::ValueDrag { zone, orig_pos, fine_key } = self.input_mode {
             let xd = self.last_mouse_pos.0 - orig_pos.0;
             let yd = self.last_mouse_pos.1 - orig_pos.1;
-            let mut distance = xd + -yd; // (xd * xd).sqrt() (yd * yd).sqrt();
+            let mut distance = -yd;
 
             let steps = if fine_key { distance / 25.0 } else { distance / 10.0 };
 
