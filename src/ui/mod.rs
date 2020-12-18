@@ -45,17 +45,69 @@ pub enum MouseButton {
 }
 
 #[derive(Debug, Clone, Copy)]
+pub enum Key {
+    None,
+    Character(char),
+    Backspace,
+    Escape,
+    Delete,
+    F1,
+    F2,
+    F3,
+    F4,
+    F5,
+    F6,
+    F7,
+    F8,
+    F9,
+    F10,
+    F11,
+    F12,
+    Left,
+    Up,
+    Right,
+    Down,
+    PageUp,
+    PageDown,
+    Home,
+    End,
+    Insert,
+    ShiftL,
+    ShiftR,
+    CtrlL,
+    CtrlR,
+    AltL,
+    AltR,
+    SuperL,
+    SuperR,
+    KeyMenu,
+    KeyCapsLock,
+    KeyScrollLock,
+    KeyNumLock,
+    KeyPrintScreen,
+    KeyPause,
+}
+
+#[derive(Debug, Clone, Copy)]
+pub struct KeyEvent {
+    pub key: Key,
+    // TODO: handle modifiers!
+}
+
+#[derive(Debug, Clone, Copy)]
 pub enum UIEvent {
     MousePosition(f64, f64),
     MouseButtonPressed(MouseButton),
     MouseButtonReleased(MouseButton),
+    KeyPressed(KeyEvent),
+    KeyReleased(KeyEvent),
     WindowClose,
 }
 
 #[derive(Debug, Clone, Copy)]
 enum InputMode {
     None,
-    ValueDrag  { zone: ActiveZone, orig_pos: (f64, f64) },
+    ValueDrag  { zone: ActiveZone, orig_pos: (f64, f64), fine_key: bool },
     SelectMod  { zone: ActiveZone },
     ToggleBtn  { zone: ActiveZone },
     SetDefault { zone: ActiveZone },
@@ -91,6 +143,7 @@ pub struct UI {
     drag_tmp_value: Option<(usize, f64)>,
     last_mouse_pos: (f64, f64),
     input_mode:     InputMode,
+    fine_drag_key_held: bool,
 
     needs_redraw_flag: bool,
 }
@@ -136,6 +189,7 @@ impl UI {
                 value_specs:        vec![],
                 hover_zone:         None,
                 drag_tmp_value:     None,
+                fine_drag_key_held: false,
                 last_mouse_pos:     (0.0, 0.0),
                 needs_redraw_flag:  true,
                 input_mode:         InputMode::None,
@@ -245,12 +299,12 @@ impl UI {
     }
 
     fn recalc_drag_value(&mut self) {
-        if let InputMode::ValueDrag{ zone, orig_pos } = self.input_mode {
+        if let InputMode::ValueDrag { zone, orig_pos, fine_key } = self.input_mode {
             let xd = self.last_mouse_pos.0 - orig_pos.0;
             let yd = self.last_mouse_pos.1 - orig_pos.1;
             let mut distance = xd + -yd; // (xd * xd).sqrt() (yd * yd).sqrt();
 
-            let steps = distance / 10.0;
+            let steps = if fine_key { distance / 25.0 } else { distance / 10.0 };
 
             let step_val =
                 if zone.subtype == 0 {
@@ -323,6 +377,7 @@ impl UI {
                                     InputMode::ValueDrag {
                                         orig_pos: self.last_mouse_pos,
                                         zone:     self.hover_zone.unwrap(),
+                                        fine_key: self.fine_drag_key_held,
                                     };
                                 self.recalc_drag_value();
 
@@ -461,6 +516,18 @@ impl UI {
 
                 self.input_mode     = InputMode::None;
                 self.drag_tmp_value = None;
+            },
+            UIEvent::KeyPressed(key_event) => {
+                match key_event.key {
+                    Key::ShiftL => { self.fine_drag_key_held = true; },
+                    _ => { }
+                }
+            },
+            UIEvent::KeyReleased(key_event) => {
+                match key_event.key {
+                    Key::ShiftL => { self.fine_drag_key_held = false; },
+                    _ => { }
+                }
             },
             UIEvent::WindowClose => {
                 self.ui_handle.tx.send(
