@@ -791,6 +791,13 @@ impl UI {
     pub fn draw(&mut self, cr: &cairo::Context) {
         let (ww, wh) = self.window_size;
 
+        cr.set_source_rgb(
+            UI_GUI_BG_CLR.0,
+            UI_GUI_BG_CLR.1,
+            UI_GUI_BG_CLR.2);
+        cr.rectangle(0.0, 0.0, ww, wh);
+        cr.fill();
+
         if let Some(ff) = self.font.as_ref() {
             cr.set_font_face(ff);
         } else {
