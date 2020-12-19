@@ -9,7 +9,7 @@ pub mod ui;
 pub mod baseview;
 
 use proc::Channel;
-use proc::{ParamProvider, Param, ParamSet, MonoProcessor, MonoVoice};
+use proc::{ParamProvider, Param, ParamSet, MonoProcessor, MonoVoice, SmoothParameters};
 use op_kickmess::*;
 use helpers::note_to_freq;
 
@@ -49,6 +49,7 @@ impl Default for Kickmess {
             params: Arc::new(KickmessVSTParams::default()),
             voices: vec![],
             events: vec![],
+            smooth_param: SmoothParameters::new(64, 0),
         }
     }
 }
@@ -59,10 +60,11 @@ enum VoiceEvent {
 }
 
 struct Kickmess {
-    host:      HostCallback,
-    params:    Arc<KickmessVSTParams>,
-    voices:    Vec<OpKickmess>,
-    events:    Vec<VoiceEvent>,
+    host:           HostCallback,
+    params:         Arc<KickmessVSTParams>,
+    voices:         Vec<OpKickmess>,
+    events:         Vec<VoiceEvent>,
+    smooth_param:   SmoothParameters,
 }
 
 impl Kickmess {
@@ -115,13 +117,16 @@ impl Plugin for Kickmess {
             voices.push(OpKickmess::new());
         }
 
-        let events = std::vec::Vec::with_capacity(2 * max_poly);
+        let events       = std::vec::Vec::with_capacity(2 * max_poly);
+        let params       = Arc::new(KickmessVSTParams::default());
+        let smooth_param = SmoothParameters::new(64, params.ps.param_count());
 
         Self {
             host,
             voices,
-            params: Arc::new(KickmessVSTParams::default()),
+            params,
             events,
+            smooth_param,
         }
     }
 
@@ -159,11 +164,14 @@ impl Plugin for Kickmess {
 
         for os in outputbuf.get_mut(0) { *os = 0.0; }
 
-        let mut channel = AB::from_buffers((&inbuf, outputbuf.get_mut(0)));
-
         if !self.events.is_empty() {
             self.process_voice_events();
         }
+
+        self.smooth_param.advance_params(
+            64, outputbuf.get_mut(0).len(), &self.params.ps, &*self.params);
+
+        let mut channel = AB::from_buffers((&inbuf, outputbuf.get_mut(0)));
 
         for voice in self.voices.iter_mut() {
             if voice.is_playing() {

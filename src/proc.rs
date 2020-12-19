@@ -278,10 +278,10 @@ impl SmoothParameters {
                     v[i * param_count + pi] =
                         (last_val * (1.0 - x) + x * end_param_val) as f32;
 
-                    println!("[{} @ {},{}] x= {} | {} => {} :::=> {}",
-                             last_frame_cnt + i, last_frame_cnt,
-                             frames, x, last_val, end_param_val,
-                             v[i * param_count + pi]);
+//                    println!("[{} @ {},{}] x= {} | {} => {} :::=> {}",
+//                             last_frame_cnt + i, last_frame_cnt,
+//                             frames, x, last_val, end_param_val,
+//                             v[i * param_count + pi]);
                 }
             } else {
                 for i in 0..frames {
