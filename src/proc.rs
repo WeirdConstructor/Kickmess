@@ -195,16 +195,19 @@ impl SmoothParameters {
 
     /// Initialize the current frame values, in case we never ran a single frame.
     pub fn init_params(&mut self, frames: usize, ps: &ParamSet, pp: &dyn ParamProvider) {
-        let v         = &mut self.current;
-        let framesize = self.framesize;
+        let v           = &mut self.current;
+        let framesize   = self.framesize;
+        let param_count = self.param_count;
 
         for pi in 0..self.param_count {
             let pv = ps.get(pi, pp);
 
             for i in 0..framesize {
-                v[i * framesize + pi] = pv;
+                v[i * param_count + pi] = pv;
             }
         }
+
+        self.last_frame_nf = frames;
     }
 
     pub fn advance_params(&mut self, frames: usize,
@@ -216,8 +219,9 @@ impl SmoothParameters {
         let last_v = &self.last[(self.last.len() - frames)..self.last.len()];
 
         let last_frame_frame = self.last_frame_nf + self.framesize;
+        let param_count      = self.param_count;
 
-        for pi in 0..self.param_count {
+        for pi in 0..param_count {
             let end_param_val = ps.get(pi, pp) as f64;
             let last_val      = last_v[pi] as f64;
 
@@ -227,7 +231,7 @@ impl SmoothParameters {
                 let x : f64 =
                     (i + last_frame_frame) as f64 / end_param_frame as f64;
 
-                v[i * frames + pi] =
+                v[i * param_count + pi] =
                     (last_val * (1.0 - x) + x * end_param_val) as f32;
             }
         }
@@ -236,11 +240,50 @@ impl SmoothParameters {
     }
 
     pub fn get_frame(&self, idx: usize) -> &[f32] {
-        let frame_idx = idx * self.framesize;
-        &self.current[frame_idx..(frame_idx + self.framesize)]
+        let frame_idx = idx * self.param_count;
+        &self.current[frame_idx..(frame_idx + self.param_count)]
     }
 
     pub fn swap(&mut self) {
         std::mem::swap(&mut self.last, &mut self.current);
+    }
+}
+
+impl ParamProvider for Vec<f32> {
+    fn param(&self, p: Param) -> f32 {
+        self[p as usize]
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn check_init() {
+        let mut smooth = SmoothParameters::new(64, 4);
+
+        let mut ps = ParamSet::new();
+        ps.add(ParamDefinition::from(Param::Freq1,  5.0, 3000.0, 150.0, "Start Freq.").exp());
+        ps.add(ParamDefinition::from(Param::Freq2,  5.0, 2000.0,  40.0, "End Freq.").exp());
+        ps.add(ParamDefinition::from(Param::Decay1, 5.0, 5000.0, 440.0, "Length").exp());
+
+        let p1 = vec![0.0, 0.3, 0.4, 0.5];
+        smooth.init_params(2, &ps, &p1);
+
+        assert_eq!(
+            &format!("{:?}", &smooth.current[0..4]),
+            "[274.55, 324.20004, 1253.75, 0.0]");
+        assert_eq!(
+            &format!("{:?}", &smooth.current[4..8]),
+            "[274.55, 324.20004, 1253.75, 0.0]");
+
+        let p2 = vec![0.0, 1.0, 1.0, 1.0];
+        smooth.swap();
+        smooth.advance_params(64, 66, &ps, &p2);
+
+        assert_eq!(
+            &format!("{:?}", &smooth.current[0..4]),
+            "[274.55, 324.20004, 1253.75, 0.0]");
     }
 }
