@@ -57,15 +57,20 @@ impl ParamProvider for f32 {
 }
 
 #[derive(Debug, Clone, Copy)]
-pub struct ParamDefinition(Param, f32, f32, f32, &'static str, bool);
+pub struct ParamDefinition(Param, f32, f32, f32, &'static str, bool, bool);
 
 impl ParamDefinition {
     pub fn from(p: Param, min: f32, max: f32, def: f32, desc: &'static str) -> Self {
-        Self(p, min, max, def, desc, false)
+        Self(p, min, max, def, desc, false, true)
     }
 
     pub fn exp(mut self) -> Self {
         self.5 = true;
+        self
+    }
+
+    pub fn no_smooth(mut self) -> Self {
+        self.6 = false;
         self
     }
 
@@ -83,6 +88,8 @@ impl ParamDefinition {
             crate::helpers::range2p(self.3, self.1, self.2)
         }
     }
+
+    pub fn is_smooth(&self) -> bool { self.6 }
 
     pub fn map(&self, p: f32) -> f32 {
         if self.5 {
@@ -138,6 +145,14 @@ impl ParamSet {
         }
     }
 
+    pub fn is_smooth(&self, idx: usize) -> bool {
+        if let Some(pd) = self.definition(idx) {
+            return pd.is_smooth();
+        }
+
+        false
+    }
+
     pub fn get(&self, idx: usize, pp: &dyn ParamProvider) -> f32 {
         if let Some(pd) = self.definition(idx) {
             pd.map(pp.param(pd.0))
@@ -174,7 +189,7 @@ pub struct SmoothParameters {
     last:           Vec<f32>,
     framesize:      usize,
     param_count:    usize,
-    last_frame_nf:  usize,
+    last_frame_cnt:  usize,
 }
 
 impl SmoothParameters {
@@ -187,7 +202,7 @@ impl SmoothParameters {
         Self {
             current:       v1,
             last:          v2,
-            last_frame_nf: 0,
+            last_frame_cnt: 0,
             framesize,
             param_count,
         }
@@ -207,36 +222,50 @@ impl SmoothParameters {
             }
         }
 
-        self.last_frame_nf = frames;
+        self.last_frame_cnt = frames;
     }
 
     pub fn advance_params(&mut self, frames: usize,
-                          end_param_frame: usize,
+                          total_nframes: usize,
                           ps: &ParamSet,
                           pp: &dyn ParamProvider) {
 
-        let v      = &mut self.current;
-        let last_v = &self.last[(self.last.len() - frames)..self.last.len()];
-
-        let last_frame_frame = self.last_frame_nf + self.framesize;
+        let v                = &mut self.current;
         let param_count      = self.param_count;
+        let last_frame_cnt   = self.last_frame_cnt;
+        let last_frame_idx   = (last_frame_cnt - 1) * param_count;
+        let nframe_increment = 1.0 / (total_nframes - 1) as f64;
+
+        let last_v = &self.last[last_frame_idx..(last_frame_idx + param_count)];
 
         for pi in 0..param_count {
             let end_param_val = ps.get(pi, pp) as f64;
-            let last_val      = last_v[pi] as f64;
 
-            for i in 0..frames {
-                // calculate the interpolation factor between last_v and
-                // the current frame number:
-                let x : f64 =
-                    (i + last_frame_frame) as f64 / end_param_frame as f64;
+            if ps.is_smooth(pi) {
+                let last_val      = last_v[pi] as f64;
 
-                v[i * param_count + pi] =
-                    (last_val * (1.0 - x) + x * end_param_val) as f32;
+                for i in 0..frames {
+                    // calculate the interpolation factor between last_v and
+                    // the current frame number:
+                    let x : f64 =
+                        (i + last_frame_cnt) as f64 * nframe_increment;
+
+                    v[i * param_count + pi] =
+                        (last_val * (1.0 - x) + x * end_param_val) as f32;
+
+                    println!("[{} @ {},{}] x= {} | {} => {} :::=> {}",
+                             last_frame_cnt + i, last_frame_cnt,
+                             frames, x, last_val, end_param_val,
+                             v[i * param_count + pi]);
+                }
+            } else {
+                for i in 0..frames {
+                    v[i * param_count + pi] = end_param_val as f32;
+                }
             }
         }
 
-        self.last_frame_nf = last_frame_frame + frames;
+        self.last_frame_cnt = last_frame_cnt + frames;
     }
 
     pub fn get_frame(&self, idx: usize) -> &[f32] {
@@ -265,7 +294,7 @@ mod tests {
 
         let mut ps = ParamSet::new();
         ps.add(ParamDefinition::from(Param::Freq1,  5.0, 3000.0, 150.0, "Start Freq.").exp());
-        ps.add(ParamDefinition::from(Param::Freq2,  5.0, 2000.0,  40.0, "End Freq.").exp());
+        ps.add(ParamDefinition::from(Param::Freq2,  5.0, 2000.0,  40.0, "End Freq.").exp().no_smooth());
         ps.add(ParamDefinition::from(Param::Decay1, 5.0, 5000.0, 440.0, "Length").exp());
 
         let p1 = vec![0.0, 0.3, 0.4, 0.5];
@@ -283,7 +312,10 @@ mod tests {
         smooth.advance_params(64, 66, &ps, &p2);
 
         assert_eq!(
+            &format!("{:?}", &smooth.current[(63 * 4)..(64 * 4)]),
+            "[3000.0, 2000.0, 5000.0, 0.0]");
+        assert_eq!(
             &format!("{:?}", &smooth.current[0..4]),
-            "[274.55, 324.20004, 1253.75, 0.0]");
+            "[358.40997, 2000.0, 1369.0193, 0.0]");
     }
 }
