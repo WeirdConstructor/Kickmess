@@ -168,3 +168,79 @@ pub trait MonoVoice : MonoProcessor {
     fn is_playing(&self) -> bool;
     fn in_release(&self) -> bool;
 }
+
+pub struct SmoothParameters {
+    current:        Vec<f32>,
+    last:           Vec<f32>,
+    framesize:      usize,
+    param_count:    usize,
+    last_frame_nf:  usize,
+}
+
+impl SmoothParameters {
+    pub fn new(framesize: usize, param_count: usize) -> Self {
+        let mut v1 = Vec::with_capacity(framesize * param_count);
+        let mut v2 = Vec::with_capacity(framesize * param_count);
+        v1.resize(framesize * param_count, 0.0);
+        v2.resize(framesize * param_count, 0.0);
+
+        Self {
+            current:       v1,
+            last:          v2,
+            last_frame_nf: 0,
+            framesize,
+            param_count,
+        }
+    }
+
+    /// Initialize the current frame values, in case we never ran a single frame.
+    pub fn init_params(&mut self, frames: usize, ps: &ParamSet, pp: &dyn ParamProvider) {
+        let v         = &mut self.current;
+        let framesize = self.framesize;
+
+        for pi in 0..self.param_count {
+            let pv = ps.get(pi, pp);
+
+            for i in 0..framesize {
+                v[i * framesize + pi] = pv;
+            }
+        }
+    }
+
+    pub fn advance_params(&mut self, frames: usize,
+                          end_param_frame: usize,
+                          ps: &ParamSet,
+                          pp: &dyn ParamProvider) {
+
+        let v      = &mut self.current;
+        let last_v = &self.last[(self.last.len() - frames)..self.last.len()];
+
+        let last_frame_frame = self.last_frame_nf + self.framesize;
+
+        for pi in 0..self.param_count {
+            let end_param_val = ps.get(pi, pp) as f64;
+            let last_val      = last_v[pi] as f64;
+
+            for i in 0..frames {
+                // calculate the interpolation factor between last_v and
+                // the current frame number:
+                let x : f64 =
+                    (i + last_frame_frame) as f64 / end_param_frame as f64;
+
+                v[i * frames + pi] =
+                    (last_val * (1.0 - x) + x * end_param_val) as f32;
+            }
+        }
+
+        self.last_frame_nf = last_frame_frame + frames;
+    }
+
+    pub fn get_frame(&self, idx: usize) -> &[f32] {
+        let frame_idx = idx * self.framesize;
+        &self.current[frame_idx..(frame_idx + self.framesize)]
+    }
+
+    pub fn swap(&mut self) {
+        std::mem::swap(&mut self.last, &mut self.current);
+    }
+}
