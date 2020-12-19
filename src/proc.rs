@@ -191,6 +191,7 @@ pub struct SmoothParameters {
     param_count:    usize,
     last_frame_cnt: usize,
     last_frame_idx: usize,
+    uninitialized:  bool,
 }
 
 impl SmoothParameters {
@@ -209,13 +210,14 @@ impl SmoothParameters {
             last:          v2,
             last_frame_cnt: 0,
             last_frame_idx: 0,
+            uninitialized: true,
             framesize,
             param_count,
         }
     }
 
     /// Initialize the current frame values, in case we never ran a single frame.
-    pub fn init_params(&mut self, frames: usize, ps: &ParamSet, pp: &dyn ParamProvider) {
+    fn init_params(&mut self, frames: usize, ps: &ParamSet, pp: &dyn ParamProvider) {
         let v           = &mut self.current;
         let framesize   = self.framesize;
         let param_count = self.param_count;
@@ -230,6 +232,7 @@ impl SmoothParameters {
 
         self.last_frame_cnt = frames;
         self.last_frame_idx = (frames - 1) * param_count;
+        self.uninitialized  = false;
     }
 
     /// Advance the parameter interpolation.
@@ -245,6 +248,11 @@ impl SmoothParameters {
                           ps: &ParamSet,
                           pp: &dyn ParamProvider) {
 
+        if self.uninitialized {
+            self.init_params(frames, ps, pp);
+            return;
+        }
+
         self.swap();
 
         let v                = &mut self.current;
@@ -259,7 +267,7 @@ impl SmoothParameters {
             let end_param_val = ps.get(pi, pp) as f64;
 
             if ps.is_smooth(pi) {
-                let last_val      = last_v[pi] as f64;
+                let last_val = last_v[pi] as f64;
 
                 for i in 0..frames {
                     // calculate the interpolation factor between last_v and
@@ -333,7 +341,7 @@ mod tests {
         ps.add(ParamDefinition::from(Param::Decay1, 5.0, 5000.0, 440.0, "Length").exp());
 
         let new_params = vec![0.0, 0.3, 0.4, 0.5];
-        smooth.init_params(2, &ps, &new_params);
+        smooth.advance_params(2, 66, &ps, &new_params);
 
         assert_eq!(
             &fmt_vec(&smooth.current[0..4]),
