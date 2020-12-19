@@ -332,8 +332,8 @@ mod tests {
         ps.add(ParamDefinition::from(Param::Freq2,  5.0, 2000.0,  40.0, "End Freq.").exp().no_smooth());
         ps.add(ParamDefinition::from(Param::Decay1, 5.0, 5000.0, 440.0, "Length").exp());
 
-        let p1 = vec![0.0, 0.3, 0.4, 0.5];
-        smooth.init_params(2, &ps, &p1);
+        let new_params = vec![0.0, 0.3, 0.4, 0.5];
+        smooth.init_params(2, &ps, &new_params);
 
         assert_eq!(
             &fmt_vec(&smooth.current[0..4]),
@@ -342,8 +342,8 @@ mod tests {
             &fmt_vec(&smooth.current[4..8]),
             "[274.55, 324.20, 1253.75, 0.00]");
 
-        let p2 = vec![0.0, 1.0, 1.0, 1.0];
-        smooth.advance_params(64, 66, &ps, &p2);
+        let new_params = vec![0.0, 1.0, 1.0, 1.0];
+        smooth.advance_params(64, 66, &ps, &new_params);
 
         assert_eq!(
             &fmt_vec(&smooth.current[(63 * 4)..(64 * 4)]),
@@ -353,8 +353,8 @@ mod tests {
             "[358.41, 2000.00, 1369.02, 0.00]");
 
 
-        let p2 = vec![0.0, 0.0, 0.0, 0.0];
-        smooth.advance_params(64, 64, &ps, &p2);
+        let new_params = vec![0.0, 0.0, 0.0, 0.0];
+        smooth.advance_params(64, 64, &ps, &new_params);
 
         assert_eq!(
             &fmt_vec(&smooth.current[(63 * 4)..(64 * 4)]),
