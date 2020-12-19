@@ -189,10 +189,15 @@ pub struct SmoothParameters {
     last:           Vec<f32>,
     framesize:      usize,
     param_count:    usize,
-    last_frame_cnt:  usize,
+    last_frame_cnt: usize,
+    last_frame_idx: usize,
 }
 
 impl SmoothParameters {
+    /// Create a SmoothParameters structure for the given
+    /// maximum framesize with a certain number of parameters.
+    ///
+    /// The only allocation will happend in new() here.
     pub fn new(framesize: usize, param_count: usize) -> Self {
         let mut v1 = Vec::with_capacity(framesize * param_count);
         let mut v2 = Vec::with_capacity(framesize * param_count);
@@ -203,6 +208,7 @@ impl SmoothParameters {
             current:       v1,
             last:          v2,
             last_frame_cnt: 0,
+            last_frame_idx: 0,
             framesize,
             param_count,
         }
@@ -223,17 +229,28 @@ impl SmoothParameters {
         }
 
         self.last_frame_cnt = frames;
+        self.last_frame_idx = (frames - 1) * param_count;
     }
 
-    pub fn advance_params(&mut self, frames: usize,
+    /// Advance the parameter interpolation.
+    ///
+    /// - frames contains the number of frames to interpolate from the last
+    ///   call to either init_params() or advance_params()
+    /// - total_nframes is the number of frames the given set of parameters
+    ///   provide the value for. After total_nframes the values of the
+    ///   parameters need to be reached.
+    pub fn advance_params(&mut self,
+                          frames: usize,
                           total_nframes: usize,
                           ps: &ParamSet,
                           pp: &dyn ParamProvider) {
 
+        self.swap();
+
         let v                = &mut self.current;
         let param_count      = self.param_count;
         let last_frame_cnt   = self.last_frame_cnt;
-        let last_frame_idx   = (last_frame_cnt - 1) * param_count;
+        let last_frame_idx   = self.last_frame_idx;
         let nframe_increment = 1.0 / (total_nframes - 1) as f64;
 
         let last_v = &self.last[last_frame_idx..(last_frame_idx + param_count)];
@@ -265,15 +282,21 @@ impl SmoothParameters {
             }
         }
 
-        self.last_frame_cnt = last_frame_cnt + frames;
+        self.last_frame_cnt = self.last_frame_cnt + frames;
+        if self.last_frame_cnt >= total_nframes {
+            self.last_frame_cnt = 0;
+        }
+        self.last_frame_idx = (frames - 1) * param_count;
     }
 
+    /// Returns a reference to the parameters of the recently
+    /// init_params() or advance_params() frames.
     pub fn get_frame(&self, idx: usize) -> &[f32] {
         let frame_idx = idx * self.param_count;
         &self.current[frame_idx..(frame_idx + self.param_count)]
     }
 
-    pub fn swap(&mut self) {
+    fn swap(&mut self) {
         std::mem::swap(&mut self.last, &mut self.current);
     }
 }
@@ -288,6 +311,18 @@ impl ParamProvider for Vec<f32> {
 mod tests {
     use super::*;
 
+    fn fmt_vec(v: &[f32]) -> String {
+        let mut s = String::from("[");
+        for i in 0..v.len() {
+            if i > 0 {
+                s += ", ";
+            }
+            s += &format!("{:.2}", v[i]);
+        }
+        s += "]";
+        s
+    }
+
     #[test]
     fn check_init() {
         let mut smooth = SmoothParameters::new(64, 4);
@@ -301,21 +336,31 @@ mod tests {
         smooth.init_params(2, &ps, &p1);
 
         assert_eq!(
-            &format!("{:?}", &smooth.current[0..4]),
-            "[274.55, 324.20004, 1253.75, 0.0]");
+            &fmt_vec(&smooth.current[0..4]),
+            "[274.55, 324.20, 1253.75, 0.00]");
         assert_eq!(
-            &format!("{:?}", &smooth.current[4..8]),
-            "[274.55, 324.20004, 1253.75, 0.0]");
+            &fmt_vec(&smooth.current[4..8]),
+            "[274.55, 324.20, 1253.75, 0.00]");
 
         let p2 = vec![0.0, 1.0, 1.0, 1.0];
-        smooth.swap();
         smooth.advance_params(64, 66, &ps, &p2);
 
         assert_eq!(
-            &format!("{:?}", &smooth.current[(63 * 4)..(64 * 4)]),
-            "[3000.0, 2000.0, 5000.0, 0.0]");
+            &fmt_vec(&smooth.current[(63 * 4)..(64 * 4)]),
+            "[3000.00, 2000.00, 5000.00, 0.00]");
         assert_eq!(
-            &format!("{:?}", &smooth.current[0..4]),
-            "[358.40997, 2000.0, 1369.0193, 0.0]");
+            &fmt_vec(&smooth.current[0..4]),
+            "[358.41, 2000.00, 1369.02, 0.00]");
+
+
+        let p2 = vec![0.0, 0.0, 0.0, 0.0];
+        smooth.advance_params(64, 64, &ps, &p2);
+
+        assert_eq!(
+            &fmt_vec(&smooth.current[(63 * 4)..(64 * 4)]),
+            "[5.00, 5.00, 5.00, 0.00]");
+        assert_eq!(
+            &fmt_vec(&smooth.current[0..4]),
+            "[3000.00, 5.00, 5000.00, 0.00]");
     }
 }
