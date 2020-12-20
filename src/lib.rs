@@ -72,18 +72,7 @@ impl Kickmess {
         while !self.events.is_empty() {
             match self.events.pop().unwrap() {
                 VoiceEvent::Start { note, delta_frames, vel } => {
-//                    let mut playing = 0;
-//                    let mut release = 0;
-//                    for voice in self.voices.iter_mut() {
-//                        if voice.is_playing() {
-//                            playing += 1;
-//                            if voice.in_release() {
-//                                release += 1;
-//                            }
-//                        }
-//                    }
-
-                    for (i, voice) in self.voices.iter_mut().enumerate() {
+                    for voice in self.voices.iter_mut() {
                         if !voice.is_playing() {
                             voice.read_params(&self.params.ps, &*self.params);
                             voice.start_note(
@@ -96,7 +85,7 @@ impl Kickmess {
                     }
                 },
                 VoiceEvent::End { note, delta_frames } => {
-                    for (i, voice) in self.voices.iter_mut().enumerate() {
+                    for voice in self.voices.iter_mut() {
                         if voice.id() == (note as usize) {
                             voice.end_note(delta_frames);
                             break;
@@ -193,19 +182,11 @@ impl Plugin for Kickmess {
                         });
 
                     } else if data[0] == 128 {
-                        for (i, voice) in self.voices.iter_mut().enumerate() {
-                            if voice.is_playing() && !voice.in_release() {
-                                //d// println!("[VOICE {}] END", i);
-                                self.events.push(VoiceEvent::End {
-                                    note:         data[1],
-                                    delta_frames: delta_frames as usize,
-                                });
-                                break;
-                            }
-                        }
+                        self.events.push(VoiceEvent::End {
+                            note:         data[1],
+                            delta_frames: delta_frames as usize,
+                        });
                     }
-
-                    //d// println!("MIDI: {:?}", data);
                 },
                 _ => (),
             }
