@@ -31,8 +31,25 @@ use crate::env::*;
 use crate::MAX_BLOCKSIZE;
 const PI2 : f64 = std::f64::consts::PI * 2.0;
 
+const P_FREQ_START      : usize = 0;
+const P_FREQ_END        : usize = 1;
+const P_F_ENV_RELEASE   : usize = 2;
+const P_DIST_START      : usize = 3;
+const P_DIST_END        : usize = 4;
+const P_DIST_GAIN       : usize = 5;
+const P_ENV_SLOPE       : usize = 6;
+const P_FREQ_SLOPE      : usize = 7;
+const P_NOISE           : usize = 8;
+const P_FREQ_NOTE_START : usize = 9;
+const P_FREQ_NOTE_END   : usize = 10;
+const P_ENV_RELEASE     : usize = 11;
+const P_PHASE_OFFS      : usize = 12;
+
+const P_PARAM_NUM       : usize = 13;
+
 pub struct OpKickmess {
     id:              usize,
+    params:          [f32; P_PARAM_NUM],
     freq_start:      f32,
     freq_end:        f32,
     dist_start:      f32,
@@ -61,6 +78,7 @@ impl OpKickmess {
     pub fn new() -> Self {
         Self {
             id:              0,
+            params:          [0.0; P_PARAM_NUM],
             freq_start:      0.0,
             freq_end:        0.0,
             dist_start:      0.0,
