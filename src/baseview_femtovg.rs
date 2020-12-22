@@ -5,6 +5,12 @@ use femtovg::{
 };
 use raw_gl_context::GlContext;
 
+use raw_window_handle::{
+    unix::XlibHandle,
+    HasRawWindowHandle,
+    RawWindowHandle
+};
+
 #[macro_use]
 use baseview::{
     Size, Event, MouseEvent, MouseButton, Parent, Window,
@@ -96,7 +102,7 @@ impl WindowHandler for TestWindowHandler {
 pub fn open_window(parent: Option<*mut ::std::ffi::c_void>, ui_hdl: UIProviderHandle) -> (WindowHandle<TestWindowHandler>, Option<AppRunner>) {
     let options =
         if let Some(parent) = parent {
-//            let parent = raw_window_handle_from_parent(parent);
+            let parent = raw_window_handle_from_parent(parent);
             WindowOpenOptions {
                 title:  "BaseviewTest".to_string(),
                 size:   Size::new(WINDOW_WIDTH as f64, WINDOW_HEIGHT as f64),
@@ -138,5 +144,52 @@ pub fn open_window(parent: Option<*mut ::std::ffi::c_void>, ui_hdl: UIProviderHa
         }
 //        unsafe {
 //        }
+    })
+}
+
+#[cfg(target_os = "macos")]
+fn raw_window_handle_from_parent(
+    parent: *mut ::std::ffi::c_void
+) -> RawWindowHandle {
+    use raw_window_handle::macos::MacOSHandle;
+    use cocoa::base::id;
+    use objc::{msg_send, sel, sel_impl};
+
+    let ns_view = parent as id;
+
+    let ns_window: id = unsafe {
+        msg_send![ns_view, window]
+    };
+
+    RawWindowHandle::MacOS(MacOSHandle {
+        ns_window: ns_window as *mut ::std::ffi::c_void,
+        ns_view: ns_view as *mut ::std::ffi::c_void,
+        ..MacOSHandle::empty()
+    })
+}
+
+
+#[cfg(target_os = "windows")]
+fn raw_window_handle_from_parent(
+    parent: *mut ::std::ffi::c_void
+) -> RawWindowHandle {
+    use raw_window_handle::windows::WindowsHandle;
+
+    RawWindowHandle::Windows(WindowsHandle {
+        hwnd: parent,
+        ..WindowsHandle::empty()
+    })
+}
+
+
+#[cfg(target_os = "linux")]
+fn raw_window_handle_from_parent(
+    parent: *mut ::std::ffi::c_void
+) -> RawWindowHandle {
+    use raw_window_handle::unix::XcbHandle;
+
+    RawWindowHandle::Xcb(XcbHandle {
+        window: parent as u32,
+        ..XcbHandle::empty()
     })
 }
