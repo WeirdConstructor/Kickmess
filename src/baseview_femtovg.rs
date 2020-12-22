@@ -80,7 +80,7 @@ impl WindowHandler for TestWindowHandler {
         self.ui.handle_client_command();
 
         self.canvas.set_size(512, 512, 1.0);
-        self.canvas.clear_rect(0, 0, 512, 512, Color::rgbf(0.3, 0.3, 0.32));
+        self.canvas.clear_rect(0, 0, 512, 512, Color::rgbf(0.3, 0.5, 0.32));
 
         self.canvas.flush();
         self.context.swap_buffers();
@@ -119,17 +119,17 @@ pub fn open_window(parent: Option<*mut ::std::ffi::c_void>, ui_hdl: UIProviderHa
             GlContext::create(
                 win,
                 GlConfig {
-                    version:       (4, 6),
+                    version:       (3, 2),
                     profile:       Profile::Core,
                     red_bits:      8,
                     blue_bits:     8,
                     green_bits:    8,
-                    alpha_bits:    8,
+                    alpha_bits:    0,
                     depth_bits:    24,
                     stencil_bits:  8,
                     samples:       None,
                     srgb:          true,
-                    double_buffer: false,
+                    double_buffer: true,
                     vsync:         false,
                 }).unwrap();
         println!("XX2");
