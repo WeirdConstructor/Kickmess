@@ -17,8 +17,8 @@ raw-window-handle  = "0.3"
 cairo-sys-rs       = { version = "0.10.0", features=["xlib"] }
 x11                = { version = "2.18.2" }
 
-baseview           = { git = "https://github.com/RustAudio/baseview.git" }
-#baseview           = { path = "/home/weictr/devel/other/baseview" }
+#baseview           = { git = "https://github.com/RustAudio/baseview.git" }
+baseview           = { path = "/home/weictr/devel/other/baseview" }
 
 pugl-sys           = { git = "https://github.com/johannes-mueller/pugl-sys.git" }
 #pugl-sys           = { path = "/home/weictr/devel/other/pugl-sys/" }
@@ -29,3 +29,4 @@ femtovg            = { git = "https://github.com/femtovg/femtovg" }
 raw-gl-context     = { git = "https://github.com/glowcoil/raw-gl-context" }
 
 [dev-dependencies]
+winit = "0.22.2"

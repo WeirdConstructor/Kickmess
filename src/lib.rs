@@ -6,7 +6,7 @@ mod env;
 mod editor;
 pub mod pugl;
 pub mod ui;
-pub mod baseview;
+//pub mod baseview;
 pub mod baseview_femtovg;
 
 use proc::Channel;

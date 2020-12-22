@@ -3,7 +3,7 @@ use femtovg::{
     Canvas,
     Color,
 };
-use raw_gl_context::GlContext;
+use raw_gl_context::{GlContext, GlConfig, Profile};
 
 use raw_window_handle::{
     unix::XlibHandle,
@@ -14,7 +14,7 @@ use raw_window_handle::{
 #[macro_use]
 use baseview::{
     Size, Event, MouseEvent, MouseButton, Parent, Window,
-    WindowHandle, WindowHandler, WindowOpenOptions, WindowScalePolicy,
+    WindowHandler, WindowOpenOptions, WindowScalePolicy,
     AppRunner,
 };
 
@@ -27,8 +27,8 @@ use crate::ui::constants::*;
 use crate::ui::{UI, UIEvent};
 use crate::ui;
 
-const WINDOW_WIDTH:  usize = 500;
-const WINDOW_HEIGHT: usize = 500;
+const WINDOW_WIDTH:  usize = 512;
+const WINDOW_HEIGHT: usize = 512;
 
 pub struct TestWindowHandler {
 //    ctx:        cairo::Context,
@@ -44,11 +44,6 @@ pub struct TestWindowHandler {
 }
 
 impl WindowHandler for TestWindowHandler {
-    type Message = ();
-
-    fn on_message(&mut self, _: &mut Window, message: Self::Message) {
-        println!("MESG: {:?}", message);
-    }
 
     fn on_event(&mut self, _: &mut Window, event: Event) {
         match event {
@@ -99,7 +94,7 @@ impl WindowHandler for TestWindowHandler {
     }
 }
 
-pub fn open_window(parent: Option<*mut ::std::ffi::c_void>, ui_hdl: UIProviderHandle) -> (WindowHandle<TestWindowHandler>, Option<AppRunner>) {
+pub fn open_window(parent: Option<*mut ::std::ffi::c_void>, ui_hdl: UIProviderHandle) -> Option<AppRunner> {
     let options =
         if let Some(parent) = parent {
             let parent = raw_window_handle_from_parent(parent);
@@ -119,9 +114,29 @@ pub fn open_window(parent: Option<*mut ::std::ffi::c_void>, ui_hdl: UIProviderHa
         };
 
     Window::open(options, |win| {
-        let context = GlContext::create(win, Default::default()).unwrap();
+        println!("XXX");
+        let context =
+            GlContext::create(
+                win,
+                GlConfig {
+                    version:       (4, 6),
+                    profile:       Profile::Core,
+                    red_bits:      8,
+                    blue_bits:     8,
+                    green_bits:    8,
+                    alpha_bits:    8,
+                    depth_bits:    24,
+                    stencil_bits:  8,
+                    samples:       None,
+                    srgb:          true,
+                    double_buffer: false,
+                    vsync:         false,
+                }).unwrap();
+        println!("XX2");
         context.make_current();
+        println!("XX3");
         gl::load_with(|symbol| context.get_proc_address(symbol) as *const _);
+        println!("XX4");
 
         let renderer =
             OpenGl::new(|symbol| context.get_proc_address(symbol) as *const _)

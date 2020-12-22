@@ -1,7 +1,7 @@
 #[macro_use]
 use baseview::{
     Size, Event, MouseEvent, MouseButton, Parent, Window,
-    WindowHandle, WindowHandler, WindowOpenOptions, WindowScalePolicy,
+    WindowHandler, WindowOpenOptions, WindowScalePolicy,
     AppRunner,
 };
 
