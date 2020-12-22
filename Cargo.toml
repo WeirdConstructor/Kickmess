@@ -23,4 +23,9 @@ baseview           = { git = "https://github.com/RustAudio/baseview.git" }
 pugl-sys           = { git = "https://github.com/johannes-mueller/pugl-sys.git" }
 #pugl-sys           = { path = "/home/weictr/devel/other/pugl-sys/" }
 
+gl                 = "0.14.0"
+glutin             = "0.24.1"
+femtovg            = { git = "https://github.com/femtovg/femtovg" }
+raw-gl-context     = { git = "https://github.com/glowcoil/raw-gl-context" }
+
 [dev-dependencies]

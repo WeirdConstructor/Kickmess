@@ -7,6 +7,7 @@ mod editor;
 pub mod pugl;
 pub mod ui;
 pub mod baseview;
+pub mod baseview_femtovg;
 
 use proc::Channel;
 use proc::{ParamProvider, Param, ParamSet, MonoProcessor, MonoVoice, SmoothParameters};

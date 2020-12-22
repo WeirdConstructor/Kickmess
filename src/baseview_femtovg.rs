@@ -1,0 +1,142 @@
+use femtovg::{
+    renderer::OpenGl,
+    Canvas,
+    Color,
+};
+use raw_gl_context::GlContext;
+
+#[macro_use]
+use baseview::{
+    Size, Event, MouseEvent, MouseButton, Parent, Window,
+    WindowHandle, WindowHandler, WindowOpenOptions, WindowScalePolicy,
+    AppRunner,
+};
+
+use vst::plugin::{Info, Plugin};
+use vst::editor::Editor;
+
+use crate::ui::protocol::UIClientHandle;
+use crate::ui::protocol::UIProviderHandle;
+use crate::ui::constants::*;
+use crate::ui::{UI, UIEvent};
+use crate::ui;
+
+const WINDOW_WIDTH:  usize = 500;
+const WINDOW_HEIGHT: usize = 500;
+
+pub struct TestWindowHandler {
+//    ctx:        cairo::Context,
+//    state:      PlugUIState,
+//    display:    *mut x11::xlib::Display,
+//    visual:     *mut x11::xlib::Visual,
+//    drawable:   x11::xlib::Drawable,
+//    gui_surf:   Option<cairo::Surface>,
+
+    context:    GlContext,
+    canvas:     Canvas<OpenGl>,
+    ui:         UI,
+}
+
+impl WindowHandler for TestWindowHandler {
+    type Message = ();
+
+    fn on_message(&mut self, _: &mut Window, message: Self::Message) {
+        println!("MESG: {:?}", message);
+    }
+
+    fn on_event(&mut self, _: &mut Window, event: Event) {
+        match event {
+            Event::Mouse(MouseEvent::CursorMoved { position: p }) => {
+                self.ui.handle_ui_event(UIEvent::MousePosition(p.x, p.y));
+            },
+            Event::Mouse(MouseEvent::ButtonPressed(btn)) => {
+                let ev_btn =
+                    match btn {
+                        MouseButton::Left   => ui::MouseButton::Left,
+                        MouseButton::Right  => ui::MouseButton::Right,
+                        MouseButton::Middle => ui::MouseButton::Middle,
+                        _                   => ui::MouseButton::Left,
+                    };
+                self.ui.handle_ui_event(UIEvent::MouseButtonPressed(ev_btn));
+            },
+            Event::Mouse(MouseEvent::ButtonReleased(btn)) => {
+                let ev_btn =
+                    match btn {
+                        MouseButton::Left   => ui::MouseButton::Left,
+                        MouseButton::Right  => ui::MouseButton::Right,
+                        MouseButton::Middle => ui::MouseButton::Middle,
+                        _                   => ui::MouseButton::Left,
+                    };
+                self.ui.handle_ui_event(UIEvent::MouseButtonReleased(ev_btn));
+            },
+            _ => {
+                println!("UNHANDLED EVENT: {:?}", event);
+            },
+        }
+    }
+
+    fn on_frame(&mut self) {
+        self.ui.handle_client_command();
+
+        self.canvas.set_size(512, 512, 1.0);
+        self.canvas.clear_rect(0, 0, 512, 512, Color::rgbf(0.3, 0.3, 0.32));
+
+        self.canvas.flush();
+        self.context.swap_buffers();
+
+        if !self.ui.needs_redraw() {
+            return;
+        }
+
+//        self.ui.draw(&gui_ctx);
+
+    }
+}
+
+pub fn open_window(parent: Option<*mut ::std::ffi::c_void>, ui_hdl: UIProviderHandle) -> (WindowHandle<TestWindowHandler>, Option<AppRunner>) {
+    let options =
+        if let Some(parent) = parent {
+//            let parent = raw_window_handle_from_parent(parent);
+            WindowOpenOptions {
+                title:  "BaseviewTest".to_string(),
+                size:   Size::new(WINDOW_WIDTH as f64, WINDOW_HEIGHT as f64),
+                scale:  WindowScalePolicy::SystemScaleFactor,
+                parent: Parent::WithParent(parent),
+            }
+        } else {
+            WindowOpenOptions {
+                title:  "BaseviewTest".to_string(),
+                size:   Size::new(WINDOW_WIDTH as f64, WINDOW_HEIGHT as f64),
+                scale:  WindowScalePolicy::SystemScaleFactor,
+                parent: Parent::None,
+            }
+        };
+
+    Window::open(options, |win| {
+        let context = GlContext::create(win, Default::default()).unwrap();
+        context.make_current();
+        gl::load_with(|symbol| context.get_proc_address(symbol) as *const _);
+
+        let renderer =
+            OpenGl::new(|symbol| context.get_proc_address(symbol) as *const _)
+                .expect("Cannot create renderer");
+
+        let mut canvas = Canvas::new(renderer).expect("Cannot create canvas");
+
+        let mut ui = UI::new(ui_hdl);
+
+        ui.set_window_size(WINDOW_WIDTH as f64, WINDOW_HEIGHT as f64);
+
+        TestWindowHandler {
+            ui,
+            context,
+            canvas,
+//                    drawable: window,
+//                    display: display as *mut x11::xlib::Display,
+//                    visual: vis,
+//                    gui_surf: None,
+        }
+//        unsafe {
+//        }
+    })
+}
