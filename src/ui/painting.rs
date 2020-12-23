@@ -41,10 +41,3 @@ impl ActiveZone {
         && y >= self.y && y <= (self.y + self.h)
     }
 }
-
-pub trait Painter {
-    fn stroke(width: f32, color: (f32, f32, f32), segments: &[(f32, f32)]);
-    fn rect_fill(color: (f32, f32, f32), x: f32, y: f32, w: f32, h: f32);
-    fn rect_stroke(width: f32, color: (f32, f32, f32), x: f32, y: f32, w: f32, h: f32);
-    fn label(size: f32, align: i8, x: f32, y: f32, w: f32, h: f32, text: &str);
-}
