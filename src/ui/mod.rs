@@ -7,7 +7,6 @@ mod util;
 mod graph;
 pub mod constants;
 pub mod protocol;
-pub mod painter;
 
 use std::rc::Rc;
 use std::cell::RefCell;

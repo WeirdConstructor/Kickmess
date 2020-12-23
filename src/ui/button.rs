@@ -15,16 +15,23 @@ impl Button {
 }
 
 impl Button {
-    fn define_border_path(&self, cr: &cairo::Context, x: f64, y: f64, w: f64, h: f64) {
-        cr.move_to(x,                      y + UI_BTN_BEVEL);
-        cr.line_to(x + UI_BTN_BEVEL,       y);
-        cr.line_to(x + (w - UI_BTN_BEVEL), y);
-        cr.line_to(x + w,                  y + UI_BTN_BEVEL);
-        cr.line_to(x + w,                  y + (h - UI_BTN_BEVEL));
-        cr.line_to(x + (w - UI_BTN_BEVEL), y + h);
-        cr.line_to(x + UI_BTN_BEVEL,       y + h);
-        cr.line_to(x,                      y + (h - UI_BTN_BEVEL));
-        cr.close_path();
+    fn draw_border(&self, p: &dyn Painter, width: f64, clr: (f64, f64, f64), x: f64, y: f64, w: f64, h: f64, fill: bool) {
+        let path = &[
+            (x,                      y + UI_BTN_BEVEL),
+            (x + UI_BTN_BEVEL,       y),
+            (x + (w - UI_BTN_BEVEL), y),
+            (x + w,                  y + UI_BTN_BEVEL),
+            (x + w,                  y + (h - UI_BTN_BEVEL)),
+            (x + (w - UI_BTN_BEVEL), y + h),
+            (x + UI_BTN_BEVEL,       y + h),
+            (x,                      y + (h - UI_BTN_BEVEL)),
+        ];
+
+        if fill {
+            p.path_fill(clr, path);
+        } else {
+            p.path_stroke(width, clr, path);
+        }
     }
 }
 
@@ -48,16 +55,11 @@ impl UIElement for Button {
         (f)(z1);
     }
 
-    fn draw_value(&self, cr: &cairo::Context, x: f64, y: f64,
+    fn draw_value(&self, p: &dyn Painter, x: f64, y: f64,
                   highlight: HLStyle, data: &dyn UIElementData,
                   value: f64, val_s: &str) {
 
         let name = &data.as_btn_data().unwrap().label;
-        cr.set_font_size(UI_KNOB_FONT_SIZE);
-        cr.set_source_rgb(
-            UI_BTN_TXT_CLR.0,
-            UI_BTN_TXT_CLR.1,
-            UI_BTN_TXT_CLR.2);
 
         let (xo, yo) = (
             (UI_BTN_BORDER_WIDTH / 2.0).round(),
@@ -67,48 +69,34 @@ impl UIElement for Button {
         let w = UI_BTN_WIDTH;
         let h = UI_ELEM_TXT_H * 2.0 + UI_BTN_BORDER_WIDTH;
 
-        draw_centered_text(
-            cr,
+        p.label(UI_KNOB_FONT_SIZE, 0, UI_BTN_TXT_CLR,
             x + xo,
             y + yo + UI_ELEM_TXT_H + UI_BTN_BORDER_WIDTH,
             w, (h / 2.0).round(), name);
 
-        match highlight {
-            HLStyle::Hover(_) => {
-                cr.set_source_rgb(
-                    UI_BTN_TXT_HOVER_CLR.0,
-                    UI_BTN_TXT_HOVER_CLR.1,
-                    UI_BTN_TXT_HOVER_CLR.2);
-            },
-            HLStyle::HoverModTarget => {
-                cr.set_source_rgb(
-                    UI_BTN_TXT_HLHOVR_CLR.0,
-                    UI_BTN_TXT_HLHOVR_CLR.1,
-                    UI_BTN_TXT_HLHOVR_CLR.2);
+        let color =
+            match highlight {
+                HLStyle::Hover(_) => UI_BTN_TXT_HOVER_CLR,
+                HLStyle::HoverModTarget => {
+                    self.draw_border(
+                        p, UI_BTN_BORDER_WIDTH, UI_BTN_TXT_HLHOVR_CLR,
+                        x + xo, y + yo, w, h, false);
+                    UI_BTN_TXT_HLHOVR_CLR
+                },
+                HLStyle::ModTarget => {
+                    self.draw_border(
+                        p, UI_BTN_BORDER2_WIDTH, UI_BTN_TXT_HLIGHT_CLR,
+                        x + xo, y + yo, w, h, false);
+                    UI_BTN_TXT_HLIGHT_CLR
+                },
+                _ => UI_BTN_TXT_CLR,
+            };
 
-                cr.set_line_width(UI_BTN_BORDER_WIDTH);
-                self.define_border_path(cr, x + xo, y + yo, w, h);
-                cr.close_path();
-                cr.stroke();
-            },
-            HLStyle::ModTarget => {
-                cr.set_source_rgb(
-                    UI_BTN_TXT_HLIGHT_CLR.0,
-                    UI_BTN_TXT_HLIGHT_CLR.1,
-                    UI_BTN_TXT_HLIGHT_CLR.2);
-
-                cr.set_line_width(UI_BTN_BORDER2_WIDTH);
-                self.define_border_path(cr, x + xo, y + yo, w, h);
-                cr.close_path();
-                cr.stroke();
-            },
-            _ => { },
-        }
-
-        draw_centered_text(cr, x + xo, y + yo, w, (h / 2.0).round(), val_s);
+        p.label(UI_KNOB_FONT_SIZE, 0, color,
+            x + xo, y + yo, w, (h / 2.0).round(), val_s);
     }
 
-    fn draw_bg(&self, cr: &cairo::Context) {
+    fn draw_bg(&self, p: &dyn Painter) {
         let (w, h) = self.size();
 
         let (xo, yo) = (
@@ -124,44 +112,23 @@ impl UIElement for Button {
 
         println!("BUTON {},{}",x, y);
 
-
-        cr.set_line_width(UI_BTN_BORDER_WIDTH);
-        cr.set_source_rgb(
-            UI_BTN_BORDER_CLR.0,
-            UI_BTN_BORDER_CLR.1,
-            UI_BTN_BORDER_CLR.2);
-
         // border
-        self.define_border_path(cr, x, y, w, h);
-        cr.stroke();
+        self.draw_border(
+            p, UI_BTN_BORDER_WIDTH, UI_BTN_BORDER_CLR, x, y, w, h, false);
 
-        cr.set_line_width(UI_BTN_BORDER2_WIDTH);
-        cr.set_source_rgb(
-            UI_BTN_BORDER2_CLR.0,
-            UI_BTN_BORDER2_CLR.1,
-            UI_BTN_BORDER2_CLR.2);
+        self.draw_border(
+            p, UI_BTN_BORDER2_WIDTH, UI_BTN_BORDER2_CLR, x, y, w, h, false);
 
-        self.define_border_path(cr, x, y, w, h);
-        cr.close_path();
-        cr.stroke();
-
-        cr.set_source_rgb(
-            UI_BTN_BG_CLR.0,
-            UI_BTN_BG_CLR.1,
-            UI_BTN_BG_CLR.2);
-
-        self.define_border_path(cr, x, y, w, h);
-        cr.fill();
+        self.draw_border(
+            p, 0.0, UI_BTN_BG_CLR, x, y, w, h, true);
 
         // divider
-        cr.set_line_width(UI_BTN_BORDER2_WIDTH);
-        cr.set_source_rgb(
-            UI_BTN_BORDER2_CLR.0,
-            UI_BTN_BORDER2_CLR.1,
-            UI_BTN_BORDER2_CLR.2);
-
-        cr.move_to(x,     y + (h / 2.0).round());
-        cr.line_to(x + w, y + (h / 2.0).round());
-        cr.stroke();
+        p.path_stroke(
+            UI_BTN_BORDER2_WIDTH,
+            UI_BTN_BORDER2_CLR,
+            &[
+                (x,     y + (h / 2.0).round()),
+                (x + w, y + (h / 2.0).round()),
+            ]);
     }
 }

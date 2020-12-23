@@ -92,6 +92,10 @@ impl WindowHandler for TestWindowHandler {
         self.canvas.flush();
         self.context.swap_buffers();
 
+
+        // TODO: Define Painter struct
+        // TODO: draw button somewhere!
+
         if !self.ui.needs_redraw() {
             return;
         }
