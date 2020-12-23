@@ -82,6 +82,13 @@ impl WindowHandler for TestWindowHandler {
         self.canvas.set_size(512, 512, 1.0);
         self.canvas.clear_rect(0, 0, 512, 512, Color::rgbf(0.3, 0.5, 0.32));
 
+        let mut p = femtovg::Path::new();
+        p.move_to(10.0, 10.0);
+        p.line_to(100.0, 200.0);
+        let mut paint = femtovg::Paint::color(Color::rgbf(1.0, 0.0, 1.0));
+        paint.set_line_width(2.0);
+        self.canvas.stroke_path(&mut p, paint);
+
         self.canvas.flush();
         self.context.swap_buffers();
 
