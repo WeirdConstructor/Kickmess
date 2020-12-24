@@ -48,7 +48,7 @@ impl UIElement for Graph {
             &mut (data.iter().map(|p: &(f64, f64)| (p.0 * w + xo + x, p.1 * h + yo + y))),
             false);
         p.label(
-            self.font_size, -1, UI_BTN_TXT_CLR,
+            self.font_size, 0, UI_BTN_TXT_CLR,
             x, y + self.size().1 - UI_ELEM_TXT_H,
             w, UI_ELEM_TXT_H, name);
     }
