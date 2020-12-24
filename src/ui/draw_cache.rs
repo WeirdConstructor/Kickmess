@@ -1,7 +1,6 @@
 use crate::ui::painting::*;
 use crate::ui::constants::*;
 use crate::ui::element::{UIElement, UIElementData};
-use crate::ui::util::draw_left_text;
 
 pub struct DrawCache {
 //    surf:       Vec<Option<cairo::Surface>>,
@@ -11,7 +10,7 @@ pub struct DrawCache {
 impl DrawCache {
     pub fn new() -> Self {
         Self {
-            surf:       vec![],
+//            surf:       vec![],
             elements:   vec![],
         }
     }
@@ -21,7 +20,7 @@ impl DrawCache {
     }
 
     pub fn push_element(&mut self, el: Box<dyn UIElement>) {
-        self.surf.push(None);
+//        self.surf.push(None);
         self.elements.push(el);
     }
 

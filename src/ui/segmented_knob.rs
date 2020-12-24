@@ -1,7 +1,6 @@
 use crate::ui::painting::*;
 use crate::ui::element::{UIElement, UIElementData};
 use crate::ui::constants::*;
-use crate::ui::util::{draw_centered_text};
 
 pub struct SegmentedKnob {
     sbottom:        (f64, f64),
@@ -45,7 +44,7 @@ impl UIElement for SegmentedKnob {
         match highlight {
             HLStyle::ModTarget => {
                 self.draw_oct_arc(
-                    &p, x + xo, y + yo,
+                    p, x + xo, y + yo,
                     UI_MG_KNOB_STROKE,
                     UI_TXT_KNOB_HLIGHT_CLR,
                     false,
@@ -53,7 +52,7 @@ impl UIElement for SegmentedKnob {
             },
             HLStyle::HoverModTarget => {
                 self.draw_oct_arc(
-                    &p, x + xo, y + yo,
+                    p, x + xo, y + yo,
                     UI_MG_KNOB_STROKE * 2.0,
                     UI_TXT_KNOB_HLHOVR_CLR,
                     false,
@@ -74,7 +73,7 @@ impl UIElement for SegmentedKnob {
                 }
 
                 self.draw_oct_arc(
-                    &p, x + xo, y + yo,
+                    p, x + xo, y + yo,
                     UI_MG_KNOB_STROKE,
                     UI_FG_KNOB_STROKE_CLR,
                     true,
@@ -82,7 +81,7 @@ impl UIElement for SegmentedKnob {
             },
             HLStyle::None => {
                 self.draw_oct_arc(
-                    &p, x + xo, y + yo,
+                    p, x + xo, y + yo,
                     UI_MG_KNOB_STROKE,
                     UI_FG_KNOB_STROKE_CLR,
                     true,
@@ -90,19 +89,19 @@ impl UIElement for SegmentedKnob {
             }
         }
 
-        self.draw_value_label(&p, x + xo, y + yo, highlight, val_s);
+        self.draw_value_label(p, x + xo, y + yo, highlight, val_s);
 
         let name = &data.as_knob_data().unwrap().label;
-        self.draw_name(&p, x + xo, y + yo, name);
+        self.draw_name(p, x + xo, y + yo, name);
     }
 
-    fn draw_bg(&self, p: &dyn Painter) {
+    fn draw_bg(&self, p: &dyn Painter, x: f64, y: f64) {
         let (knob_xo, knob_yo) = self.get_center_offset(UI_BG_KNOB_STROKE);
         let (knob_w, knob_h)   = self.size();
-        let (xo, yo) = (knob_xo, knob_yo);
+        let (xo, yo) = (x + knob_xo, y + knob_yo);
 
         self.draw_oct_arc(
-            &p, xo, yo,
+            p, xo, yo,
             UI_BG_KNOB_STROKE,
             UI_BG_KNOB_STROKE_CLR,
             false,
@@ -134,7 +133,7 @@ impl UIElement for SegmentedKnob {
             xo + r.0, yo + r.1, r.2, r.3);
 
         self.draw_oct_arc(
-            &p, xo, yo,
+            p, xo, yo,
             UI_MG_KNOB_STROKE,
             UI_MG_KNOB_STROKE_CLR,
             false,
@@ -263,7 +262,7 @@ impl SegmentedKnob {
     pub fn draw_name(&self, p: &dyn Painter, x: f64, y: f64, s: &str) {
         let r = self.get_label_rect();
         p.label(
-            self.font_size_lbl, UI_TXT_KNOB_CLR, x + r.0, y + r.1, r.2, r.3, s);
+            self.font_size_lbl, 0, UI_TXT_KNOB_CLR, x + r.0, y + r.1, r.2, r.3, s);
     }
 
     pub fn draw_value_label(&self, p: &dyn Painter, x: f64, y: f64, highlight: HLStyle, s: &str) {
@@ -338,9 +337,9 @@ impl SegmentedKnob {
             p.arc_stroke(
                 line_w * 0.5,
                 line_w * 1.5,
-                0.0, 2.0 * std::f64::consts::PI);
+                0.0, 2.0 * std::f64::consts::PI,
                 x + prev.0 + partial.0,
-                y + prev.1 + partial.1,
+                y + prev.1 + partial.1);
         }
     }
 }

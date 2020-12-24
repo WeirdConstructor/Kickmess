@@ -2,7 +2,6 @@ use crate::ui::painting::*;
 use crate::ui::protocol::UIBtnMode;
 use crate::ui::element::{UIElement, UIElementData};
 use crate::ui::constants::*;
-use crate::ui::util::{draw_centered_text};
 
 pub struct Graph {
     w:          f64,
@@ -44,7 +43,7 @@ impl UIElement for Graph {
         let name = &data.as_graph_data().unwrap().label;
         let data = data.as_graph_data().unwrap().data.borrow();
 
-        p.path_stroke(1.0, UI_BTN_TXT_CLR, &data);
+        p.path_stroke32(1.0, UI_BTN_TXT_CLR, &data[..]);
         p.label(
             self.font_size, -1, UI_BTN_TXT_CLR,
             x, y + self.size().1 - UI_ELEM_TXT_H,

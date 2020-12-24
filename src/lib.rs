@@ -4,7 +4,7 @@ pub mod helpers;
 mod op_kickmess;
 mod env;
 mod editor;
-pub mod pugl;
+//pub mod pugl;
 pub mod ui;
 //pub mod baseview;
 pub mod baseview_femtovg;

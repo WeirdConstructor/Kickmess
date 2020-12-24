@@ -2,7 +2,6 @@ use crate::ui::painting::*;
 use crate::ui::protocol::UIBtnMode;
 use crate::ui::element::{UIElement, UIElementData};
 use crate::ui::constants::*;
-use crate::ui::util::{draw_centered_text};
 
 pub struct Button {
 }
@@ -96,12 +95,12 @@ impl UIElement for Button {
             x + xo, y + yo, w, (h / 2.0).round(), val_s);
     }
 
-    fn draw_bg(&self, p: &dyn Painter) {
+    fn draw_bg(&self, p: &dyn Painter, x: f64, y: f64) {
         let (w, h) = self.size();
 
         let (xo, yo) = (
-            (UI_BTN_BORDER_WIDTH / 2.0).round(),
-            (UI_BTN_BORDER_WIDTH / 2.0).round(),
+            x + (UI_BTN_BORDER_WIDTH / 2.0).round(),
+            y + (UI_BTN_BORDER_WIDTH / 2.0).round(),
         );
 
         let x = xo;
