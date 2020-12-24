@@ -117,15 +117,15 @@ impl<'a> Painter for MyPainter<'a> {
         match align {
             -1 => {
                 paint.set_text_align(femtovg::Align::Left);
-                self.canvas.fill_text(x as f32, (y + h / 2.0) as f32, text, paint);
+                self.canvas.fill_text(x as f32, (y + h / 2.0).round() as f32, text, paint);
             },
             0  => {
                 paint.set_text_align(femtovg::Align::Center);
-                self.canvas.fill_text((x + (w / 2.0)) as f32, (y + h / 2.0) as f32, text, paint);
+                self.canvas.fill_text((x + (w / 2.0)) as f32, (y + h / 2.0).round() as f32, text, paint);
             },
             _  => {
                 paint.set_text_align(femtovg::Align::Right);
-                self.canvas.fill_text((x + w) as f32, (y + h / 2.0) as f32, text, paint);
+                self.canvas.fill_text((x + w) as f32, (y + h / 2.0).round() as f32, text, paint);
             },
         }
         //d// self.rect_stroke(0.5, (1.0, 0.0, 1.0), x, y, w, h);
