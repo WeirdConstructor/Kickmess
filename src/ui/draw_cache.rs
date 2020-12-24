@@ -4,7 +4,7 @@ use crate::ui::element::{UIElement, UIElementData};
 use crate::ui::util::draw_left_text;
 
 pub struct DrawCache {
-    surf:       Vec<Option<cairo::Surface>>,
+//    surf:       Vec<Option<cairo::Surface>>,
     elements:   Vec<Box<dyn UIElement>>,
 }
 
@@ -16,13 +16,8 @@ impl DrawCache {
         }
     }
 
-    pub fn draw_container_label(&mut self, cr: &cairo::Context, x: f64, y: f64, lbl: &str) {
-        cr.set_font_size(UI_CONT_FONT_SIZE);
-        cr.set_source_rgb(
-            UI_CONT_FONT_CLR.0,
-            UI_CONT_FONT_CLR.1,
-            UI_CONT_FONT_CLR.2);
-        draw_left_text(cr, x, y, UI_ELEM_TXT_H, lbl);
+    pub fn draw_container_label(&mut self, p: &dyn Painter, x: f64, y: f64, lbl: &str) {
+        p.label(UI_CONT_FONT_SIZE, -1, UI_CONT_FONT_CLR, x, y, 100.0, UI_ELEM_TXT_H, lbl);
     }
 
     pub fn push_element(&mut self, el: Box<dyn UIElement>) {
@@ -34,12 +29,12 @@ impl DrawCache {
         self.elements.get(idx).unwrap().size()
     }
 
-    pub fn draw_data(&mut self, cr: &cairo::Context, x: f64, y: f64,
+    pub fn draw_data(&mut self, p: &dyn Painter, x: f64, y: f64,
                      idx: usize, highlight: HLStyle,
                      data: &dyn UIElementData, value: f64, val_s: &str) {
         self.elements.get(idx)
             .unwrap()
-            .draw_value(cr, x, y, highlight, data, value, val_s);
+            .draw_value(p, x, y, highlight, data, value, val_s);
     }
 
     pub fn define_active_zones(&self, x: f64, y: f64, elem_data: &dyn UIElementData,
@@ -48,28 +43,9 @@ impl DrawCache {
         self.elements.get(idx).unwrap().define_active_zones(x, y, elem_data, f);
     }
 
-    pub fn draw_bg(&mut self, cr: &cairo::Context, x: f64, y: f64, idx: usize) {
+    pub fn draw_bg(&mut self, p: &dyn Painter, x: f64, y: f64, idx: usize) {
         let element = self.elements.get(idx).unwrap();
-
-        let (elem_w, elem_h) = element.size();
-
-        if let None = self.surf[idx] {
-            let surf = cr.get_target().create_similar_image(
-                cairo::Format::ARgb32,
-                elem_w as i32,
-                elem_h as i32).expect("Createable new img surface");
-            self.surf[idx] = Some(surf);
-            let cr =
-                cairo::Context::new(
-                    self.surf[idx].as_mut().unwrap());
-            element.draw_bg(&cr);
-        }
-
-        let surf = &self.surf[idx].as_ref().unwrap();
-
-        cr.save();
-        cr.set_source_surface(surf, x, y);
-        cr.paint();
+        element.draw_bg(p, x, y);
     }
 }
 

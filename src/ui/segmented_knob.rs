@@ -34,7 +34,7 @@ impl UIElement for SegmentedKnob {
         (f)(z2);
     }
 
-    fn draw_value(&self, cr: &cairo::Context, x: f64, y: f64,
+    fn draw_value(&self, p: &dyn Painter, x: f64, y: f64,
                   highlight: HLStyle, data: &dyn UIElementData,
                   value: f64, val_s: &str) {
 
@@ -45,7 +45,7 @@ impl UIElement for SegmentedKnob {
         match highlight {
             HLStyle::ModTarget => {
                 self.draw_oct_arc(
-                    &cr, x + xo, y + yo,
+                    &p, x + xo, y + yo,
                     UI_MG_KNOB_STROKE,
                     UI_TXT_KNOB_HLIGHT_CLR,
                     false,
@@ -53,7 +53,7 @@ impl UIElement for SegmentedKnob {
             },
             HLStyle::HoverModTarget => {
                 self.draw_oct_arc(
-                    &cr, x + xo, y + yo,
+                    &p, x + xo, y + yo,
                     UI_MG_KNOB_STROKE * 2.0,
                     UI_TXT_KNOB_HLHOVR_CLR,
                     false,
@@ -62,25 +62,19 @@ impl UIElement for SegmentedKnob {
             HLStyle::Hover(subtype) => {
                 if subtype == AZ_FINE_DRAG {
                     let r = self.get_fine_adjustment_mark();
-                    cr.set_source_rgb(
-                        UI_TXT_KNOB_HOVER_CLR.0,
-                        UI_TXT_KNOB_HOVER_CLR.1,
-                        UI_TXT_KNOB_HOVER_CLR.2);
-                    cr.rectangle(x + xo + r.0, y + yo + r.1, r.2, r.3);
-                    cr.fill();
+                    p.rect_fill(
+                        UI_TXT_KNOB_HOVER_CLR,
+                        x + xo + r.0, y + yo + r.1, r.2, r.3);
 
                 } else {
                     let r = self.get_coarse_adjustment_mark();
-                    cr.set_source_rgb(
-                        UI_TXT_KNOB_HOVER_CLR.0,
-                        UI_TXT_KNOB_HOVER_CLR.1,
-                        UI_TXT_KNOB_HOVER_CLR.2);
-                    cr.rectangle(x + xo + r.0, y + yo + r.1, r.2, r.3);
-                    cr.fill();
+                    p.rect_fill(
+                        UI_TXT_KNOB_HOVER_CLR,
+                        x + xo + r.0, y + yo + r.1, r.2, r.3);
                 }
 
                 self.draw_oct_arc(
-                    &cr, x + xo, y + yo,
+                    &p, x + xo, y + yo,
                     UI_MG_KNOB_STROKE,
                     UI_FG_KNOB_STROKE_CLR,
                     true,
@@ -88,7 +82,7 @@ impl UIElement for SegmentedKnob {
             },
             HLStyle::None => {
                 self.draw_oct_arc(
-                    &cr, x + xo, y + yo,
+                    &p, x + xo, y + yo,
                     UI_MG_KNOB_STROKE,
                     UI_FG_KNOB_STROKE_CLR,
                     true,
@@ -96,65 +90,51 @@ impl UIElement for SegmentedKnob {
             }
         }
 
-        self.draw_value_label(&cr, x + xo, y + yo, highlight, val_s);
+        self.draw_value_label(&p, x + xo, y + yo, highlight, val_s);
 
         let name = &data.as_knob_data().unwrap().label;
-        self.draw_name(&cr, x + xo, y + yo, name);
+        self.draw_name(&p, x + xo, y + yo, name);
     }
 
-    fn draw_bg(&self, cr: &cairo::Context) {
+    fn draw_bg(&self, p: &dyn Painter) {
         let (knob_xo, knob_yo) = self.get_center_offset(UI_BG_KNOB_STROKE);
         let (knob_w, knob_h)   = self.size();
         let (xo, yo) = (knob_xo, knob_yo);
 
         self.draw_oct_arc(
-            &cr, xo, yo,
+            &p, xo, yo,
             UI_BG_KNOB_STROKE,
             UI_BG_KNOB_STROKE_CLR,
             false,
             1.0);
 
-        cr.set_line_width(UI_BG_KNOB_STROKE);
-        cr.set_source_rgb(
-            UI_BG_KNOB_STROKE_CLR.0,
-            UI_BG_KNOB_STROKE_CLR.1,
-            UI_BG_KNOB_STROKE_CLR.2);
-
         let dc1 = self.get_decor_rect1();
-        cr.rectangle(xo + dc1.0, yo + dc1.1, dc1.2, dc1.3);
+        p.rect_fill(
+            UI_BG_KNOB_STROKE_CLR,
+            xo + dc1.0, yo + dc1.1, dc1.2, dc1.3);
 
         let valrect = self.get_value_rect();
-        cr.rectangle(
+        p.rect_fill(
+            UI_BG_KNOB_STROKE_CLR,
             valrect.0 + xo, valrect.1 + yo, valrect.2, valrect.3);
 
         let lblrect = self.get_label_rect();
-        cr.rectangle(
+        p.rect_fill(
+            UI_BG_KNOB_STROKE_CLR,
             lblrect.0 + xo, lblrect.1 + yo, lblrect.2, lblrect.3);
-        cr.fill();
-
-//        let r = self.get_coarse_adjustment_rect();
-//        cr.set_source_rgb(0.0, 1.0, 1.0);
-//        cr.set_line_width(1.0);
-//        cr.rectangle(x + r.0, y + r.1, r.2, r.3);
-//        cr.stroke();
 
         let r = self.get_coarse_adjustment_mark();
-        cr.set_line_width(1.0);
-        cr.rectangle(xo + r.0, yo + r.1, r.2, r.3);
-        cr.fill();
-
-//        let r = self.get_fine_adjustment_rect();
-//        cr.set_source_rgb(1.0, 0.0, 1.0);
-//        cr.set_line_width(1.0);
-//        cr.rectangle(x + r.0, y + r.1, r.2, r.3);
-//        cr.stroke();
+        p.rect_fill(
+            UI_BG_KNOB_STROKE_CLR,
+            xo + r.0, yo + r.1, r.2, r.3);
 
         let r = self.get_fine_adjustment_mark();
-        cr.rectangle(xo + r.0, yo + r.1, r.2, r.3);
-        cr.fill();
+        p.rect_fill(
+            UI_BG_KNOB_STROKE_CLR,
+            xo + r.0, yo + r.1, r.2, r.3);
 
         self.draw_oct_arc(
-            &cr, xo, yo,
+            &p, xo, yo,
             UI_MG_KNOB_STROKE,
             UI_MG_KNOB_STROKE_CLR,
             false,
@@ -280,54 +260,32 @@ impl SegmentedKnob {
          UI_BG_KNOB_STROKE * 3.0)
     }
 
-    pub fn draw_name(&self, cr: &cairo::Context, x: f64, y: f64, s: &str) {
+    pub fn draw_name(&self, p: &dyn Painter, x: f64, y: f64, s: &str) {
         let r = self.get_label_rect();
-        cr.set_font_size(self.font_size_lbl);
-        cr.set_source_rgb(
-            UI_TXT_KNOB_CLR.0,
-            UI_TXT_KNOB_CLR.1,
-            UI_TXT_KNOB_CLR.2);
-
-        draw_centered_text(cr, x + r.0, y + r.1, r.2, r.3, s);
+        p.label(
+            self.font_size_lbl, UI_TXT_KNOB_CLR, x + r.0, y + r.1, r.2, r.3, s);
     }
 
-    pub fn draw_value_label(&self, cr: &cairo::Context, x: f64, y: f64, highlight: HLStyle, s: &str) {
+    pub fn draw_value_label(&self, p: &dyn Painter, x: f64, y: f64, highlight: HLStyle, s: &str) {
         let r = self.get_value_rect();
 
-        match highlight {
-            HLStyle::Hover(_subtype) => {
+        let (font_size, color) =
+            match highlight {
+                HLStyle::Hover(_subtype) => {
+                    (self.font_size_data + 1.0, UI_TXT_KNOB_HOVER_CLR)
+                },
+                HLStyle::ModTarget => {
+                    (self.font_size_data + 1.0, UI_TXT_KNOB_HLIGHT_CLR)
+                },
+                _ => {
+                    (self.font_size_data, UI_TXT_KNOB_CLR)
+                },
+            };
 
-                cr.set_font_size(self.font_size_data + 1.0);
-                cr.set_source_rgb(
-                    UI_TXT_KNOB_HOVER_CLR.0,
-                    UI_TXT_KNOB_HOVER_CLR.1,
-                    UI_TXT_KNOB_HOVER_CLR.2);
-            },
-            HLStyle::ModTarget => {
-                cr.set_font_size(self.font_size_data + 1.0);
-                cr.set_source_rgb(
-                    UI_TXT_KNOB_HLIGHT_CLR.0,
-                    UI_TXT_KNOB_HLIGHT_CLR.1,
-                    UI_TXT_KNOB_HLIGHT_CLR.2);
-            },
-            _ => {
-                cr.set_font_size(self.font_size_data);
-            },
-        }
-
-        let ext = cr.text_extents(s);
-        cr.move_to(
-            x + r.0 + ((r.2 - ext.width)  / 2.0).abs().round(),
-            y + r.1 + ext.height
-                    + ((r.3 - ext.height) / 2.0).abs().round());
-        cr.show_text(s);
-
+        p.label(font_size, 1, color, x + r.0, y + r.1, r.2, r.3, s);
     }
 
-    pub fn draw_oct_arc(&self, cr: &cairo::Context, x: f64, y: f64, line_w: f64, color: (f64, f64, f64), with_dot: bool, value: f64) {
-        cr.set_line_width(line_w);
-        cr.set_source_rgb(color.0, color.1, color.2);
-        let s       = &self.s;
+    pub fn draw_oct_arc(&self, p: &dyn Painter, x: f64, y: f64, line_w: f64, color: (f64, f64, f64), with_dot: bool, value: f64) {
         let arc_len = &self.arc_len;
 
         let (next_idx, segment_len, prev_arc_len) =
@@ -349,9 +307,13 @@ impl SegmentedKnob {
                 (1, self.s1_len, 0.0)
             };
 
-        cr.move_to(x + s[0].0, y + s[0].1);
-        for i in 1..next_idx {
-            cr.line_to(x + s[i].0, y + s[i].1);
+        let mut s : [(f64, f64); 9] = self.s;
+        s[0].0 += x;
+        s[0].1 += x;
+
+        for p in s.iter_mut() {
+            p.0 += x;
+            p.1 += y;
         }
 
         let prev       = s[next_idx - 1];
@@ -365,21 +327,21 @@ impl SegmentedKnob {
             ((last.0 - prev.0) * rest_ratio,
              (last.1 - prev.1) * rest_ratio);
 
-        cr.line_to(
+        s[next_idx] = (
             x + prev.0 + partial.0,
-            y + prev.1 + partial.1);
-        cr.stroke();
+            y + prev.1 + partial.1
+        );
+
+        p.path_stroke(line_w, color, &s[0..(next_idx + 1)]);
 
         if with_dot {
-            cr.set_line_width(line_w * 0.5);
-            cr.arc(
+            p.arc_stroke(
+                line_w * 0.5,
+                line_w * 1.5,
+                0.0, 2.0 * std::f64::consts::PI);
                 x + prev.0 + partial.0,
                 y + prev.1 + partial.1,
-                line_w * 1.5, 0.0, 2.0 * std::f64::consts::PI);
         }
-
-        cr.stroke();
-
     }
 }
 

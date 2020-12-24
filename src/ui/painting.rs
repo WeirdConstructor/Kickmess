@@ -45,6 +45,7 @@ impl ActiveZone {
 pub trait Painter {
     fn path_fill(&self, color: (f64, f64, f64), segments: &[(f64, f64)]);
     fn path_stroke(&self, width: f64, color: (f64, f64, f64), segments: &[(f64, f64)]);
+    fn arc_stroke(&self, width: f64, radius: f64, from_rad: f64, to_rad: f64, x: f64, y: f64);
     fn rect_fill(&self, color: (f64, f64, f64), x: f64, y: f64, w: f64, h: f64);
     fn rect_stroke(&self, width: f64, color: (f64, f64, f64), x: f64, y: f64, w: f64, h: f64);
     fn label(&self, size: f64, align: i8, color: (f64, f64, f64), x: f64, y: f64, w: f64, h: f64, text: &str);
