@@ -30,7 +30,7 @@ impl UIElement for Graph {
                            _f: &mut dyn FnMut(ActiveZone)) {
     }
 
-    fn draw_value(&self, p: &dyn Painter, x: f64, y: f64,
+    fn draw_value(&self, p: &mut dyn Painter, x: f64, y: f64,
                   highlight: HLStyle, data: &dyn UIElementData,
                   value: f64, val_s: &str) {
 
@@ -43,14 +43,17 @@ impl UIElement for Graph {
         let name = &data.as_graph_data().unwrap().label;
         let data = data.as_graph_data().unwrap().data.borrow();
 
-        p.path_stroke32(1.0, UI_BTN_TXT_CLR, &data[..]);
+        p.path_stroke(
+            1.0, UI_BTN_TXT_CLR,
+            &mut (data.iter().map(|p: &(f64, f64)| (p.0 * w + xo + x, p.1 * h + yo + y))),
+            false);
         p.label(
             self.font_size, -1, UI_BTN_TXT_CLR,
             x, y + self.size().1 - UI_ELEM_TXT_H,
             w, UI_ELEM_TXT_H, name);
     }
 
-    fn draw_bg(&self, p: &dyn Painter, x: f64, y: f64) {
+    fn draw_bg(&self, p: &mut dyn Painter, x: f64, y: f64) {
         let (w, h) = self.size();
         let h = h - UI_ELEM_TXT_H;
 

@@ -14,7 +14,7 @@ impl Button {
 }
 
 impl Button {
-    fn draw_border(&self, p: &dyn Painter, width: f64, clr: (f64, f64, f64), x: f64, y: f64, w: f64, h: f64, fill: bool) {
+    fn draw_border(&self, p: &mut dyn Painter, width: f64, clr: (f64, f64, f64), x: f64, y: f64, w: f64, h: f64, fill: bool) {
         let path = &[
             (x,                      y + UI_BTN_BEVEL),
             (x + UI_BTN_BEVEL,       y),
@@ -27,9 +27,9 @@ impl Button {
         ];
 
         if fill {
-            p.path_fill(clr, path);
+            p.path_fill(clr, &mut path.iter().copied(), true);
         } else {
-            p.path_stroke(width, clr, path);
+            p.path_stroke(width, clr, &mut path.iter().copied(), true);
         }
     }
 }
@@ -54,7 +54,7 @@ impl UIElement for Button {
         (f)(z1);
     }
 
-    fn draw_value(&self, p: &dyn Painter, x: f64, y: f64,
+    fn draw_value(&self, p: &mut dyn Painter, x: f64, y: f64,
                   highlight: HLStyle, data: &dyn UIElementData,
                   value: f64, val_s: &str) {
 
@@ -95,7 +95,7 @@ impl UIElement for Button {
             x + xo, y + yo, w, (h / 2.0).round(), val_s);
     }
 
-    fn draw_bg(&self, p: &dyn Painter, x: f64, y: f64) {
+    fn draw_bg(&self, p: &mut dyn Painter, x: f64, y: f64) {
         let (w, h) = self.size();
 
         let (xo, yo) = (
@@ -108,8 +108,6 @@ impl UIElement for Button {
 
         let w = UI_BTN_WIDTH;
         let h = UI_ELEM_TXT_H * 2.0 + UI_BTN_BORDER_WIDTH;
-
-        println!("BUTON {},{}",x, y);
 
         // border
         self.draw_border(
@@ -125,9 +123,10 @@ impl UIElement for Button {
         p.path_stroke(
             UI_BTN_BORDER2_WIDTH,
             UI_BTN_BORDER2_CLR,
-            &[
+            &mut [
                 (x,     y + (h / 2.0).round()),
                 (x + w, y + (h / 2.0).round()),
-            ]);
+            ].iter().copied(),
+            false);
     }
 }

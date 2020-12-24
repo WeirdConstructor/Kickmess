@@ -15,7 +15,7 @@ impl DrawCache {
         }
     }
 
-    pub fn draw_container_label(&mut self, p: &dyn Painter, x: f64, y: f64, lbl: &str) {
+    pub fn draw_container_label(&mut self, p: &mut dyn Painter, x: f64, y: f64, lbl: &str) {
         p.label(UI_CONT_FONT_SIZE, -1, UI_CONT_FONT_CLR, x, y, 100.0, UI_ELEM_TXT_H, lbl);
     }
 
@@ -28,7 +28,7 @@ impl DrawCache {
         self.elements.get(idx).unwrap().size()
     }
 
-    pub fn draw_data(&mut self, p: &dyn Painter, x: f64, y: f64,
+    pub fn draw_data(&mut self, p: &mut dyn Painter, x: f64, y: f64,
                      idx: usize, highlight: HLStyle,
                      data: &dyn UIElementData, value: f64, val_s: &str) {
         self.elements.get(idx)
@@ -42,7 +42,7 @@ impl DrawCache {
         self.elements.get(idx).unwrap().define_active_zones(x, y, elem_data, f);
     }
 
-    pub fn draw_bg(&mut self, p: &dyn Painter, x: f64, y: f64, idx: usize) {
+    pub fn draw_bg(&mut self, p: &mut dyn Painter, x: f64, y: f64, idx: usize) {
         let element = self.elements.get(idx).unwrap();
         element.draw_bg(p, x, y);
     }

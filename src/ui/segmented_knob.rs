@@ -33,7 +33,7 @@ impl UIElement for SegmentedKnob {
         (f)(z2);
     }
 
-    fn draw_value(&self, p: &dyn Painter, x: f64, y: f64,
+    fn draw_value(&self, p: &mut dyn Painter, x: f64, y: f64,
                   highlight: HLStyle, data: &dyn UIElementData,
                   value: f64, val_s: &str) {
 
@@ -95,7 +95,7 @@ impl UIElement for SegmentedKnob {
         self.draw_name(p, x + xo, y + yo, name);
     }
 
-    fn draw_bg(&self, p: &dyn Painter, x: f64, y: f64) {
+    fn draw_bg(&self, p: &mut dyn Painter, x: f64, y: f64) {
         let (knob_xo, knob_yo) = self.get_center_offset(UI_BG_KNOB_STROKE);
         let (knob_w, knob_h)   = self.size();
         let (xo, yo) = (x + knob_xo, y + knob_yo);
@@ -259,13 +259,13 @@ impl SegmentedKnob {
          UI_BG_KNOB_STROKE * 3.0)
     }
 
-    pub fn draw_name(&self, p: &dyn Painter, x: f64, y: f64, s: &str) {
+    pub fn draw_name(&self, p: &mut dyn Painter, x: f64, y: f64, s: &str) {
         let r = self.get_label_rect();
         p.label(
             self.font_size_lbl, 0, UI_TXT_KNOB_CLR, x + r.0, y + r.1, r.2, r.3, s);
     }
 
-    pub fn draw_value_label(&self, p: &dyn Painter, x: f64, y: f64, highlight: HLStyle, s: &str) {
+    pub fn draw_value_label(&self, p: &mut dyn Painter, x: f64, y: f64, highlight: HLStyle, s: &str) {
         let r = self.get_value_rect();
 
         let (font_size, color) =
@@ -281,10 +281,12 @@ impl SegmentedKnob {
                 },
             };
 
-        p.label(font_size, 1, color, x + r.0, y + r.1, r.2, r.3, s);
+        let some_right_padding = 6.0;
+
+        p.label(font_size, 1, color, x + r.0, y + r.1, r.2 - some_right_padding, r.3, s);
     }
 
-    pub fn draw_oct_arc(&self, p: &dyn Painter, x: f64, y: f64, line_w: f64, color: (f64, f64, f64), with_dot: bool, value: f64) {
+    pub fn draw_oct_arc(&self, p: &mut dyn Painter, x: f64, y: f64, line_w: f64, color: (f64, f64, f64), with_dot: bool, value: f64) {
         let arc_len = &self.arc_len;
 
         let (next_idx, segment_len, prev_arc_len) =
@@ -307,9 +309,6 @@ impl SegmentedKnob {
             };
 
         let mut s : [(f64, f64); 9] = self.s;
-        s[0].0 += x;
-        s[0].1 += x;
-
         for p in s.iter_mut() {
             p.0 += x;
             p.1 += y;
@@ -327,11 +326,11 @@ impl SegmentedKnob {
              (last.1 - prev.1) * rest_ratio);
 
         s[next_idx] = (
-            x + prev.0 + partial.0,
-            y + prev.1 + partial.1
+            prev.0 + partial.0,
+            prev.1 + partial.1
         );
 
-        p.path_stroke(line_w, color, &s[0..(next_idx + 1)]);
+        p.path_stroke(line_w, color, &mut s.iter().copied().take(next_idx + 1), false);
 
         if with_dot {
             p.arc_stroke(

@@ -1,10 +1,11 @@
 mod segmented_knob;
 mod button;
-mod painting;
 mod draw_cache;
 mod element;
 mod util;
 mod graph;
+
+pub mod painting;
 pub mod constants;
 pub mod protocol;
 
@@ -171,8 +172,8 @@ impl Rect {
 }
 
 impl UIGraphValueSource for UI {
-    fn param_value(&mut self, idx: usize) -> f32 {
-        self.get_element_value(idx)
+    fn param_value(&mut self, idx: usize) -> f64 {
+        self.get_element_value(idx) as f64
     }
 }
 
@@ -635,7 +636,7 @@ impl UI {
     }
 
     fn draw_element(&mut self,
-        p: &dyn Painter,
+        p: &mut dyn Painter,
         rect: &Rect,
         align: (i8, i8),
         element_data: &dyn UIElementData,
@@ -711,7 +712,7 @@ impl UI {
                              highlight, element_data, val, &val_str);
     }
 
-    fn layout_container(&mut self, p: &dyn Painter, crect: Rect, rows: &Vec<Vec<UIInput>>) {
+    fn layout_container(&mut self, p: &mut dyn Painter, crect: Rect, rows: &Vec<Vec<UIInput>>) {
         let mut row_offs = 0;
         for row in rows.iter() {
             let mut col_offs = 0;
@@ -785,7 +786,7 @@ impl UI {
         }
     }
 
-    pub fn draw(&mut self, p: &dyn Painter) {
+    pub fn draw(&mut self, p: &mut dyn Painter) {
         let (ww, wh) = self.window_size;
 
         p.rect_fill(UI_GUI_BG_CLR, 0.0, 0.0, ww, wh);

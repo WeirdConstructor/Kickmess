@@ -1,1 +1,1 @@
-cargo run --color=always --release --example pugl_gui
+cargo run --color=always --release --example baseview_femto_gui

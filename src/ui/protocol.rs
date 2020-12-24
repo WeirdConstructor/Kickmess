@@ -213,7 +213,7 @@ impl UIElementData for UIKnobData {
 }
 
 pub trait UIGraphValueSource {
-    fn param_value(&mut self, idx: usize) -> f32;
+    fn param_value(&mut self, idx: usize) -> f64;
 }
 
 #[derive(Clone)]
@@ -221,8 +221,8 @@ pub struct UIGraphData {
     pub pos:         UIPos,
     pub id:          usize,
     pub label:       String,
-    pub data:        Box<std::cell::RefCell<Vec<(f32,f32)>>>,
-    pub fun:         Arc<dyn Fn(usize, &mut dyn UIGraphValueSource, &mut Vec<(f32,f32)>) + Send + Sync>,
+    pub data:        Box<std::cell::RefCell<Vec<(f64,f64)>>>,
+    pub fun:         Arc<dyn Fn(usize, &mut dyn UIGraphValueSource, &mut Vec<(f64,f64)>) + Send + Sync>,
 }
 
 impl std::fmt::Debug for UIGraphData {
@@ -232,7 +232,7 @@ impl std::fmt::Debug for UIGraphData {
 }
 
 impl UIGraphData {
-    pub fn new(id: usize, label: String, pos: UIPos, fun: Arc<dyn Fn(usize, &mut dyn UIGraphValueSource, &mut Vec<(f32, f32)>) + Send + Sync>) -> Self {
+    pub fn new(id: usize, label: String, pos: UIPos, fun: Arc<dyn Fn(usize, &mut dyn UIGraphValueSource, &mut Vec<(f64, f64)>) + Send + Sync>) -> Self {
         Self {
             id,
             label,
@@ -295,15 +295,15 @@ impl UIInput {
         UIInput::Knob(UIKnobData { id, label, pos })
     }
 
-    pub fn graph(id: usize, label: String, pos: UIPos, fun: Arc<dyn Fn(usize, &mut dyn UIGraphValueSource, &mut Vec<(f32, f32)>) + Send + Sync>) -> Self {
+    pub fn graph(id: usize, label: String, pos: UIPos, fun: Arc<dyn Fn(usize, &mut dyn UIGraphValueSource, &mut Vec<(f64, f64)>) + Send + Sync>) -> Self {
         UIInput::Graph(UIGraphData::new(id, label, pos, fun))
     }
 
-    pub fn graph_huge(id: usize, label: String, pos: UIPos, fun: Arc<dyn Fn(usize, &mut dyn UIGraphValueSource, &mut Vec<(f32, f32)>) + Send + Sync>) -> Self {
+    pub fn graph_huge(id: usize, label: String, pos: UIPos, fun: Arc<dyn Fn(usize, &mut dyn UIGraphValueSource, &mut Vec<(f64, f64)>) + Send + Sync>) -> Self {
         UIInput::GraphHuge(UIGraphData::new(id, label, pos, fun))
     }
 
-    pub fn graph_small(id: usize, label: String, pos: UIPos, fun: Arc<dyn Fn(usize, &mut dyn UIGraphValueSource, &mut Vec<(f32, f32)>) + Send + Sync>) -> Self {
+    pub fn graph_small(id: usize, label: String, pos: UIPos, fun: Arc<dyn Fn(usize, &mut dyn UIGraphValueSource, &mut Vec<(f64, f64)>) + Send + Sync>) -> Self {
         UIInput::GraphSmall(UIGraphData::new(id, label, pos, fun))
     }
 
