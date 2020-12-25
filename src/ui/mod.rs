@@ -1,10 +1,13 @@
+// Copyright (c) 2020-2021 Weird Constructor <weirdconstructor@gmail.com>
+// This is a part of Kickmess. See README.md and COPYING for details.
+
 mod segmented_knob;
 mod button;
-mod painting;
 mod draw_cache;
 mod element;
-mod util;
 mod graph;
+
+pub mod painting;
 pub mod constants;
 pub mod protocol;
 
@@ -12,7 +15,7 @@ use std::rc::Rc;
 use std::cell::RefCell;
 
 use crate::ui::element::*;
-use crate::ui::painting::{ActiveZone, HLStyle};
+use crate::ui::painting::{ActiveZone, HLStyle, Painter};
 use crate::ui::draw_cache::{DrawCache};
 use crate::ui::protocol::{UIMsg, UICmd, UIPos, UIKnobData, UIProviderHandle,
                           UILayout, UIBtnData, UIInput, UIValueSpec, UIGraphValueSource};
@@ -128,7 +131,7 @@ impl InputMode {
 pub struct UI {
     ui_handle:      UIProviderHandle,
 
-    font:           Option<cairo::FontFace>,
+//    font:           Option<cairo::FontFace>,
 
     layout:         Rc<RefCell<Vec<UILayout>>>,
 
@@ -171,8 +174,8 @@ impl Rect {
 }
 
 impl UIGraphValueSource for UI {
-    fn param_value(&mut self, idx: usize) -> f32 {
-        self.get_element_value(idx)
+    fn param_value(&mut self, idx: usize) -> f64 {
+        self.get_element_value(idx) as f64
     }
 }
 
@@ -193,7 +196,7 @@ impl UI {
                 last_mouse_pos:     (0.0, 0.0),
                 needs_redraw_flag:  true,
                 input_mode:         InputMode::None,
-                font:               None,
+//                font:               None,
             };
         this.init_draw_cache();
         this
@@ -561,12 +564,13 @@ impl UI {
         self.value_specs[id].fine(steps)
     }
 
-    fn get_formatted_value(&self, id: usize) -> String {
+    fn get_formatted_value(&self, id: usize, writer: &mut std::io::Write) -> bool {
         if id >= self.value_specs.len() {
-            return String::from("bad valspec id");
+            write!(writer, "bad valspec id {}", id);
+            return true;
         }
 
-        self.value_specs[id].fmt(self.get_element_value(id) as f64)
+        self.value_specs[id].fmt(self.get_element_value(id) as f64, writer)
     }
 
     fn get_prev_toggle_value(&self, id: usize) -> f32 {
@@ -635,7 +639,7 @@ impl UI {
     }
 
     fn draw_element(&mut self,
-        cr: &cairo::Context,
+        p: &mut dyn Painter,
         rect: &Rect,
         align: (i8, i8),
         element_data: &dyn UIElementData,
@@ -664,13 +668,10 @@ impl UI {
         let mut z_idx = 0;
 
         if false {
-            cr.set_line_width(1.0);
-            cr.set_source_rgb(1.0, 0.0, 1.0);
-            cr.rectangle(xe, ye, size.0, size.1);
-            cr.stroke();
+            p.rect_stroke(1.0, (1.0, 0.0, 1.0), xe, ye, size.0, size.1);
         }
 
-        let az = self.cache.draw_bg(cr, xe, ye, cache_idx as usize);
+        let az = self.cache.draw_bg(p, xe, ye, cache_idx as usize);
         self.cache.define_active_zones(xe, ye, element_data, cache_idx as usize, &mut |az| {
             zones[z_idx] = Some(az);
             z_idx += 1;
@@ -708,13 +709,63 @@ impl UI {
                 },
             };
 
+        let mut buf : [u8; 64] = [0_u8; 64];
+        let mut bw = std::io::BufWriter::new(&mut buf[..]);
         let val     = self.get_element_value(id) as f64;
-        let val_str = self.get_formatted_value(id);
-        self.cache.draw_data(cr, xe, ye, cache_idx as usize,
-                             highlight, element_data, val, &val_str);
+        if !self.get_formatted_value(id, &mut bw) {
+            self.cache.draw_data(p, xe, ye, cache_idx as usize,
+                                 highlight, element_data, val,
+                                 &"write! fail");
+        } else {
+            self.cache.draw_data(p, xe, ye, cache_idx as usize,
+                                 highlight, element_data, val,
+                                 &std::str::from_utf8(bw.buffer()).unwrap());
+        }
     }
 
-    fn layout_container(&mut self, cr: &cairo::Context, crect: Rect, rows: &Vec<Vec<UIInput>>) {
+    fn layout_container(&mut self, p: &mut dyn Painter, border: bool, label: &str, depth: u32, crect: Rect, rows: &Vec<Vec<UIInput>>) {
+        let crect =
+            if border {
+                p.rect_fill(UI_BORDER_CLR,
+                    crect.x - UI_BORDER_WIDTH,
+                    crect.y - UI_BORDER_WIDTH,
+                    crect.w + 2.0 * UI_BORDER_WIDTH,
+                    crect.h + 2.0 * UI_BORDER_WIDTH);
+
+                p.rect_fill(
+                    if depth % 2 == 0 { UI_GUI_BG_CLR } else { UI_GUI_BG2_CLR },
+                    crect.x,
+                    crect.y,
+                    crect.w,
+                    crect.h);
+
+                let crect =
+                    if label.len() > 0 {
+                        // Draw container title with some padding in relation
+                        // to the border size.
+                        self.cache.draw_container_label(
+                            p, crect.x, crect.y, crect.w, label);
+
+                        Rect {
+                            x: crect.x,
+                            y: crect.y + UI_ELEM_TXT_H,
+                            w: crect.w,
+                            h: crect.h - UI_ELEM_TXT_H
+                        }
+                    } else {
+                        crect
+                    };
+
+                Rect {
+                    x: crect.x + UI_PADDING,
+                    y: crect.y + UI_PADDING,
+                    w: crect.w - 2.0 * UI_PADDING,
+                    h: crect.h - 2.0 * UI_PADDING,
+                }
+            } else {
+                crect
+            };
+
         let mut row_offs = 0;
         for row in rows.iter() {
             let mut col_offs = 0;
@@ -739,25 +790,25 @@ impl UI {
                     },
                     UIInput::Button(btn_data) => {
                         self.draw_element(
-                            cr, &el_rect, pos.alignment(),
+                            p, &el_rect, pos.alignment(),
                             btn_data,
                             ElementType::Button);
                     },
                     UIInput::Knob(knob_data) => {
                         self.draw_element(
-                            cr, &el_rect, pos.alignment(),
+                            p, &el_rect, pos.alignment(),
                             knob_data,
                             ElementType::Knob);
                     },
                     UIInput::KnobSmall(knob_data) => {
                         self.draw_element(
-                            cr, &el_rect, pos.alignment(),
+                            p, &el_rect, pos.alignment(),
                             knob_data,
                             ElementType::KnobSmall);
                     },
                     UIInput::KnobHuge(knob_data) => {
                         self.draw_element(
-                            cr, &el_rect, pos.alignment(),
+                            p, &el_rect, pos.alignment(),
                             knob_data,
                             ElementType::KnobHuge);
                     },
@@ -769,7 +820,7 @@ impl UI {
                         }
 
                         self.draw_element(
-                            cr, &el_rect, pos.alignment(),
+                            p, &el_rect, pos.alignment(),
                             graph_data,
                             match el {
                                 UIInput::Graph(_)      => ElementType::Graph,
@@ -777,9 +828,12 @@ impl UI {
                                 _                      => ElementType::GraphHuge,
                             });
                     },
-                    UIInput::Container(_, childs) => {
+                    UIInput::Container(_, childs, next_border) => {
                         let crect = el_rect;
-                        self.layout_container(cr, crect, childs);
+                        self.layout_container(
+                            p, *next_border, "",
+                            if border { depth + 1 } else { depth },
+                            crect, childs);
                     },
                 }
             }
@@ -788,26 +842,21 @@ impl UI {
         }
     }
 
-    pub fn draw(&mut self, cr: &cairo::Context) {
+    pub fn draw(&mut self, p: &mut dyn Painter) {
         let (ww, wh) = self.window_size;
 
-        cr.set_source_rgb(
-            UI_GUI_BG_CLR.0,
-            UI_GUI_BG_CLR.1,
-            UI_GUI_BG_CLR.2);
-        cr.rectangle(0.0, 0.0, ww, wh);
-        cr.fill();
+        p.rect_fill(UI_GUI_BG_CLR, 0.0, 0.0, ww, wh);
 
-        if let Some(ff) = self.font.as_ref() {
-            cr.set_font_face(ff);
-        } else {
-            let ff = cairo::FontFace::toy_create(
-                "serif",
-                cairo::FontSlant::Normal,
-                cairo::FontWeight::Normal);
-            cr.set_font_face(&ff);
-            self.font = Some(ff);
-        }
+//        if let Some(ff) = self.font.as_ref() {
+//            cr.set_font_face(ff);
+//        } else {
+//            let ff = cairo::FontFace::toy_create(
+//                "serif",
+//                cairo::FontSlant::Normal,
+//                cairo::FontWeight::Normal);
+//            cr.set_font_face(&ff);
+//            self.font = Some(ff);
+//        }
 
         self.zones.clear();
 
@@ -828,32 +877,7 @@ impl UI {
 
                     let crect = Rect { x, y, w, h };
 
-                    cr.rectangle(
-                        x - UI_BORDER_WIDTH,
-                        y - UI_BORDER_WIDTH,
-                        w + 2.0 * UI_BORDER_WIDTH,
-                        h + 2.0 * UI_BORDER_WIDTH);
-                    cr.set_source_rgb(
-                        UI_BORDER_CLR.0,
-                        UI_BORDER_CLR.1,
-                        UI_BORDER_CLR.2);
-                    cr.fill();
-
-                    cr.set_source_rgb(
-                        UI_GUI_BG_CLR.0,
-                        UI_GUI_BG_CLR.1,
-                        UI_GUI_BG_CLR.2);
-                    cr.rectangle(x, y, w, h);
-                    cr.fill();
-
-                    if label.len() > 0 {
-                        // Draw container title with some padding in relation
-                        // to the border size.
-                        self.cache.draw_container_label(
-                            cr, x + UI_BORDER_WIDTH, y + UI_BORDER_WIDTH, label);
-                    }
-
-                    self.layout_container(cr, crect, rows);
+                    self.layout_container(p, true, label, 0, crect, rows);
 
                     //d// println!("DRAW CONTAINER {},{},{},{}", x, y, w, h);
                 },

@@ -1,3 +1,6 @@
+// Copyright (c) 2020-2021 Weird Constructor <weirdconstructor@gmail.com>
+// This is a part of Kickmess. See README.md and COPYING for details.
+
 pub trait Channel {
     fn process(&mut self, f: &mut dyn FnMut(&[f32], &mut [f32]));
 }

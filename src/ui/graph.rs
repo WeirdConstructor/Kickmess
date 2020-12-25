@@ -1,8 +1,10 @@
+// Copyright (c) 2020-2021 Weird Constructor <weirdconstructor@gmail.com>
+// This is a part of Kickmess. See README.md and COPYING for details.
+
 use crate::ui::painting::*;
 use crate::ui::protocol::UIBtnMode;
 use crate::ui::element::{UIElement, UIElementData};
 use crate::ui::constants::*;
-use crate::ui::util::{draw_centered_text};
 
 pub struct Graph {
     w:          f64,
@@ -31,7 +33,7 @@ impl UIElement for Graph {
                            _f: &mut dyn FnMut(ActiveZone)) {
     }
 
-    fn draw_value(&self, cr: &cairo::Context, x: f64, y: f64,
+    fn draw_value(&self, p: &mut dyn Painter, x: f64, y: f64,
                   highlight: HLStyle, data: &dyn UIElementData,
                   value: f64, val_s: &str) {
 
@@ -41,53 +43,28 @@ impl UIElement for Graph {
         let h = h - 2.0 * UI_GRPH_BORDER;
         let (xo, yo) = (UI_GRPH_BORDER, UI_GRPH_BORDER);
 
-        cr.set_line_width(1.0);
-        cr.set_source_rgb(
-            UI_BTN_TXT_CLR.0,
-            UI_BTN_TXT_CLR.1,
-            UI_BTN_TXT_CLR.2);
-
         let name = &data.as_graph_data().unwrap().label;
         let data = data.as_graph_data().unwrap().data.borrow();
 
-        cr.save();
-        let mut first = true;
-        for p in data.iter() {
-            let px = p.0 as f64;
-            let py = 1.0 - (p.1 as f64);
-            if first {
-                cr.move_to(x + xo + px * w, y + yo + py * h);
-            } else {
-                cr.line_to(x + xo + px * w, y + yo + py * h);
-            }
-            first = false;
-        }
-        cr.stroke();
-        cr.restore();
-
-        cr.set_font_size(self.font_size);
-        draw_centered_text(
-            cr, x, y + self.size().1 - UI_ELEM_TXT_H, w, UI_ELEM_TXT_H, name);
+        p.path_stroke(
+            1.0, UI_BTN_TXT_CLR,
+            &mut (data.iter().map(|p: &(f64, f64)| (p.0 * w + xo + x, p.1 * h + yo + y))),
+            false);
+        p.label(
+            self.font_size, 0, UI_BTN_TXT_CLR,
+            x, y + self.size().1 - UI_ELEM_TXT_H,
+            w, UI_ELEM_TXT_H, name);
     }
 
-    fn draw_bg(&self, cr: &cairo::Context) {
+    fn draw_bg(&self, p: &mut dyn Painter, x: f64, y: f64) {
         let (w, h) = self.size();
         let h = h - UI_ELEM_TXT_H;
 
-        cr.set_source_rgb(
-            UI_BTN_BG_CLR.0,
-            UI_BTN_BG_CLR.1,
-            UI_BTN_BG_CLR.2);
-        cr.rectangle(0.0, 0.0, w, h + UI_ELEM_TXT_H);
-        cr.fill();
+        p.rect_fill(UI_BTN_BG_CLR, x, y, w, h + UI_ELEM_TXT_H);
 
-        cr.set_line_width(UI_GRPH_BORDER);
-        cr.set_source_rgb(
-            UI_GRPH_BORDER_CLR.0,
-            UI_GRPH_BORDER_CLR.1,
-            UI_GRPH_BORDER_CLR.2);
         let mid_border = UI_GRPH_BORDER / 2.0;
-        cr.rectangle(mid_border, mid_border, w - UI_GRPH_BORDER, h - UI_GRPH_BORDER);
-        cr.stroke();
+        p.rect_stroke(
+            UI_GRPH_BORDER, UI_GRPH_BORDER_CLR,
+            x + mid_border, y + mid_border, w - UI_GRPH_BORDER, h - UI_GRPH_BORDER);
     }
 }
