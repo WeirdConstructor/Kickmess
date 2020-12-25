@@ -18,5 +18,5 @@ glutin             = "0.24.1"
 vst                = { git = "https://github.com/rustaudio/vst-rs" }
 femtovg            = { git = "https://github.com/femtovg/femtovg" }
 raw-gl-context     = { git = "https://github.com/glowcoil/raw-gl-context" }
-#baseview           = { git = "https://github.com/RustAudio/baseview.git" }
-baseview           = { path = "/home/weictr/devel/other/baseview" }
+baseview           = { git = "https://github.com/RustAudio/baseview.git" }
+#baseview           = { path = "/home/weictr/devel/other/baseview" }

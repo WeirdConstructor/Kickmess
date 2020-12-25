@@ -11,7 +11,6 @@ use femtovg::{
 use raw_gl_context::{GlContext, GlConfig, Profile};
 
 use raw_window_handle::{
-    unix::XlibHandle,
     HasRawWindowHandle,
     RawWindowHandle
 };
