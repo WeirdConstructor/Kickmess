@@ -2,6 +2,7 @@ use femtovg::{
     renderer::OpenGl,
     Canvas,
     FontId,
+    ImageId,
     Color,
 };
 use raw_gl_context::{GlContext, GlConfig, Profile};
@@ -14,7 +15,7 @@ use raw_window_handle::{
 
 #[macro_use]
 use baseview::{
-    Size, Event, MouseEvent, MouseButton, Parent, Window,
+    Size, Event, WindowEvent, WindowInfo, MouseEvent, MouseButton, Parent, Window,
     WindowHandler, WindowOpenOptions, WindowScalePolicy,
     AppRunner,
 };
@@ -29,6 +30,50 @@ use crate::ui::painting::Painter;
 use crate::ui::{UI, UIEvent};
 use crate::ui;
 
+struct FrameTimeMeasurement {
+    buf: [u128; 60],
+    idx: usize,
+    cur: Option<std::time::Instant>,
+    lbl: String,
+}
+
+impl FrameTimeMeasurement {
+    fn new(lbl: &str) -> Self {
+        Self {
+            buf: [0; 60],
+            idx: 0,
+            cur: None,
+            lbl: lbl.to_string(),
+        }
+    }
+
+    fn start_measure(&mut self) {
+        self.cur = Some(std::time::Instant::now());
+    }
+
+    fn end_measure(&mut self) {
+        if let Some(cur) = self.cur.take() {
+            let dur_microseconds = cur.elapsed().as_micros();
+            if (self.idx + 1) >= self.buf.len() {
+                let mut min = 99999999;
+                let mut max = 0;
+                let mut avg = 0;
+                for b in self.buf.iter() {
+                    if *b < min { min = *b; }
+                    if *b > max { max = *b; }
+                    avg += *b;
+                }
+                avg /= self.buf.len() as u128;
+                println!("Frame time [{:10}]: min={:5.3}, max={:5.3}, avg={:5.3}", self.lbl, min as f64 / 1000.0, max as f64 / 1000.0, avg as f64 / 1000.0);
+                self.idx = 0;
+            } else {
+                self.idx += 1;
+            }
+            self.buf[self.idx] = dur_microseconds;
+        }
+    }
+}
+
 const WINDOW_WIDTH:  usize = 800;
 const WINDOW_HEIGHT: usize = 512;
 
@@ -36,6 +81,9 @@ pub struct TestWindowHandler {
     context:    GlContext,
     canvas:     Canvas<OpenGl>,
     font:       FontId,
+    img_buf:    ImageId,
+    ftm:        FrameTimeMeasurement,
+    ftm_redraw: FrameTimeMeasurement,
     ui:         UI,
 }
 
@@ -160,6 +208,20 @@ impl WindowHandler for TestWindowHandler {
                     };
                 self.ui.handle_ui_event(UIEvent::MouseButtonReleased(ev_btn));
             },
+            Event::Window(WindowEvent::Resized(info)) => {
+                let size = info.logical_size();
+
+                self.canvas.set_size(size.width as u32, size.height as u32, 1.0);
+                let (w, h) = (self.canvas.width(), self.canvas.height());
+                self.canvas.delete_image(self.img_buf);
+                self.img_buf =
+                    self.canvas.create_image_empty(
+                        w as usize, h as usize,
+                        femtovg::PixelFormat::Rgb8,
+                        femtovg::ImageFlags::FLIP_Y).expect("making image buffer");
+                self.ui.set_window_size(w as f64, h as f64);
+                self.ui.queue_redraw();
+            },
             _ => {
                 println!("UNHANDLED EVENT: {:?}", event);
             },
@@ -169,20 +231,43 @@ impl WindowHandler for TestWindowHandler {
     fn on_frame(&mut self) {
         self.ui.handle_client_command();
 
-        self.canvas.set_size(800, 512, 1.0);
-        self.canvas.clear_rect(0, 0, 800, 512, Color::rgbf(0.3, 0.5, 0.32));
+        let redraw = self.ui.needs_redraw();
 
-        let mut p = femtovg::Path::new();
-        p.move_to(10.0, 10.0);
-        p.line_to(100.0, 200.0);
-        let mut paint = femtovg::Paint::color(Color::rgbf(1.0, 0.0, 1.0));
-        paint.set_line_width(2.0);
-        self.canvas.stroke_path(&mut p, paint);
+        if redraw {
+            self.ftm.start_measure();
+        }
 
-        self.ui.draw(&mut MyPainter { canvas: &mut self.canvas, font: self.font });
+        if redraw {
+            self.ftm_redraw.start_measure();
+            self.canvas.set_render_target(femtovg::RenderTarget::Image(self.img_buf));
+            self.canvas.clear_rect(
+                0, 0,
+                self.canvas.width() as u32,
+                self.canvas.height() as u32,
+                Color::rgbf(0.3, 0.5, 0.32));
+            self.ui.draw(&mut MyPainter { canvas: &mut self.canvas, font: self.font });
+            self.ftm_redraw.end_measure();
+        }
+
+
+        let img_paint =
+            femtovg::Paint::image(
+                self.img_buf, 0.0, 0.0,
+                self.canvas.width(),
+                self.canvas.height(),
+                0.0, 1.0);
+        let mut path = femtovg::Path::new();
+        path.rect(0.0, 0.0, self.canvas.width(), self.canvas.height());
+
+        self.canvas.set_render_target(femtovg::RenderTarget::Screen);
+        self.canvas.fill_path(&mut path, img_paint);
 
         self.canvas.flush();
         self.context.swap_buffers();
+
+        if redraw {
+            self.ftm.end_measure();
+        }
     }
 }
 
@@ -222,7 +307,7 @@ pub fn open_window(parent: Option<*mut ::std::ffi::c_void>, ui_hdl: UIProviderHa
                     samples:       None,
                     srgb:          true,
                     double_buffer: true,
-                    vsync:         false,
+                    vsync:         true,
                 }).unwrap();
         println!("XX2");
         context.make_current();
@@ -235,7 +320,14 @@ pub fn open_window(parent: Option<*mut ::std::ffi::c_void>, ui_hdl: UIProviderHa
                 .expect("Cannot create renderer");
 
         let mut canvas = Canvas::new(renderer).expect("Cannot create canvas");
+        canvas.set_size(WINDOW_WIDTH as u32, WINDOW_HEIGHT as u32, 1.0);
         let font = canvas.add_font("DejaVuSerif.ttf").expect("can load font");
+        let (w, h) = (canvas.width(), canvas.height());
+        let img_buf =
+            canvas.create_image_empty(
+                w as usize, h as usize,
+                femtovg::PixelFormat::Rgb8,
+                femtovg::ImageFlags::FLIP_Y).expect("making image buffer");
 
         let mut ui = UI::new(ui_hdl);
 
@@ -246,6 +338,9 @@ pub fn open_window(parent: Option<*mut ::std::ffi::c_void>, ui_hdl: UIProviderHa
             context,
             canvas,
             font,
+            img_buf,
+            ftm:        FrameTimeMeasurement::new("img"),
+            ftm_redraw: FrameTimeMeasurement::new("redraw"),
 //                    drawable: window,
 //                    display: display as *mut x11::xlib::Display,
 //                    visual: vis,
