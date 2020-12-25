@@ -11,7 +11,7 @@ pub struct UIInputValue {
 #[derive(Clone)]
 pub struct UIValueSpec {
     fun: Arc<dyn Fn(f64) -> f64 + Send + Sync>,
-    fmt: Arc<dyn Fn(f64, f64) -> String + Send + Sync>,
+    fmt: Arc<dyn Fn(f64, f64, &mut std::io::Write) -> bool + Send + Sync>,
     coarse_step:    f64,
     fine_step:      f64,
     default:        f64,
@@ -27,7 +27,7 @@ impl UIValueSpec {
     pub fn new_id() -> Self {
         Self {
             fun: Arc::new(|x| x),
-            fmt: Arc::new(|_, x| format!("{:4.2}", x)),
+            fmt: Arc::new(|_, x, writer| write!(writer, "{:4.2}", x).is_ok()),
             coarse_step: 0.05,
             fine_step:   0.01,
             default:     0.0,
@@ -37,7 +37,7 @@ impl UIValueSpec {
     pub fn new(fun: Arc<dyn Fn(f64) -> f64 + Send + Sync>) -> Self {
         Self {
             fun,
-            fmt: Arc::new(|_, x| format!("{:4.2}", x)),
+            fmt: Arc::new(|_, x, writer| write!(writer, "{:4.2}", x).is_ok()),
             coarse_step: 0.05,
             fine_step:   0.01,
             default:     0.0,
@@ -58,12 +58,12 @@ impl UIValueSpec {
             fun: Arc::new(move |_x| {
                 0.0
             }),
-            fmt: Arc::new(move |v, _| {
+            fmt: Arc::new(move |v, _, writer| {
                 let mut idx : usize = (v * max_idx).round() as usize;
                 if idx > strings.len() {
-                    "?".to_string()
+                    write!(writer, "?").is_ok()
                 } else {
-                    strings[idx].clone()
+                    write!(writer, "{}", strings[idx]).is_ok()
                 }
             }),
             coarse_step: (1.0 / max_idx),
@@ -91,14 +91,14 @@ impl UIValueSpec {
 
                 0.0
             }),
-            fmt: Arc::new(move |v, _| {
+            fmt: Arc::new(move |v, _, writer| {
                 for (id, s) in id_2_str_map.iter() {
                     if *id == (v.round() as usize) {
-                        return s.clone()
+                        return write!(writer, "{}", s).is_ok();
                     }
                 }
 
-                empty_label.clone()
+                write!(writer, "{}", empty_label).is_ok()
             }),
             coarse_step: 0.0,
             fine_step:   0.0,
@@ -109,7 +109,7 @@ impl UIValueSpec {
     pub fn new_min_max_exp(min: f64, max: f64, width: usize, prec: usize) -> Self {
         Self {
             fun: Arc::new(move |x| min * (1.0 - (x * x)) + max * (x * x)),
-            fmt: Arc::new(move |_, x| format!("{2:0$.1$}", width, prec, x)),
+            fmt: Arc::new(move |_, x, writer| write!(writer, "{2:0$.1$}", width, prec, x).is_ok()),
             coarse_step: 0.05,
             fine_step:   0.001,
             default:     0.0,
@@ -119,7 +119,7 @@ impl UIValueSpec {
     pub fn new_min_max(min: f64, max: f64, width: usize, prec: usize) -> Self {
         Self {
             fun: Arc::new(move |x| min * (1.0 - x) + max * x),
-            fmt: Arc::new(move |_, x| format!("{2:0$.1$}", width, prec, x)),
+            fmt: Arc::new(move |_, x, writer| write!(writer, "{2:0$.1$}", width, prec, x).is_ok()),
             coarse_step: 0.05,
             fine_step:   0.001,
             default:     0.0,
@@ -138,10 +138,10 @@ impl UIValueSpec {
     }
 
     pub fn new_with_fmt(fun: Arc<dyn Fn(f64) -> f64 + Send + Sync>,
-                        fmt: Arc<dyn Fn(f64, f64) -> String + Send + Sync>) -> Self {
+                        fmt: Arc<dyn Fn(f64, f64, &mut std::io::Write) + Send + Sync>) -> Self {
         Self {
             fun,
-            fmt: Arc::new(|_, x| format!("{:4.2}", x)),
+            fmt: Arc::new(|_, x, writer| write!(writer, "{:4.2}", x).is_ok()),
             coarse_step: 0.05,
             fine_step:   0.001,
             default:     0.0,
@@ -151,8 +151,8 @@ impl UIValueSpec {
     pub fn fine(&self, steps: f64) -> f64   { self.fine_step   * steps }
     pub fn coarse(&self, steps: f64) -> f64 { self.coarse_step * steps }
     pub fn v2v(&self, x: f64) -> f64        { (self.fun)(x) }
-    pub fn fmt(&self, x: f64) -> String     { (self.fmt)(x, self.v2v(x)) }
     pub fn get_default(&self) -> f64        { self.default }
+    pub fn fmt(&self, x: f64, writer: &mut std::io::Write) -> bool { (self.fmt)(x, self.v2v(x), writer) }
 }
 
 // TODO: Define default margin/padding between grid cells

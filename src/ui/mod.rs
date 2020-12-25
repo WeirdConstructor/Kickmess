@@ -562,12 +562,13 @@ impl UI {
         self.value_specs[id].fine(steps)
     }
 
-    fn get_formatted_value(&self, id: usize) -> String {
+    fn get_formatted_value(&self, id: usize, writer: &mut std::io::Write) -> bool {
         if id >= self.value_specs.len() {
-            return String::from("bad valspec id");
+            write!(writer, "bad valspec id {}", id);
+            return true;
         }
 
-        self.value_specs[id].fmt(self.get_element_value(id) as f64)
+        self.value_specs[id].fmt(self.get_element_value(id) as f64, writer)
     }
 
     fn get_prev_toggle_value(&self, id: usize) -> f32 {
@@ -706,10 +707,18 @@ impl UI {
                 },
             };
 
+        let mut buf : [u8; 64] = [0_u8; 64];
+        let mut bw = std::io::BufWriter::new(&mut buf[..]);
         let val     = self.get_element_value(id) as f64;
-        let val_str = self.get_formatted_value(id);
-        self.cache.draw_data(p, xe, ye, cache_idx as usize,
-                             highlight, element_data, val, &val_str);
+        if !self.get_formatted_value(id, &mut bw) {
+            self.cache.draw_data(p, xe, ye, cache_idx as usize,
+                                 highlight, element_data, val,
+                                 &"write! fail");
+        } else {
+            self.cache.draw_data(p, xe, ye, cache_idx as usize,
+                                 highlight, element_data, val,
+                                 &std::str::from_utf8(bw.buffer()).unwrap());
+        }
     }
 
     fn layout_container(&mut self, p: &mut dyn Painter, crect: Rect, rows: &Vec<Vec<UIInput>>) {
