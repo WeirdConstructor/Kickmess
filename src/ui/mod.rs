@@ -677,6 +677,13 @@ impl UI {
     fn layout_container(&mut self, p: &mut dyn Painter, border: bool, label: &str, depth: u32, crect: Rect, rows: &Vec<Vec<UIInput>>) {
         let crect =
             if border {
+                let crect = Rect {
+                    x: crect.x + UI_MARGIN,
+                    y: crect.y + UI_MARGIN,
+                    w: crect.w - 2.0 * UI_MARGIN,
+                    h: crect.h - 2.0 * UI_MARGIN,
+                };
+
                 p.rect_fill(UI_BORDER_CLR,
                     crect.x - UI_BORDER_WIDTH,
                     crect.y - UI_BORDER_WIDTH,

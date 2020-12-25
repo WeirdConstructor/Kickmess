@@ -52,7 +52,7 @@ pub const UI_GRPH_FONT_SIZE       : f64 = UI_KNOB_FONT_SIZE;
 
 pub const UI_BOX_H          : f64 = 200.0;
 pub const UI_BOX_BORD       : f64 =   3.0;
-//pub const UI_MARGIN         : f64 =   5.0;
+pub const UI_MARGIN         : f64 =   4.0;
 pub const UI_PADDING        : f64 =   6.0;
 pub const UI_ELEM_TXT_H     : f64 =  20.0;
 pub const UI_SAFETY_PAD     : f64 =   1.0;

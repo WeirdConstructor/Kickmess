@@ -34,19 +34,62 @@ use crate::env::*;
 use crate::MAX_BLOCKSIZE;
 const PI2 : f64 = std::f64::consts::PI * 2.0;
 
-const P_FREQ_START      : usize = 0;
-const P_FREQ_END        : usize = 1;
-const P_F_ENV_RELEASE   : usize = 2;
-const P_DIST_START      : usize = 3;
-const P_DIST_END        : usize = 4;
-const P_DIST_GAIN       : usize = 5;
-const P_ENV_SLOPE       : usize = 6;
-const P_FREQ_SLOPE      : usize = 7;
-const P_NOISE           : usize = 8;
-const P_FREQ_NOTE_START : usize = 9;
-const P_FREQ_NOTE_END   : usize = 10;
-const P_ENV_RELEASE     : usize = 11;
-const P_PHASE_OFFS      : usize = 12;
+macro_rules! param_model {
+    ($x: ident) => {
+        $x!{public freq_start      exp no_smooth 0,   5.0,   3000.0, 150.0, "Start Freq."}
+        $x!{public freq_end        exp no_smooth 1,   5.0,   2000.0,  40.0, "End Freq."}
+        $x!{public f_env_release   exp no_smooth 2,   5.0,   5000.0, 440.0, "Length"}
+        $x!{public dist_start      lin smooth    3,   0.0,   100.0,    0.8, "Dist. Start"}
+        $x!{public dist_end        lin smooth    4,   0.0,   100.0,    0.8, "Dist. End"}
+        $x!{public dist_gain       lin smooth    5,   0.1,   5.0,      1.0, "Dist. Gain"}
+        $x!{public env_slope       lin smooth    6,   0.01,  1.0,    0.163, "Env. slope"}
+        $x!{public freq_slope      lin smooth    7,   0.001, 1.0,     0.06, "Freq. slope"}
+        $x!{public noise           lin smooth    8,   0.0,   1.0,      0.0, "Noise"}
+        $x!{public freq_note_start lin no_smooth 9,   0.0,   1.0,      1.0, "Start from note"}
+        $x!{public freq_note_end   lin no_smooth 10,  0.0,   1.0,      1.0, "End from note"}
+        $x!{public env_release     lin no_smooth 11,  1.0,1000.0,      5.0, "Env Release"}
+        $x!{public phase_offs      lin smooth    12,  0.0,   1.0,      0.0, "Click"}
+        $x!{private phase_test     lin smooth    12,  0.0,   1.0,      0.0, "Click"}
+    }
+}
+
+struct ParamModel<'a> {
+    v: &'a [f32],
+}
+
+macro_rules! param_impl_accessors {
+    ($_:ident $name:ident $e:ident $s:ident $idx:expr, $($tt:tt)*) => {
+        impl ParamModel<'_> {
+            fn $name(&self) -> f32 { self.v[$idx] }
+        }
+    }
+}
+
+impl ParamModel<'_> {
+    fn init_public_set(&self, ps: &mut ParamSet) {
+        macro_rules! param_add_ps {
+            (public $name:ident $e:ident $s:ident $idx:expr, $min:expr, $max:expr, $def:expr, $lbl:expr) => {
+                ps.add(ParamDefinition::from(Param::Freq1, $min, $max, $def, $lbl).$e().$s());
+            };
+            (private $($tt:tt)*) => {
+            }
+        }
+
+        param_model!{param_add_ps}
+    }
+
+    fn init_private_set(&self, ps: &mut ParamSet) {
+        macro_rules! param_add_ps_priv {
+            ($_:ident $name:ident $e:ident $s:ident $idx:expr, $min:expr, $max:expr, $def:expr, $lbl:expr) => {
+                ps.add(ParamDefinition::from(Param::Freq1, $min, $max, $def, $lbl).$e().$s());
+            }
+        }
+
+        param_model!{param_add_ps_priv}
+    }
+}
+
+param_model!{param_impl_accessors}
 
 const P_PARAM_NUM       : usize = 13;
 

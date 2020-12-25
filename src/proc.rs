@@ -67,8 +67,18 @@ impl ParamDefinition {
         Self(p, min, max, def, desc, false, true)
     }
 
+    pub fn lin(mut self) -> Self {
+        self.5 = false;
+        self
+    }
+
     pub fn exp(mut self) -> Self {
         self.5 = true;
+        self
+    }
+
+    pub fn smooth(mut self) -> Self {
+        self.6 = true;
         self
     }
 
