@@ -1,3 +1,6 @@
+// Copyright (c) 2020-2021 Weird Constructor <weirdconstructor@gmail.com>
+// This is a part of Kickmess. See README.md and COPYING for details.
+
 use std::sync::mpsc::{Sender, Receiver};
 use std::sync::Arc;
 use crate::ui::element::UIElementData;
@@ -251,7 +254,7 @@ impl UIElementData for UIGraphData {
 #[derive(Debug, Clone)]
 pub enum UIInput {
     None(UIPos),
-    Container(UIPos, Vec<Vec<UIInput>>),
+    Container(UIPos, Vec<Vec<UIInput>>, bool),
     KnobSmall(UIKnobData),
     Knob(UIKnobData),
     KnobHuge(UIKnobData),
@@ -268,7 +271,7 @@ impl UIInput {
     pub fn position(&self) -> UIPos {
         match self {
             UIInput::None(p)                             => *p,
-            UIInput::Container(p, _)                     => *p,
+            UIInput::Container(p, _, _)                  => *p,
             UIInput::KnobSmall(UIKnobData { pos, .. })   => *pos,
             UIInput::Knob(UIKnobData { pos, .. })        => *pos,
             UIInput::KnobHuge(UIKnobData { pos, .. })    => *pos,
@@ -315,8 +318,12 @@ impl UIInput {
         UIInput::KnobHuge(UIKnobData { id, label, pos })
     }
 
+    pub fn container_border(pos: UIPos, childs: Vec<Vec<UIInput>>) -> Self {
+        UIInput::Container(pos, childs, true)
+    }
+
     pub fn container(pos: UIPos, childs: Vec<Vec<UIInput>>) -> Self {
-        UIInput::Container(pos, childs)
+        UIInput::Container(pos, childs, false)
     }
 }
 

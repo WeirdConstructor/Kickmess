@@ -43,6 +43,11 @@ Public License Version 2 or any later. The former authors were:
 * Copyright (c) 2006-2014 Tobias Doerffel <tobydox/at/users.sourceforge.net>
 * Copyright (c) 2014 grejppi <grejppi/at/gmail.com>
 
+The DejaVuSerif.ttf font file has the license:
+
+    Fonts are (c) Bitstream (see below). DejaVu changes are in public domain.
+    Glyphs imported from Arev fonts are (c) Tavmjong Bah (see below)
+
 ### Why (A)GPL?
 
 Picking a license for my code bothered me for a long time. I read many

@@ -1,3 +1,6 @@
+// Copyright (c) 2020-2021 Weird Constructor <weirdconstructor@gmail.com>
+// This is a part of Kickmess. See README.md and COPYING for details.
+
 /* Parts of this file are translated from LMMS under GPLv2-or-later
  * into this project, which is GPLv3-or-later.
  *
@@ -5,7 +8,7 @@
  *
  * Copyright (c) 2006-2014 Tobias Doerffel <tobydox/at/users.sourceforge.net>
  * Copyright (c) 2014 grejppi <grejppi/at/gmail.com>
- * Copyright (c) 2020 Weird Constructor <weirdconstructor/at/gmail.com>
+ * Copyright (c) 2020-2021 Weird Constructor <weirdconstructor/at/gmail.com>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public

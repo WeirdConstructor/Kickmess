@@ -1,8 +1,10 @@
+// Copyright (c) 2020-2021 Weird Constructor <weirdconstructor@gmail.com>
+// This is a part of Kickmess. See README.md and COPYING for details.
+
 mod segmented_knob;
 mod button;
 mod draw_cache;
 mod element;
-mod util;
 mod graph;
 
 pub mod painting;
@@ -721,7 +723,49 @@ impl UI {
         }
     }
 
-    fn layout_container(&mut self, p: &mut dyn Painter, crect: Rect, rows: &Vec<Vec<UIInput>>) {
+    fn layout_container(&mut self, p: &mut dyn Painter, border: bool, label: &str, depth: u32, crect: Rect, rows: &Vec<Vec<UIInput>>) {
+        let crect =
+            if border {
+                p.rect_fill(UI_BORDER_CLR,
+                    crect.x - UI_BORDER_WIDTH,
+                    crect.y - UI_BORDER_WIDTH,
+                    crect.w + 2.0 * UI_BORDER_WIDTH,
+                    crect.h + 2.0 * UI_BORDER_WIDTH);
+
+                p.rect_fill(
+                    if depth % 2 == 0 { UI_GUI_BG_CLR } else { UI_GUI_BG2_CLR },
+                    crect.x,
+                    crect.y,
+                    crect.w,
+                    crect.h);
+
+                let crect =
+                    if label.len() > 0 {
+                        // Draw container title with some padding in relation
+                        // to the border size.
+                        self.cache.draw_container_label(
+                            p, crect.x, crect.y, crect.w, label);
+
+                        Rect {
+                            x: crect.x,
+                            y: crect.y + UI_ELEM_TXT_H,
+                            w: crect.w,
+                            h: crect.h - UI_ELEM_TXT_H
+                        }
+                    } else {
+                        crect
+                    };
+
+                Rect {
+                    x: crect.x + UI_PADDING,
+                    y: crect.y + UI_PADDING,
+                    w: crect.w - 2.0 * UI_PADDING,
+                    h: crect.h - 2.0 * UI_PADDING,
+                }
+            } else {
+                crect
+            };
+
         let mut row_offs = 0;
         for row in rows.iter() {
             let mut col_offs = 0;
@@ -784,9 +828,12 @@ impl UI {
                                 _                      => ElementType::GraphHuge,
                             });
                     },
-                    UIInput::Container(_, childs) => {
+                    UIInput::Container(_, childs, next_border) => {
                         let crect = el_rect;
-                        self.layout_container(p, crect, childs);
+                        self.layout_container(
+                            p, *next_border, "",
+                            if border { depth + 1 } else { depth },
+                            crect, childs);
                     },
                 }
             }
@@ -830,22 +877,7 @@ impl UI {
 
                     let crect = Rect { x, y, w, h };
 
-                    p.rect_fill(UI_BORDER_CLR,
-                        x - UI_BORDER_WIDTH,
-                        y - UI_BORDER_WIDTH,
-                        w + 2.0 * UI_BORDER_WIDTH,
-                        h + 2.0 * UI_BORDER_WIDTH);
-
-                    p.rect_fill(UI_GUI_BG_CLR, x, y, w, h);
-
-                    if label.len() > 0 {
-                        // Draw container title with some padding in relation
-                        // to the border size.
-                        self.cache.draw_container_label(
-                            p, x + UI_BORDER_WIDTH, y + UI_BORDER_WIDTH, label);
-                    }
-
-                    self.layout_container(p, crect, rows);
+                    self.layout_container(p, true, label, 0, crect, rows);
 
                     //d// println!("DRAW CONTAINER {},{},{},{}", x, y, w, h);
                 },

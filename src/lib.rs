@@ -1,13 +1,14 @@
+// Copyright (c) 2020-2021 Weird Constructor <weirdconstructor@gmail.com>
+// This is a part of Kickmess. See README.md and COPYING for details.
+
 #![allow(warnings)]
 pub mod proc;
 pub mod helpers;
 mod op_kickmess;
 mod env;
 mod editor;
-//pub mod pugl;
 pub mod ui;
-//pub mod baseview;
-pub mod baseview_femtovg;
+pub mod window;
 
 use proc::Channel;
 use proc::{ParamProvider, Param, ParamSet, MonoProcessor, MonoVoice, SmoothParameters};

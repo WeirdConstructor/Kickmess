@@ -1,3 +1,6 @@
+// Copyright (c) 2020-2021 Weird Constructor <weirdconstructor@gmail.com>
+// This is a part of Kickmess. See README.md and COPYING for details.
+
 use crate::ui::painting::*;
 use crate::ui::protocol::UIKnobData;
 use crate::ui::protocol::UIBtnData;
