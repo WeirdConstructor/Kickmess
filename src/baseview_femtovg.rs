@@ -85,6 +85,7 @@ pub struct TestWindowHandler {
     ftm:        FrameTimeMeasurement,
     ftm_redraw: FrameTimeMeasurement,
     ui:         UI,
+    scale:      f32,
 }
 
 struct MyPainter<'a> {
@@ -186,7 +187,10 @@ impl WindowHandler for TestWindowHandler {
     fn on_event(&mut self, _: &mut Window, event: Event) {
         match event {
             Event::Mouse(MouseEvent::CursorMoved { position: p }) => {
-                self.ui.handle_ui_event(UIEvent::MousePosition(p.x, p.y));
+                self.ui.handle_ui_event(
+                    UIEvent::MousePosition(
+                        p.x / self.scale as f64,
+                        p.y / self.scale as f64));
             },
             Event::Mouse(MouseEvent::ButtonPressed(btn)) => {
                 let ev_btn =
@@ -219,7 +223,19 @@ impl WindowHandler for TestWindowHandler {
                         w as usize, h as usize,
                         femtovg::PixelFormat::Rgb8,
                         femtovg::ImageFlags::FLIP_Y).expect("making image buffer");
-                self.ui.set_window_size(w as f64, h as f64);
+//                self.ui.set_window_size(w as f64, h as f64);
+
+//                let aspect = (WINDOW_WIDTH as f32) / (WINDOW_HEIGHT as f32);
+
+                let ri = (w as f32) / (h as f32);
+                let rs = (WINDOW_WIDTH as f32) / (WINDOW_HEIGHT as f32);
+
+                if rs > ri {
+                    self.scale = (w as f32) / (WINDOW_WIDTH as f32);
+                } else {
+                    self.scale = (h as f32) / (WINDOW_HEIGHT as f32);
+                }
+
                 self.ui.queue_redraw();
             },
             _ => {
@@ -240,12 +256,18 @@ impl WindowHandler for TestWindowHandler {
         if redraw {
             self.ftm_redraw.start_measure();
             self.canvas.set_render_target(femtovg::RenderTarget::Image(self.img_buf));
+            self.canvas.save();
+            self.canvas.scale(self.scale, self.scale);
             self.canvas.clear_rect(
                 0, 0,
                 self.canvas.width() as u32,
                 self.canvas.height() as u32,
-                Color::rgbf(0.3, 0.5, 0.32));
+                Color::rgbf(
+                    UI_GUI_BG_CLR.0 as f32,
+                    UI_GUI_BG_CLR.1 as f32,
+                    UI_GUI_BG_CLR.2 as f32));
             self.ui.draw(&mut MyPainter { canvas: &mut self.canvas, font: self.font });
+            self.canvas.restore();
             self.ftm_redraw.end_measure();
         }
 
@@ -341,6 +363,7 @@ pub fn open_window(parent: Option<*mut ::std::ffi::c_void>, ui_hdl: UIProviderHa
             img_buf,
             ftm:        FrameTimeMeasurement::new("img"),
             ftm_redraw: FrameTimeMeasurement::new("redraw"),
+            scale:      1.0,
 //                    drawable: window,
 //                    display: display as *mut x11::xlib::Display,
 //                    visual: vis,
