@@ -19,8 +19,7 @@ use raw_window_handle::{
 #[macro_use]
 use baseview::{
     Size, Event, WindowEvent, WindowInfo, MouseEvent, MouseButton, Parent, Window,
-    WindowHandler, WindowOpenOptions, WindowScalePolicy,
-    AppRunner,
+    WindowHandler, WindowOpenOptions, WindowScalePolicy, AppRunner,
 };
 
 use vst::plugin::{Info, Plugin};
@@ -215,6 +214,17 @@ impl WindowHandler for TestWindowHandler {
                     };
                 self.ui.handle_ui_event(UIEvent::MouseButtonReleased(ev_btn));
             },
+            Event::Keyboard(ev) => {
+                use keyboard_types::KeyState;
+                match ev.state {
+                    KeyState::Up => {
+                        self.ui.handle_ui_event(UIEvent::KeyReleased(ev));
+                    },
+                    KeyState::Down => {
+                        self.ui.handle_ui_event(UIEvent::KeyPressed(ev));
+                    },
+                }
+            },
             Event::Window(WindowEvent::Resized(info)) => {
                 let size = info.logical_size();
 
@@ -226,9 +236,6 @@ impl WindowHandler for TestWindowHandler {
                         w as usize, h as usize,
                         femtovg::PixelFormat::Rgb8,
                         femtovg::ImageFlags::FLIP_Y).expect("making image buffer");
-//                self.ui.set_window_size(w as f64, h as f64);
-
-//                let aspect = (WINDOW_WIDTH as f32) / (WINDOW_HEIGHT as f32);
 
                 let ri = (w as f32) / (h as f32);
                 let rs = (WINDOW_WIDTH as f32) / (WINDOW_HEIGHT as f32);

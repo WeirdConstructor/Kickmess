@@ -20,6 +20,7 @@ use crate::ui::draw_cache::{DrawCache};
 use crate::ui::protocol::{UIMsg, UICmd, UIPos, UIKnobData, UIProviderHandle,
                           UILayout, UIBtnData, UIInput, UIValueSpec, UIGraphValueSource};
 use crate::ui::constants::*;
+use keyboard_types::{Key, KeyboardEvent};
 
 const IMAGINARY_MAX_ID : usize = 9999999999;
 
@@ -47,63 +48,13 @@ pub enum MouseButton {
     Middle,
 }
 
-#[derive(Debug, Clone, Copy)]
-pub enum Key {
-    None,
-    Character(char),
-    Backspace,
-    Escape,
-    Delete,
-    F1,
-    F2,
-    F3,
-    F4,
-    F5,
-    F6,
-    F7,
-    F8,
-    F9,
-    F10,
-    F11,
-    F12,
-    Left,
-    Up,
-    Right,
-    Down,
-    PageUp,
-    PageDown,
-    Home,
-    End,
-    Insert,
-    ShiftL,
-    ShiftR,
-    CtrlL,
-    CtrlR,
-    AltL,
-    AltR,
-    SuperL,
-    SuperR,
-    KeyMenu,
-    KeyCapsLock,
-    KeyScrollLock,
-    KeyNumLock,
-    KeyPrintScreen,
-    KeyPause,
-}
-
-#[derive(Debug, Clone, Copy)]
-pub struct KeyEvent {
-    pub key: Key,
-    // TODO: handle modifiers!
-}
-
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 pub enum UIEvent {
     MousePosition(f64, f64),
     MouseButtonPressed(MouseButton),
     MouseButtonReleased(MouseButton),
-    KeyPressed(KeyEvent),
-    KeyReleased(KeyEvent),
+    KeyPressed(KeyboardEvent),
+    KeyReleased(KeyboardEvent),
     WindowClose,
 }
 
@@ -522,13 +473,13 @@ impl UI {
             },
             UIEvent::KeyPressed(key_event) => {
                 match key_event.key {
-                    Key::ShiftL => { self.fine_drag_key_held = true; },
+                    Key::Shift => { self.fine_drag_key_held = true; },
                     _ => { }
                 }
             },
             UIEvent::KeyReleased(key_event) => {
                 match key_event.key {
-                    Key::ShiftL => { self.fine_drag_key_held = false; },
+                    Key::Shift => { self.fine_drag_key_held = false; },
                     _ => { }
                 }
             },
