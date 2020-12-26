@@ -73,7 +73,7 @@ impl<'a> ParamModel<'a> {
     fn init_public_set(ps: &mut ParamSet) {
         macro_rules! param_add_ps {
             (public $name:ident $e:ident $s:ident $idx:expr, $min:expr, $max:expr, $def:expr, $lbl:expr) => {
-                ps.add(ParamDefinition::from(Param::Freq1, $min, $max, $def, $lbl).$e().$s());
+                ps.add(ParamDefinition::from($idx, $min, $max, $def, $lbl).$e().$s());
             };
             (private $($tt:tt)*) => {
             }
@@ -85,7 +85,7 @@ impl<'a> ParamModel<'a> {
     fn init_private_set(ps: &mut ParamSet) {
         macro_rules! param_add_ps_priv {
             ($_:ident $name:ident $e:ident $s:ident $idx:expr, $min:expr, $max:expr, $def:expr, $lbl:expr) => {
-                ps.add(ParamDefinition::from(Param::Freq1, $min, $max, $def, $lbl).$e().$s());
+                ps.add(ParamDefinition::from($idx, $min, $max, $def, $lbl).$e().$s());
             }
         }
 
@@ -135,19 +135,21 @@ impl OpKickmess {
 
 impl MonoProcessor for OpKickmess {
     fn init_params(ps: &mut ParamSet, public_ps: &mut ParamSet) {
-        public_ps.add2(ps, ParamDefinition::from(Param::Freq1,      5.0,   3000.0, 150.0, "Start Freq.").exp().no_smooth());
-        public_ps.add2(ps, ParamDefinition::from(Param::Freq2,      5.0,   2000.0,  40.0, "End Freq.").exp().no_smooth());
-        public_ps.add2(ps, ParamDefinition::from(Param::Decay1,     5.0,   5000.0, 440.0, "Length").exp().no_smooth());
-        public_ps.add2(ps, ParamDefinition::from(Param::Dist1,      0.0,   100.0,    0.8, "Dist. Start"));
-        public_ps.add2(ps, ParamDefinition::from(Param::Dist2,      0.0,   100.0,    0.8, "Dist. End"));
-        public_ps.add2(ps, ParamDefinition::from(Param::Gain1,      0.1,   5.0,      1.0, "Dist. Gain"));
-        public_ps.add2(ps, ParamDefinition::from(Param::Env1,       0.01,  1.0,    0.163, "Env. slope"));
-        public_ps.add2(ps, ParamDefinition::from(Param::Release1,   0.001, 1.0,     0.06, "Freq. slope"));
-        public_ps.add2(ps, ParamDefinition::from(Param::Noise1,     0.0,   1.0,      0.0, "Noise"));
-        public_ps.add2(ps, ParamDefinition::from(Param::S1,         0.0,   1.0,      1.0, "Start from note").no_smooth());
-        public_ps.add2(ps, ParamDefinition::from(Param::S2,         0.0,   1.0,      1.0, "End from note").no_smooth());
-        public_ps.add2(ps, ParamDefinition::from(Param::Release2,   1.0,1000.0,      5.0, "Env Release").no_smooth());
-        public_ps.add2(ps, ParamDefinition::from(Param::Phase1,     0.0,   1.0,      0.0, "Click"));
+//        public_ps.add2(ps, ParamDefinition::from(Param::Freq1,      5.0,   3000.0, 150.0, "Start Freq.").exp().no_smooth());
+//        public_ps.add2(ps, ParamDefinition::from(Param::Freq2,      5.0,   2000.0,  40.0, "End Freq.").exp().no_smooth());
+//        public_ps.add2(ps, ParamDefinition::from(Param::Decay1,     5.0,   5000.0, 440.0, "Length").exp().no_smooth());
+//        public_ps.add2(ps, ParamDefinition::from(Param::Dist1,      0.0,   100.0,    0.8, "Dist. Start"));
+//        public_ps.add2(ps, ParamDefinition::from(Param::Dist2,      0.0,   100.0,    0.8, "Dist. End"));
+//        public_ps.add2(ps, ParamDefinition::from(Param::Gain1,      0.1,   5.0,      1.0, "Dist. Gain"));
+//        public_ps.add2(ps, ParamDefinition::from(Param::Env1,       0.01,  1.0,    0.163, "Env. slope"));
+//        public_ps.add2(ps, ParamDefinition::from(Param::Release1,   0.001, 1.0,     0.06, "Freq. slope"));
+//        public_ps.add2(ps, ParamDefinition::from(Param::Noise1,     0.0,   1.0,      0.0, "Noise"));
+//        public_ps.add2(ps, ParamDefinition::from(Param::S1,         0.0,   1.0,      1.0, "Start from note").no_smooth());
+//        public_ps.add2(ps, ParamDefinition::from(Param::S2,         0.0,   1.0,      1.0, "End from note").no_smooth());
+//        public_ps.add2(ps, ParamDefinition::from(Param::Release2,   1.0,1000.0,      5.0, "Env Release").no_smooth());
+//        public_ps.add2(ps, ParamDefinition::from(Param::Phase1,     0.0,   1.0,      0.0, "Click"));
+        ParamModel::init_public_set(public_ps);
+        ParamModel::init_private_set(ps);
     }
 
     fn set_sample_rate(&mut self, sr: f32) {

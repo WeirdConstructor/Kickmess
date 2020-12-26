@@ -10,7 +10,7 @@ mod editor;
 pub mod ui;
 pub mod window;
 
-use proc::{ParamProvider, Param, ParamSet, MonoProcessor, MonoVoice, SmoothParameters};
+use proc::{ParamProvider, ParamDefinition, ParamSet, MonoProcessor, MonoVoice, SmoothParameters};
 use op_kickmess::*;
 use helpers::note_to_freq;
 
@@ -212,46 +212,12 @@ impl Plugin for Kickmess {
 pub(crate) struct KickmessVSTParams {
     ps:             ParamSet,
     public_ps:      ParamSet,
-
-    freq_start:      AtomicFloat,
-    freq_end:        AtomicFloat,
-    length:          AtomicFloat,
-    dist_start:      AtomicFloat,
-    dist_end:        AtomicFloat,
-    dist_gain:       AtomicFloat,
-    env_slope:       AtomicFloat,
-    noise:           AtomicFloat,
-    freq_slope:      AtomicFloat,
-    env_release:     AtomicFloat,
-    freq_note_start: AtomicFloat,
-    freq_note_end:   AtomicFloat,
-    phase_offs:      AtomicFloat,
-}
-
-impl KickmessVSTParams {
-    fn atom_float(&self, p: Param) -> Option<&AtomicFloat> {
-        match p {
-            Param::Freq1    => Some(&self.freq_start),
-            Param::Freq2    => Some(&self.freq_end),
-            Param::Decay1   => Some(&self.length),
-            Param::Dist1    => Some(&self.dist_start),
-            Param::Dist2    => Some(&self.dist_end),
-            Param::Gain1    => Some(&self.dist_gain),
-            Param::Env1     => Some(&self.env_slope),
-            Param::Release1 => Some(&self.freq_slope),
-            Param::Release2 => Some(&self.env_release),
-            Param::Noise1   => Some(&self.noise),
-            Param::S1       => Some(&self.freq_note_start),
-            Param::S2       => Some(&self.freq_note_end),
-            Param::Phase1   => Some(&self.phase_offs),
-            _               => None,
-        }
-    }
+    params:         Vec<AtomicFloat>,
 }
 
 impl ParamProvider for KickmessVSTParams {
-    fn param(&self, p: Param) -> f32 {
-        if let Some(af) = self.atom_float(p) {
+    fn param(&self, idx: usize) -> f32 {
+        if let Some(af) = self.params.get(idx) {
             af.get()
         } else {
             0.0
@@ -259,9 +225,8 @@ impl ParamProvider for KickmessVSTParams {
     }
 }
 
-fn new_default_atom(ps: &mut ParamSet, p: Param) -> AtomicFloat {
-    let idx = ps.idx_of(p).expect("Having a parameter here!");
-    AtomicFloat::new(ps.definition(idx).unwrap().default_p())
+fn new_default_atom(ps: &mut ParamSet, p: &ParamDefinition) -> AtomicFloat {
+    AtomicFloat::new(ps.definition(p.idx()).unwrap().default_p())
 }
 
 impl Default for KickmessVSTParams {
@@ -270,22 +235,16 @@ impl Default for KickmessVSTParams {
         let mut public_ps = ParamSet::new();
         OpKickmess::init_params(&mut ps, &mut public_ps);
 
+        let mut params = vec![];
+
+        for idx in 0..ps.param_count() {
+            params.push(AtomicFloat::new(ps.definition(idx).unwrap().default_p()));
+        }
+
         KickmessVSTParams {
-            freq_start:      new_default_atom(&mut ps, Param::Freq1),
-            freq_end:        new_default_atom(&mut ps, Param::Freq2),
-            length:          new_default_atom(&mut ps, Param::Decay1),
-            dist_start:      new_default_atom(&mut ps, Param::Dist1),
-            dist_end:        new_default_atom(&mut ps, Param::Dist2),
-            dist_gain:       new_default_atom(&mut ps, Param::Gain1),
-            env_slope:       new_default_atom(&mut ps, Param::Env1),
-            noise:           new_default_atom(&mut ps, Param::Noise1),
-            freq_slope:      new_default_atom(&mut ps, Param::Release1),
-            env_release:     new_default_atom(&mut ps, Param::Release2),
-            freq_note_start: new_default_atom(&mut ps, Param::S1),
-            freq_note_end:   new_default_atom(&mut ps, Param::S2),
-            phase_offs:      new_default_atom(&mut ps, Param::Phase1),
             ps,
             public_ps,
+            params,
         }
     }
 }
@@ -297,7 +256,7 @@ impl PluginParameters for KickmessVSTParams {
 
     fn set_parameter(&self, index: i32, val: f32) {
         if let Some(pd) = self.public_ps.definition(index as usize) {
-            if let Some(af) = self.atom_float(pd.param()) {
+            if let Some(af) = self.params.get(pd.idx()) {
                 af.set(val);
             }
         }

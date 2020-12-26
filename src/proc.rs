@@ -1,65 +1,20 @@
 // Copyright (c) 2020-2021 Weird Constructor <weirdconstructor@gmail.com>
 // This is a part of Kickmess. See README.md and COPYING for details.
 
-#[derive(Debug, Copy, Clone, PartialEq, PartialOrd)]
-pub enum Param {
-    None,
-    Freq1,
-    Freq2,
-    Decay1,
-    Decay2,
-    Release1,
-    Release2,
-    Gain1,
-    Gain2,
-    Dist1,
-    Dist2,
-    Noise1,
-    Env1,
-    Phase1,
-    S1,
-    S2,
-    Threshold1,
-    Threshold2,
-    Tmp1,
-    Tmp2,
-}
-
-pub trait ParamMapper {
-    fn map(&self, p: Param) -> Param;
-}
-
-impl ParamMapper for dyn Fn(Param) -> Param {
-    fn map(&self, p: Param) -> Param { self(p) }
-}
-
-impl ParamMapper for (Param, Param) {
-    fn map(&self, p: Param) -> Param {
-        if self.0 == p { self.1 }
-        else           { p }
-    }
-}
-
 pub trait ParamProvider {
-    fn param(&self, p: Param) -> f32;
-}
-
-impl ParamProvider for (&dyn ParamProvider, &dyn ParamMapper) {
-    fn param(&self, p: Param) -> f32 {
-        self.0.param(self.1.map(p))
-    }
-}
-
-impl ParamProvider for f32 {
-    fn param(&self, _p: Param) -> f32 { *self }
+    fn param(&self, p: usize) -> f32;
 }
 
 #[derive(Debug, Clone, Copy)]
-pub struct ParamDefinition(Param, f32, f32, f32, &'static str, bool, bool);
+pub struct ParamDefinition(usize, f32, f32, f32, &'static str, bool, bool);
 
 impl ParamDefinition {
-    pub fn from(p: Param, min: f32, max: f32, def: f32, desc: &'static str) -> Self {
-        Self(p, min, max, def, desc, false, true)
+    pub fn new() -> Self {
+        Self(0, 0.0, 0.0, 0.0, "", false, false)
+    }
+
+    pub fn from(idx: usize, min: f32, max: f32, def: f32, desc: &'static str) -> Self {
+        Self(idx, min, max, def, desc, false, true)
     }
 
     pub fn lin(mut self) -> Self {
@@ -82,7 +37,7 @@ impl ParamDefinition {
         self
     }
 
-    pub fn param(&self) -> Param { self.0 }
+    pub fn idx(&self) -> usize { self.0 }
 
     pub fn name(&self) -> &'static str { self.4 }
 
@@ -118,12 +73,10 @@ impl ParamSet {
     }
 
     pub fn add(&mut self, pd: ParamDefinition) {
-        self.defines.push(pd)
-    }
-
-    pub fn add2(&mut self, other: &mut Self, pd: ParamDefinition) {
-        other.add(pd);
-        self.defines.push(pd)
+        if pd.idx() >= self.defines.len() {
+            self.defines.resize(pd.idx() + 1, ParamDefinition::new());
+        }
+        self.defines[pd.idx()] = pd;
     }
 
     pub fn param_count(&self) -> usize { self.defines.len() }
@@ -133,16 +86,6 @@ impl ParamSet {
         }
 
         Some(&self.defines[idx])
-    }
-
-    pub fn idx_of(&self, p: Param) -> Option<usize> {
-        for (i, d) in self.defines.iter().enumerate() {
-            if d.0 == p {
-                return Some(i);
-            }
-        }
-
-        None
     }
 
     pub fn get_raw(&self, idx: usize, pp: &dyn ParamProvider) -> f32 {
@@ -169,13 +112,6 @@ impl ParamSet {
         }
     }
 }
-
-// Foldback:
-//    if( in >= m_threshold || in < -m_threshold )
-//    {
-//        return ( fabsf( fabsf( fmodf( in - m_threshold, m_threshold*4 ) ) - m_threshold*2 ) - m_threshold ) * m_gain;
-//    }
-//    return in * m_gain;
 
 pub trait MonoProcessor {
     fn init_params(ps: &mut ParamSet, public_ps: &mut ParamSet);
@@ -314,12 +250,6 @@ impl SmoothParameters {
 
     fn swap(&mut self) {
         std::mem::swap(&mut self.last, &mut self.current);
-    }
-}
-
-impl ParamProvider for Vec<f32> {
-    fn param(&self, p: Param) -> f32 {
-        self[p as usize]
     }
 }
 
