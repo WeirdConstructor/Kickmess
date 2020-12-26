@@ -53,6 +53,7 @@ impl REnv {
                     self.state = EnvPosState::Running;
                     self.len_samples =
                         ((self.len_ms * self.srate) / 1000.0) as usize;
+                    println!("TRIGGER: {} {}", self.len_samples, self.len_ms);
                     self.pos   = 0;
                 } else {
                     return EnvPos::Off;

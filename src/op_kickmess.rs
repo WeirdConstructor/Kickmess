@@ -49,7 +49,7 @@ macro_rules! param_model {
         $x!{public freq_note_end   lin no_smooth 10,  0.0,   1.0,      1.0, "End from note"}
         $x!{public env_release     lin no_smooth 11,  1.0,1000.0,      5.0, "Env Release"}
         $x!{public phase_offs      lin smooth    12,  0.0,   1.0,      0.0, "Click"}
-        $x!{private phase_test     lin smooth    12,  0.0,   1.0,      0.0, "Click"}
+        $x!{private phase_test     lin smooth    13,  0.0,   1.0,      0.0, "Click2"}
     }
 }
 
@@ -156,12 +156,13 @@ impl MonoProcessor for OpKickmess {
         self.f_env.set_sample_rate(sr);
     }
 
-    fn process(&mut self, params: &SmoothParameters, out: &mut [f32]) {
+    fn process(&mut self, params: &SmoothParameters, proc_offs: usize, out: &mut [f32]) {
         let block_params = ParamModel::new(params.get_frame(0));
         self.f_env.set_release(block_params.f_env_release());
         self.release.set_release(block_params.env_release());
 
         for (offs, os) in out.iter_mut().enumerate() {
+            let offs = offs + proc_offs;
             let params = ParamModel::new(params.get_frame(offs));
 
             let mut kick_sample : f64 = 0.0;

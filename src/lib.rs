@@ -143,18 +143,19 @@ impl Plugin for Kickmess {
             self.process_voice_events();
         }
 
-        let out_buf = outputbuf.get_mut(0);
-        let mut remaining = outputbuf.get_mut(0).len();
+        let out_buf       = outputbuf.get_mut(0);
+        let mut remaining = out_buf.len();
         let mut offs      = 0;
         loop {
             let advance_frames = if remaining > 64 { 64 } else { remaining };
             self.smooth_param.advance_params(
-                advance_frames, outputbuf.get_mut(0).len(), &self.params.ps, &*self.params);
+                advance_frames, out_buf.len(), &self.params.ps, &*self.params);
 
             for voice in self.voices.iter_mut() {
                 if voice.is_playing() {
                     voice.process(
                         &self.smooth_param,
+                        offs,
                         &mut out_buf[offs..(offs + advance_frames)]);
                 }
             }

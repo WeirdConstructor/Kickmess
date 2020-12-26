@@ -179,7 +179,7 @@ impl ParamSet {
 
 pub trait MonoProcessor {
     fn init_params(ps: &mut ParamSet, public_ps: &mut ParamSet);
-    fn process(&mut self, params: &SmoothParameters, out: &mut [f32]);
+    fn process(&mut self, params: &SmoothParameters, offs: usize, out: &mut [f32]);
     fn set_sample_rate(&mut self, srate: f32);
 }
 
