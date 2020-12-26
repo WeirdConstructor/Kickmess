@@ -183,11 +183,11 @@ pub fn p2range_exp(x: f32, a: f32, b: f32) -> f32 {
 }
 
 pub fn range2p(v: f32, a: f32, b: f32) -> f32 {
-    (v - b) / (a - b)
+    (v - a) / (b - a).abs()
 }
 
 pub fn range2p_exp(v: f32, a: f32, b: f32) -> f32 {
-    ((v - b) / (a - b)).sqrt()
+    ((v - a) / (b - a).abs()).sqrt()
 }
 
 // gain: 24.0 - -90.0   default = 0.0
@@ -196,5 +196,27 @@ pub fn gain2coef(gain: f32) -> f32 {
         10.0_f32.powf(gain * 0.05)
     } else {
         0.0
+    }
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn check_range2p_exp() {
+        let a = p2range_exp(0.5, 1.0, 100.0);
+        let x = range2p_exp(a, 1.0, 100.0);
+
+        assert!((x - 0.5).abs() < std::f32::EPSILON);
+    }
+
+    #[test]
+    fn check_range2p() {
+        let a = p2range(0.5, 1.0, 100.0);
+        let x = range2p(a, 1.0, 100.0);
+
+        assert!((x - 0.5).abs() < std::f32::EPSILON);
     }
 }
