@@ -5,6 +5,16 @@ pub trait ParamProvider {
     fn param(&self, p: usize) -> f32;
 }
 
+impl ParamProvider for std::vec::Vec<f32> {
+    fn param(&self, p: usize) -> f32 {
+        if let Some(v) = self.get(p) {
+            *v
+        } else {
+            0.0
+        }
+    }
+}
+
 #[derive(Debug, Clone, Copy)]
 pub struct ParamDefinition(usize, f32, f32, f32, &'static str, bool, bool);
 
@@ -202,7 +212,6 @@ impl SmoothParameters {
         let param_count      = self.param_count;
         let last_frame_cnt   = self.last_frame_cnt;
         let last_frame_idx   = self.last_frame_idx;
-        let nframe_increment = 1.0 / (total_nframes - 1) as f64;
 
         let last_v = &self.last[last_frame_idx..(last_frame_idx + param_count)];
 
@@ -210,8 +219,10 @@ impl SmoothParameters {
             let end_param_val = ps.get(pi, pp) as f64;
             let last_val      = last_v[pi] as f64;
 
-            if (end_param_val - last_val).abs() < std::f64::EPSILON
+            if (end_param_val - last_val).abs() > std::f64::EPSILON
                && ps.is_smooth(pi) {
+
+                let nframe_increment = 1.0 / (total_nframes - 1) as f64;
 
                 for i in 0..frames {
                     // calculate the interpolation factor between last_v and
@@ -274,29 +285,29 @@ mod tests {
         let mut smooth = SmoothParameters::new(64, 4);
 
         let mut ps = ParamSet::new();
-        ps.add(ParamDefinition::from(Param::Freq1,  5.0, 3000.0, 150.0, "Start Freq.").exp());
-        ps.add(ParamDefinition::from(Param::Freq2,  5.0, 2000.0,  40.0, "End Freq.").exp().no_smooth());
-        ps.add(ParamDefinition::from(Param::Decay1, 5.0, 5000.0, 440.0, "Length").exp());
+        ps.add(ParamDefinition::from(1,  5.0, 3000.0, 150.0, "Start Freq.").exp().smooth());
+        ps.add(ParamDefinition::from(2,  5.0, 2000.0,  40.0, "End Freq.").exp().no_smooth());
+        ps.add(ParamDefinition::from(3,  5.0, 5000.0, 440.0, "Length").exp().smooth());
 
         let new_params = vec![0.0, 0.3, 0.4, 0.5];
         smooth.advance_params(2, 66, &ps, &new_params);
 
         assert_eq!(
             &fmt_vec(&smooth.current[0..4]),
-            "[274.55, 324.20, 1253.75, 0.00]");
+            "[0.00, 274.55, 324.20, 1253.75]");
         assert_eq!(
             &fmt_vec(&smooth.current[4..8]),
-            "[274.55, 324.20, 1253.75, 0.00]");
+            "[0.00, 274.55, 324.20, 1253.75]");
 
         let new_params = vec![0.0, 1.0, 1.0, 1.0];
         smooth.advance_params(64, 66, &ps, &new_params);
 
         assert_eq!(
             &fmt_vec(&smooth.current[(63 * 4)..(64 * 4)]),
-            "[3000.00, 2000.00, 5000.00, 0.00]");
+            "[0.00, 3000.00, 2000.00, 5000.00]");
         assert_eq!(
             &fmt_vec(&smooth.current[0..4]),
-            "[358.41, 2000.00, 1369.02, 0.00]");
+            "[0.00, 358.41, 2000.00, 1369.02]");
 
 
         let new_params = vec![0.0, 0.0, 0.0, 0.0];
@@ -304,9 +315,9 @@ mod tests {
 
         assert_eq!(
             &fmt_vec(&smooth.current[(63 * 4)..(64 * 4)]),
-            "[5.00, 5.00, 5.00, 0.00]");
+            "[0.00, 5.00, 5.00, 5.00]");
         assert_eq!(
             &fmt_vec(&smooth.current[0..4]),
-            "[3000.00, 5.00, 5000.00, 0.00]");
+            "[0.00, 3000.00, 5.00, 5000.00]");
     }
 }
