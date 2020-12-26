@@ -51,6 +51,8 @@ impl REnv {
             EnvPosState::StartOffs(s_offs) => {
                 if s_offs == offs {
                     self.state = EnvPosState::Running;
+                    self.len_samples =
+                        ((self.len_ms * self.srate) / 1000.0) as usize;
                     self.pos   = 0;
                 } else {
                     return EnvPos::Off;
@@ -91,8 +93,6 @@ impl REnv {
 
     pub fn trigger(&mut self, offs: usize) {
         self.state = EnvPosState::StartOffs(offs);
-        self.len_samples =
-            ((self.len_ms * self.srate) / 1000.0) as usize;
     }
 
     pub fn active(&self) -> bool {

@@ -1,11 +1,6 @@
 // Copyright (c) 2020-2021 Weird Constructor <weirdconstructor@gmail.com>
 // This is a part of Kickmess. See README.md and COPYING for details.
 
-pub trait Channel {
-    fn process(&mut self, f: &mut dyn FnMut(&[f32], &mut [f32]));
-}
-
-
 #[derive(Debug, Copy, Clone, PartialEq, PartialOrd)]
 pub enum Param {
     None,
@@ -184,8 +179,7 @@ impl ParamSet {
 
 pub trait MonoProcessor {
     fn init_params(ps: &mut ParamSet, public_ps: &mut ParamSet);
-    fn read_params(&mut self, ps: &ParamSet, pp: &dyn ParamProvider);
-    fn process(&mut self, c: &mut dyn Channel);
+    fn process(&mut self, params: &SmoothParameters, out: &mut [f32]);
     fn set_sample_rate(&mut self, srate: f32);
 }
 
@@ -278,9 +272,10 @@ impl SmoothParameters {
 
         for pi in 0..param_count {
             let end_param_val = ps.get(pi, pp) as f64;
+            let last_val      = last_v[pi] as f64;
 
-            if ps.is_smooth(pi) {
-                let last_val = last_v[pi] as f64;
+            if (end_param_val - last_val).abs() < std::f64::EPSILON
+               && ps.is_smooth(pi) {
 
                 for i in 0..frames {
                     // calculate the interpolation factor between last_v and

@@ -44,7 +44,7 @@ macro_rules! param_model {
         $x!{public dist_gain       lin smooth    5,   0.1,   5.0,      1.0, "Dist. Gain"}
         $x!{public env_slope       lin smooth    6,   0.01,  1.0,    0.163, "Env. slope"}
         $x!{public freq_slope      lin smooth    7,   0.001, 1.0,     0.06, "Freq. slope"}
-        $x!{public noise           lin smooth    8,   0.0,   1.0,      0.0, "Noise"}
+        $x!{public noise           exp smooth    8,   0.0,   1.0,      0.0, "Noise"}
         $x!{public freq_note_start lin no_smooth 9,   0.0,   1.0,      1.0, "Start from note"}
         $x!{public freq_note_end   lin no_smooth 10,  0.0,   1.0,      1.0, "End from note"}
         $x!{public env_release     lin no_smooth 11,  1.0,1000.0,      5.0, "Env Release"}
@@ -65,7 +65,11 @@ macro_rules! param_impl_accessors {
     }
 }
 
-impl ParamModel<'_> {
+impl<'a> ParamModel<'a> {
+    fn new(v: &'a [f32]) -> Self {
+        Self { v }
+    }
+
     fn init_public_set(&self, ps: &mut ParamSet) {
         macro_rules! param_add_ps {
             (public $name:ident $e:ident $s:ident $idx:expr, $min:expr, $max:expr, $def:expr, $lbl:expr) => {
@@ -91,26 +95,14 @@ impl ParamModel<'_> {
 
 param_model!{param_impl_accessors}
 
-const P_PARAM_NUM       : usize = 13;
 
 pub struct OpKickmess {
     id:              usize,
-    params:          [f32; P_PARAM_NUM],
-    freq_start:      f32,
-    freq_end:        f32,
-    dist_start:      f32,
-    dist_end:        f32,
-    dist_gain:       f32,
-    env_slope:       f32,
-    noise:           f32,
-    freq_slope:      f32,
-    freq_note_start: f32,
-    freq_note_end:   f32,
-    phase_offs:      f64,
 
     cur_f_start:     f64,
     cur_f_end:       f64,
 
+    init_note_freq:  f64,
     note_freq:       f64,
     cur_phase:       f32,
     srate:           f32,
@@ -124,22 +116,11 @@ impl OpKickmess {
     pub fn new() -> Self {
         Self {
             id:              0,
-            params:          [0.0; P_PARAM_NUM],
-            freq_start:      0.0,
-            freq_end:        0.0,
-            dist_start:      0.0,
-            dist_end:        0.0,
-            dist_gain:       0.0,
-            env_slope:       0.0,
-            noise:           0.0,
-            freq_slope:      0.0,
-            freq_note_start: 0.0,
-            freq_note_end:   0.0,
-            phase_offs:      0.0,
 
             cur_f_start:     0.0,
             cur_f_end:       0.0,
 
+            init_note_freq:  0.0,
             note_freq:       0.0,
             cur_phase:       0.0,
             srate:           0.0,
@@ -175,110 +156,97 @@ impl MonoProcessor for OpKickmess {
         self.f_env.set_sample_rate(sr);
     }
 
-    fn read_params(&mut self, ps: &ParamSet, pp: &dyn ParamProvider) {
-        self.freq_start       = ps.get( 0, pp);
-        self.freq_end         = ps.get( 1, pp);
-        self.f_env.set_release( ps.get( 2, pp));
-        self.dist_start       = ps.get( 3, pp);
-        self.dist_end         = ps.get( 4, pp);
-        self.dist_gain        = ps.get( 5, pp);
-        self.env_slope        = ps.get( 6, pp);
-        self.freq_slope       = ps.get( 7, pp);
-        self.noise            = ps.get( 8, pp);
-        self.freq_note_start  = ps.get( 9, pp);
-        self.freq_note_end    = ps.get(10, pp);
-        self.release.set_release(ps.get(11, pp));
-        self.phase_offs       = ps.get(12, pp) as f64 * PI2;
+    fn process(&mut self, params: &SmoothParameters, out: &mut [f32]) {
+        let block_params = ParamModel::new(params.get_frame(0));
+        self.f_env.set_release(block_params.f_env_release());
+        self.release.set_release(block_params.env_release());
 
-        self.noise = self.noise * self.noise;
-    }
+        for (offs, os) in out.iter_mut().enumerate() {
+            let params = ParamModel::new(params.get_frame(offs));
 
-    fn process(&mut self, l: &mut dyn Channel) {
-        let has_dist_env = (self.dist_start - self.dist_end).abs() > 0.0001;
+            let mut kick_sample : f64 = 0.0;
 
-        l.process(&mut |_i: &[f32], o: &mut [f32]| {
-            for (offs, os) in o.iter_mut().enumerate() {
-                let mut kick_sample : f64 = 0.0;
+            if let EnvPos::Release(pos, env_value) = self.f_env.next(offs) {
+                if pos == 0 {
+                    self.release.reset();
+                    self.cur_phase = 0.0;
 
-                if let EnvPos::Release(pos, env_value) = self.f_env.next(offs) {
-                    if pos == 0 {
-                        self.release.reset();
-                        self.cur_phase = 0.0;
+                    if params.freq_note_start() >= 0.5 {
+                        self.cur_f_start = self.init_note_freq as f64;
+                    } else {
+                        self.cur_f_start = params.freq_start() as f64;
                     }
 
-                    let gain : f64 = 1.0 - env_value.powf(self.env_slope as f64);
-
-                    let mut s =
-                        fast_sin(self.cur_phase as f64 * PI2 + self.phase_offs)
-                        * (1.0_f64 - self.noise as f64);
-
-                    s += self.rng.next_open01() * gain * gain * self.noise as f64;
-
-                    kick_sample = s * gain;
-
-                    if has_dist_env {
-                        let thres = p2range(env_value as f32, self.dist_start, self.dist_end);
-                        kick_sample = f_distort(self.dist_gain, thres, kick_sample as f32) as f64;
+                    if params.freq_note_end() >= 0.5 {
+                        self.cur_f_end = self.init_note_freq as f64;
+                    } else {
+                        self.cur_f_end = params.freq_end() as f64;
                     }
 
-                    self.cur_phase +=
-                        (self.note_freq / (self.srate as f64)) as f32;
-//                    println!("nf: {:5.3}", self.note_freq);
-
-                    let change : f64 =
-                        if env_value <= 1.0 {
-                            (self.cur_f_start - self.cur_f_end) as f64
-                            * (1.0 - env_value.powf(self.freq_slope as f64))
-                        } else {
-                            0.0
-                        };
-
-                    self.note_freq = self.cur_f_end as f64 + change;
+                    self.note_freq = self.cur_f_start as f64;
                 }
 
-                let release_env_gain =
-                    match self.release.next(offs) {
-                        EnvPos::Off => 1.0,
-                        EnvPos::Release(_, value) => {
-                            let gain : f64 = 1.0 - value.powf(0.5);
-                            gain
-                        },
-                        EnvPos::End => {
-                            self.f_env.reset();
-                            self.release.reset();
-                            0.0
-                        }
+                let gain : f64 = 1.0 - env_value.powf(params.env_slope() as f64);
+
+                let mut s =
+                    fast_sin((self.cur_phase as f64 + (params.phase_offs() as f64))
+                             * PI2)
+                    * (1.0_f64 - params.noise() as f64);
+
+                s += self.rng.next_open01() * gain * gain * params.noise() as f64;
+
+                kick_sample = s * gain;
+
+                if (params.dist_start() - params.dist_end()).abs() > 0.0001 {
+                    let thres = p2range(env_value as f32, params.dist_start(), params.dist_end());
+                    kick_sample = f_distort(params.dist_gain(), thres, kick_sample as f32) as f64;
+                }
+
+                self.cur_phase +=
+                    (self.note_freq / (self.srate as f64)) as f32;
+//                    println!("nf: {:5.3}", self.note_freq);
+
+                let change : f64 =
+                    if env_value <= 1.0 {
+                        (self.cur_f_start - self.cur_f_end) as f64
+                        * (1.0 - env_value.powf(params.freq_slope() as f64))
+                    } else {
+                        0.0
                     };
 
-                *os += (kick_sample * release_env_gain) as f32;
+                self.note_freq = self.cur_f_end as f64 + change;
             }
-        });
+
+            let release_env_gain =
+                match self.release.next(offs) {
+                    EnvPos::Off => 1.0,
+                    EnvPos::Release(_, value) => {
+                        let gain : f64 = 1.0 - value.powf(0.5);
+                        gain
+                    },
+                    EnvPos::End => {
+                        self.f_env.reset();
+                        self.release.reset();
+                        0.0
+                    }
+                };
+
+            *os += (kick_sample * release_env_gain) as f32;
+        }
     }
 }
 
 impl MonoVoice for OpKickmess {
     fn start_note(&mut self, id: usize, offs: usize, freq: f32, _vel: f32) {
         self.id = id;
+        self.init_note_freq = freq as f64;
         self.f_env.trigger(offs);
 
-        if self.freq_note_start >= 0.5 {
-            self.cur_f_start = freq as f64;
-        } else {
-            self.cur_f_start = self.freq_start as f64;
-        }
-
-        if self.freq_note_end >= 0.5 {
-            self.cur_f_end = freq as f64;
-        } else {
-            self.cur_f_end = self.freq_end as f64;
-        }
 //        println!("{} freq: {:5.3}, fs: {:5.3}, fe: {:5.3}",
 //                 self.id,
 //                 self.note_freq,
 //                 self.cur_f_start,
 //                 self.cur_f_end);
-
-        self.note_freq = self.cur_f_start as f64;
     }
 
     fn id(&self) -> usize { self.id }

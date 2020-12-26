@@ -4,18 +4,14 @@
 use kickmessvst;
 use kickmessvst::ui;
 use kickmessvst::ui::protocol::*;
-use std::rc::Rc;
 use std::sync::Arc;
-use std::sync::Mutex;
-
-use kickmessvst::proc::Param;
 
 fn main() {
     let (cl_hdl, p_hdl) = ui::protocol::UIClientHandle::create();
 
     let runner = kickmessvst::window::open_window(None, p_hdl);
 
-    let graph_fun = Arc::new(|id: usize, src: &mut dyn UIGraphValueSource, out: &mut Vec<(f64, f64)>| {
+    let graph_fun = Arc::new(|_id: usize, src: &mut dyn UIGraphValueSource, out: &mut Vec<(f64, f64)>| {
         let samples = 40;
         for x in 0..(samples + 1) {
             let x = x as f64 / (samples as f64);

@@ -10,7 +10,6 @@ mod editor;
 pub mod ui;
 pub mod window;
 
-use proc::Channel;
 use proc::{ParamProvider, Param, ParamSet, MonoProcessor, MonoVoice, SmoothParameters};
 use op_kickmess::*;
 use helpers::note_to_freq;
@@ -27,21 +26,6 @@ use vst::plugin::{HostCallback, Category, Info, Plugin, PluginParameters, CanDo}
 use std::sync::Arc;
 
 const MAX_BLOCKSIZE: usize = 128;
-
-struct AB<'a>((&'a [f32], &'a mut [f32]));
-
-
-impl<'a> AB<'a> {
-    fn from_buffers(bufs: (&'a [f32], &'a mut [f32])) -> Self {
-        Self(bufs)
-    }
-}
-
-impl<'a> Channel for AB<'a> {
-    fn process(&mut self, f: &mut dyn FnMut(&[f32], &mut [f32])) {
-        f(self.0.0, self.0.1)
-    }
-}
 
 
 impl Default for Kickmess {
@@ -76,7 +60,7 @@ impl Kickmess {
                 VoiceEvent::Start { note, delta_frames, vel } => {
                     for voice in self.voices.iter_mut() {
                         if !voice.is_playing() {
-                            voice.read_params(&self.params.ps, &*self.params);
+//                            voice.read_params(&self.params.ps, &*self.params);
                             voice.start_note(
                                 note as usize,
                                 delta_frames as usize,
@@ -159,15 +143,25 @@ impl Plugin for Kickmess {
             self.process_voice_events();
         }
 
-        self.smooth_param.advance_params(
-            64, outputbuf.get_mut(0).len(), &self.params.ps, &*self.params);
+        let out_buf = outputbuf.get_mut(0);
+        let mut remaining = outputbuf.get_mut(0).len();
+        let mut offs      = 0;
+        loop {
+            let advance_frames = if remaining > 64 { 64 } else { remaining };
+            self.smooth_param.advance_params(
+                advance_frames, outputbuf.get_mut(0).len(), &self.params.ps, &*self.params);
 
-        let mut channel = AB::from_buffers((&inbuf, outputbuf.get_mut(0)));
+            for voice in self.voices.iter_mut() {
+                if voice.is_playing() {
+                    voice.process(
+                        &self.smooth_param,
+                        &mut out_buf[offs..(offs + advance_frames)]);
+                }
+            }
 
-        for voice in self.voices.iter_mut() {
-            if voice.is_playing() {
-                voice.read_params(&self.params.ps, &*self.params);
-                voice.process(&mut channel);
+            remaining -= advance_frames;
+            if remaining == 0 {
+                break;
             }
         }
     }
