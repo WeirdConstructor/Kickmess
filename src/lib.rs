@@ -10,7 +10,7 @@ mod editor;
 pub mod ui;
 pub mod window;
 
-use proc::{ParamProvider, ParamDefinition, ParamSet, MonoProcessor, MonoVoice, SmoothParameters};
+use proc::{ParamProvider, VoiceManager, ParamDefinition, ParamSet, MonoProcessor, MonoVoice, SmoothParameters};
 use op_kickmess::*;
 use helpers::note_to_freq;
 
@@ -25,82 +25,36 @@ use vst::plugin::{HostCallback, Category, Info, Plugin, PluginParameters, CanDo}
 
 use std::sync::Arc;
 
-const MAX_BLOCKSIZE: usize = 128;
+const MAX_BLOCKSIZE: usize = 64;
+const MAX_POLY:      usize = 16;
 
+struct Kickmess {
+    host:           HostCallback,
+    params:         Arc<KickmessVSTParams>,
+    voices:         VoiceManager<OpKickmess>,
+    smooth_param:   SmoothParameters,
+}
 
 impl Default for Kickmess {
     fn default() -> Kickmess {
         Kickmess {
             host:   HostCallback::default(),
             params: Arc::new(KickmessVSTParams::default()),
-            voices: vec![],
-            events: vec![],
-            smooth_param: SmoothParameters::new(64, 0),
+            voices: VoiceManager::new(MAX_POLY),
+            smooth_param: SmoothParameters::new(MAX_BLOCKSIZE, 0),
         }
     }
-}
-
-enum VoiceEvent {
-    Start { note: u8, vel: u8, delta_frames: usize },
-    End   { note: u8, delta_frames: usize },
-}
-
-struct Kickmess {
-    host:           HostCallback,
-    params:         Arc<KickmessVSTParams>,
-    voices:         Vec<OpKickmess>,
-    events:         Vec<VoiceEvent>,
-    smooth_param:   SmoothParameters,
-}
-
-impl Kickmess {
-    fn process_voice_events(&mut self) {
-        while !self.events.is_empty() {
-            match self.events.pop().unwrap() {
-                VoiceEvent::Start { note, delta_frames, vel } => {
-                    for voice in self.voices.iter_mut() {
-                        if !voice.is_playing() {
-//                            voice.read_params(&self.params.ps, &*self.params);
-                            voice.start_note(
-                                note as usize,
-                                delta_frames as usize,
-                                note_to_freq(note as f32),
-                                vel as f32);
-                            break;
-                        }
-                    }
-                },
-                VoiceEvent::End { note, delta_frames } => {
-                    for voice in self.voices.iter_mut() {
-                        if voice.id() == (note as usize) {
-                            voice.end_note(delta_frames);
-                            break;
-                        }
-                    }
-                },
-            }
-        }
-    }
-
 }
 
 impl Plugin for Kickmess {
     fn new(host: HostCallback) -> Self {
-        let max_poly = 10;
-        let mut voices = vec![];
-        for _ in 0..max_poly {
-            voices.push(OpKickmess::new());
-        }
-
-        let events       = std::vec::Vec::with_capacity(2 * max_poly);
         let params       = Arc::new(KickmessVSTParams::default());
-        let smooth_param = SmoothParameters::new(64, params.ps.param_count());
+        let smooth_param = SmoothParameters::new(MAX_BLOCKSIZE, params.ps.param_count());
 
         Self {
             host,
-            voices,
+            voices: VoiceManager::new(MAX_POLY),
             params,
-            events,
             smooth_param,
         }
     }
@@ -126,9 +80,7 @@ impl Plugin for Kickmess {
     }
 
     fn set_sample_rate(&mut self, rate: f32) {
-        for voice in self.voices.iter_mut() {
-            voice.set_sample_rate(rate);
-        }
+        self.voices.set_sample_rate(rate);
     }
 
     fn process(&mut self, buffer: &mut AudioBuffer<f32>) {
@@ -140,22 +92,16 @@ impl Plugin for Kickmess {
         for os in out_buf.iter_mut() { *os = 0.0; }
 
         loop {
-            let advance_frames = if remaining > 64 { 64 } else { remaining };
+            let advance_frames =
+                if remaining > MAX_BLOCKSIZE { MAX_BLOCKSIZE } else { remaining };
+
             self.smooth_param.advance_params(
                 advance_frames, out_buf.len(), &self.params.ps, &*self.params);
 
-            if !self.events.is_empty() {
-                self.process_voice_events();
-            }
-
-            for voice in self.voices.iter_mut() {
-                if voice.is_playing() {
-                    voice.process(
-                        &self.smooth_param,
-                        offs,
-                        &mut out_buf[offs..(offs + advance_frames)]);
-                }
-            }
+            self.voices.process(
+                offs,
+                &mut out_buf[offs..(offs + advance_frames)],
+                &self.smooth_param);
 
             offs      += advance_frames;
             remaining -= advance_frames;
@@ -169,20 +115,7 @@ impl Plugin for Kickmess {
         for e in events.events() {
             match e {
                 Event::Midi(MidiEvent { data, delta_frames, .. }) => {
-                    if data[0] == 144 {
-                        //d// println!("RECV: {} DT: {}", data[0], delta_frames);
-                        self.events.push(VoiceEvent::Start {
-                            note:         data[1],
-                            vel:          data[2],
-                            delta_frames: delta_frames as usize,
-                        });
-
-                    } else if data[0] == 128 {
-                        self.events.push(VoiceEvent::End {
-                            note:         data[1],
-                            delta_frames: delta_frames as usize,
-                        });
-                    }
+                    self.voices.handle_midi(&data, delta_frames as usize);
                 },
                 _ => (),
             }

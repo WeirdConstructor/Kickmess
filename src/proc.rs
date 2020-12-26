@@ -130,6 +130,7 @@ pub trait MonoProcessor {
 }
 
 pub trait MonoVoice : MonoProcessor {
+    fn new() -> Self;
     fn id(&self) -> usize;
     fn start_note(&mut self, id: usize, offs: usize, freq: f32, vel: f32);
     fn end_note(&mut self, offs: usize);
@@ -261,6 +262,97 @@ impl SmoothParameters {
 
     fn swap(&mut self) {
         std::mem::swap(&mut self.last, &mut self.current);
+    }
+}
+
+pub enum VoiceEvent {
+    Start { note: u8, vel: u8, delta_frames: usize },
+    End   { note: u8, delta_frames: usize },
+}
+
+pub struct VoiceManager<T: MonoVoice> {
+    voices: Vec<T>,
+    events: Vec<VoiceEvent>,
+}
+
+impl<T: MonoVoice> VoiceManager<T> {
+    pub fn new(max_voices: usize) -> Self {
+        let mut voices = vec![];
+
+        // Assumption: 10 * max_voices is enough :-)
+        let events = std::vec::Vec::with_capacity(10 * max_voices);
+
+        for _ in 0..max_voices {
+            voices.push(T::new());
+        }
+
+        Self {
+            voices,
+            events,
+        }
+    }
+
+    pub fn set_sample_rate(&mut self, rate: f32) {
+        for voice in self.voices.iter_mut() {
+            voice.set_sample_rate(rate);
+        }
+    }
+
+    pub fn handle_midi(&mut self, data: &[u8], delta_frames: usize) {
+        if data[0] == 144 {
+            //d// println!("RECV: {} DT: {}", data[0], delta_frames);
+            self.events.push(VoiceEvent::Start {
+                note:         data[1],
+                vel:          data[2],
+                delta_frames: delta_frames as usize,
+            });
+
+        } else if data[0] == 128 {
+            self.events.push(VoiceEvent::End {
+                note:         data[1],
+                delta_frames: delta_frames as usize,
+            });
+        }
+    }
+
+    pub fn process(&mut self, nframe_offs: usize, out: &mut [f32], smooth_param: &SmoothParameters) {
+        self.process_voice_events();
+
+        for voice in self.voices.iter_mut() {
+            if voice.is_playing() {
+                voice.process(smooth_param, nframe_offs, out);
+            }
+        }
+    }
+
+    fn process_voice_events(&mut self) {
+        use crate::helpers::note_to_freq;
+
+        while !self.events.is_empty() {
+            match self.events.pop().unwrap() {
+                VoiceEvent::Start { note, delta_frames, vel } => {
+                    for voice in self.voices.iter_mut() {
+                        if !voice.is_playing() {
+//                            voice.read_params(&self.params.ps, &*self.params);
+                            voice.start_note(
+                                note as usize,
+                                delta_frames as usize,
+                                note_to_freq(note as f32),
+                                vel as f32);
+                            break;
+                        }
+                    }
+                },
+                VoiceEvent::End { note, delta_frames } => {
+                    for voice in self.voices.iter_mut() {
+                        if voice.id() == (note as usize) {
+                            voice.end_note(delta_frames);
+                            break;
+                        }
+                    }
+                },
+            }
+        }
     }
 }
 

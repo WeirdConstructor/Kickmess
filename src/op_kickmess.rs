@@ -112,27 +112,6 @@ pub struct OpKickmess {
     release:         REnv,
 }
 
-impl OpKickmess {
-    pub fn new() -> Self {
-        Self {
-            id:              0,
-
-            cur_f_start:     0.0,
-            cur_f_end:       0.0,
-
-            init_note_freq:  0.0,
-            note_freq:       0.0,
-            cur_phase:       0.0,
-            srate:           0.0,
-
-            rng:             RandGen::new(),
-            f_env:           REnv::new(),
-            release:         REnv::new(),
-
-        }
-    }
-}
-
 impl MonoProcessor for OpKickmess {
     fn init_params(ps: &mut ParamSet, public_ps: &mut ParamSet) {
 //        public_ps.add2(ps, ParamDefinition::from(Param::Freq1,      5.0,   3000.0, 150.0, "Start Freq.").exp().no_smooth());
@@ -240,6 +219,25 @@ impl MonoProcessor for OpKickmess {
 }
 
 impl MonoVoice for OpKickmess {
+    fn new() -> Self {
+        Self {
+            id:              0,
+
+            cur_f_start:     0.0,
+            cur_f_end:       0.0,
+
+            init_note_freq:  0.0,
+            note_freq:       0.0,
+            cur_phase:       0.0,
+            srate:           0.0,
+
+            rng:             RandGen::new(),
+            f_env:           REnv::new(),
+            release:         REnv::new(),
+
+        }
+    }
+
     fn start_note(&mut self, id: usize, offs: usize, freq: f32, _vel: f32) {
         self.id = id;
         self.init_note_freq = freq as f64;
