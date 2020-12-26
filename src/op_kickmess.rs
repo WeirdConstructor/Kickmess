@@ -70,7 +70,7 @@ impl<'a> ParamModel<'a> {
         Self { v }
     }
 
-    fn init_public_set(&self, ps: &mut ParamSet) {
+    fn init_public_set(ps: &mut ParamSet) {
         macro_rules! param_add_ps {
             (public $name:ident $e:ident $s:ident $idx:expr, $min:expr, $max:expr, $def:expr, $lbl:expr) => {
                 ps.add(ParamDefinition::from(Param::Freq1, $min, $max, $def, $lbl).$e().$s());
@@ -82,7 +82,7 @@ impl<'a> ParamModel<'a> {
         param_model!{param_add_ps}
     }
 
-    fn init_private_set(&self, ps: &mut ParamSet) {
+    fn init_private_set(ps: &mut ParamSet) {
         macro_rules! param_add_ps_priv {
             ($_:ident $name:ident $e:ident $s:ident $idx:expr, $min:expr, $max:expr, $def:expr, $lbl:expr) => {
                 ps.add(ParamDefinition::from(Param::Freq1, $min, $max, $def, $lbl).$e().$s());
@@ -162,12 +162,12 @@ impl MonoProcessor for OpKickmess {
         self.release.set_release(block_params.env_release());
 
         for (offs, os) in out.iter_mut().enumerate() {
-            let offs = offs + proc_offs;
             let params = ParamModel::new(params.get_frame(offs));
+            let block_offs = offs + proc_offs;
 
             let mut kick_sample : f64 = 0.0;
 
-            if let EnvPos::Release(pos, env_value) = self.f_env.next(offs) {
+            if let EnvPos::Release(pos, env_value) = self.f_env.next(block_offs) {
                 if pos == 0 {
                     self.release.reset();
                     self.cur_phase = 0.0;
@@ -219,7 +219,7 @@ impl MonoProcessor for OpKickmess {
             }
 
             let release_env_gain =
-                match self.release.next(offs) {
+                match self.release.next(block_offs) {
                     EnvPos::Off => 1.0,
                     EnvPos::Release(_, value) => {
                         let gain : f64 = 1.0 - value.powf(0.5);
@@ -243,9 +243,8 @@ impl MonoVoice for OpKickmess {
         self.init_note_freq = freq as f64;
         self.f_env.trigger(offs);
 
-//        println!("{} freq: {:5.3}, fs: {:5.3}, fe: {:5.3}",
-//                 self.id,
-//                 self.note_freq,
+        println!("{} freq: {:5.3}, offs: {}",
+                 self.id, self.init_note_freq, offs);
 //                 self.cur_f_start,
 //                 self.cur_f_end);
     }

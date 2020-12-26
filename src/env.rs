@@ -49,11 +49,12 @@ impl REnv {
         match self.state {
             EnvPosState::Wait => { return EnvPos::Off; }
             EnvPosState::StartOffs(s_offs) => {
+                //d// println!("********* {} <=> {}", s_offs, offs);
                 if s_offs == offs {
                     self.state = EnvPosState::Running;
                     self.len_samples =
                         ((self.len_ms * self.srate) / 1000.0) as usize;
-                    println!("TRIGGER: {} {}", self.len_samples, self.len_ms);
+                    //d// println!("TRIGGER: {} {}", self.len_samples, self.len_ms);
                     self.pos   = 0;
                 } else {
                     return EnvPos::Off;

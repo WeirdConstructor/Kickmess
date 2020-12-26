@@ -132,24 +132,21 @@ impl Plugin for Kickmess {
     }
 
     fn process(&mut self, buffer: &mut AudioBuffer<f32>) {
-
-        let inbuf : [f32; 0] = [];
-
         let (_, mut outputbuf) = buffer.split();
-
-        for os in outputbuf.get_mut(0) { *os = 0.0; }
-
-        if !self.events.is_empty() {
-            self.process_voice_events();
-        }
-
         let out_buf       = outputbuf.get_mut(0);
         let mut remaining = out_buf.len();
         let mut offs      = 0;
+
+        for os in out_buf.iter_mut() { *os = 0.0; }
+
         loop {
             let advance_frames = if remaining > 64 { 64 } else { remaining };
             self.smooth_param.advance_params(
                 advance_frames, out_buf.len(), &self.params.ps, &*self.params);
+
+            if !self.events.is_empty() {
+                self.process_voice_events();
+            }
 
             for voice in self.voices.iter_mut() {
                 if voice.is_playing() {
@@ -160,6 +157,7 @@ impl Plugin for Kickmess {
                 }
             }
 
+            offs      += advance_frames;
             remaining -= advance_frames;
             if remaining == 0 {
                 break;
@@ -172,6 +170,7 @@ impl Plugin for Kickmess {
             match e {
                 Event::Midi(MidiEvent { data, delta_frames, .. }) => {
                     if data[0] == 144 {
+                        //d// println!("RECV: {} DT: {}", data[0], delta_frames);
                         self.events.push(VoiceEvent::Start {
                             note:         data[1],
                             vel:          data[2],
