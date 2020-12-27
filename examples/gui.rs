@@ -9,7 +9,7 @@ use std::sync::Arc;
 fn main() {
     let (cl_hdl, p_hdl) = ui::protocol::UIClientHandle::create();
 
-    let runner = kickmessvst::window::open_window(None, p_hdl);
+    let runner = kickmessvst::window::open_window("Kickmess Test GUI", 800, 600, None, p_hdl);
 
     let graph_fun = Arc::new(|_id: usize, src: &mut dyn UIGraphValueSource, out: &mut Vec<(f64, f64)>| {
         let samples = 40;

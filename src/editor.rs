@@ -8,12 +8,13 @@ use crate::ui::constants::*;
 use crate::ui::{UI, UIEvent};
 use crate::ui;
 
-const WINDOW_WIDTH:  usize = 500;
-const WINDOW_HEIGHT: usize = 500;
+const WINDOW_WIDTH:  i32 = 800;
+const WINDOW_HEIGHT: i32 = 600;
 
 pub(crate) struct KickmessEditor {
 //    view:      Option<Box<PuglView<PuglUI>>>,
-    params:    Arc<KickmessVSTParams>,
+    params:     Arc<KickmessVSTParams>,
+    gui_hdl:    Option<ui::protocol::UIClientHandle>,
 }
 
 impl KickmessEditor {
@@ -21,7 +22,65 @@ impl KickmessEditor {
         Self {
 //            view: None,
             params,
+            gui_hdl: None,
         }
+    }
+
+    fn define_gui(&self) {
+        self.gui_hdl.as_ref().unwrap().tx.send(UICmd::DefineValues(vec![
+            UIValueSpec::new_id(),
+            UIValueSpec::new_min_max_exp(5.0, 3000.0, 6, 1).steps(0.04, 0.01),
+            UIValueSpec::new_min_max_exp(5.0, 2000.0, 6, 1).steps(0.04, 0.01),
+            UIValueSpec::new_min_max_exp(5.0, 5000.0, 6, 1).steps(0.04, 0.01),
+            UIValueSpec::new_min_max(0.0, 100.0, 5, 1).steps(0.04, 0.01),
+            UIValueSpec::new_min_max(0.0, 100.0, 5, 1).steps(0.04, 0.01),
+            UIValueSpec::new_id(),
+            UIValueSpec::new_id(),
+            UIValueSpec::new_id(),
+            UIValueSpec::new_mod_target_list(&[
+                (1, "Start (Hz)"),
+                (2, "End (Hz)"),
+                (3, "Length (ms)"),
+            ], "?"),
+            UIValueSpec::new_toggle(&[ "Off", "On", "Left", "Right" ]),
+            UIValueSpec::new_id(),
+            UIValueSpec::new_id(),
+            UIValueSpec::new_id(),
+            UIValueSpec::new_id(),
+        ])).expect("mpsc ok");
+
+        self.gui_hdl.as_ref().unwrap().tx.send(UICmd::Define(vec![
+            UILayout::Container {
+                label: String::from("Test GUI"),
+                xv: 0, yv: 0, wv: 7, hv: 12,
+                rows: vec![
+                    vec![
+                        UIInput::container_border(UIPos::center(12, 4), vec![ vec![
+                                UIInput::knob(      1, String::from("Start (Hz)"),  UIPos::right(3, 12)),
+                                UIInput::knob_small(2, String::from("End (Hz)"),    UIPos::right(2, 12)),
+                                UIInput::knob_huge( 3, String::from("Length (ms)"), UIPos::right(3, 12)),
+                                UIInput::btn_mod_target(9, String::from("Mod1"),    UIPos::right(4, 12)),
+                        ], ]),
+                    ],
+                    vec![
+                        UIInput::container_border(UIPos::center(12, 4), vec![ vec![
+                            UIInput::knob(      4, String::from("Dist S."), UIPos::center(3, 12)),
+                            UIInput::knob_small(5, String::from("Dist E."), UIPos::center(2, 12)),
+                            UIInput::knob_huge( 1, String::from("SFreq."),  UIPos::center(3, 12)),
+                            UIInput::btn_toggle(10, String::from("Mod2"),   UIPos::center(4, 12)),
+                        ], ]),
+                    ],
+                    vec![
+                        UIInput::container_border(UIPos::center(12, 4), vec![ vec![
+                            UIInput::knob(      1, String::from("SFreq."),   UIPos::left(3, 12).bottom()),
+                            UIInput::knob_small(1, String::from("SFreq."),   UIPos::left(2, 12).bottom()),
+                            UIInput::knob_huge( 1, String::from("SFreq."),   UIPos::left(3, 12).bottom()),
+                            UIInput::btn_drag_value(7, String::from("Mod3"), UIPos::left(4, 12).bottom()),
+                        ], ]),
+                    ],
+                ],
+            },
+        ])).expect("sending GUI definition works");
     }
 }
 
@@ -35,42 +94,62 @@ impl Editor for KickmessEditor {
     }
 
     fn open(&mut self, parent: *mut std::ffi::c_void) -> bool {
-        println!("OPEN null={} == {:?}", parent.is_null(), parent);
-//        self.view = Some(open_window(Some(parent), None));
+        let (cl_hdl, p_hdl) = ui::protocol::UIClientHandle::create();
 
-        println!("OPENED");
+        let runner =
+            crate::window::open_window(
+                "Kickmess",
+                WINDOW_WIDTH, WINDOW_HEIGHT,
+                Some(parent), p_hdl);
+        std::thread::spawn(move || {
+            runner.unwrap().app_run_blocking();
+        });
+
+        self.gui_hdl = Some(cl_hdl);
+        self.define_gui();
 
         true
     }
 
     fn is_open(&mut self) -> bool {
-//        self.view.is_some()
-        false
+        self.gui_hdl.is_some()
     }
 
     fn idle(&mut self) {
-//        let mut close = false;
-//
-//        if let Some(view) = self.view.as_mut() {
-//            let hdl = view.as_mut().handle();
-//
-//            hdl.update(0.0);
-//
-//            while let Ok(msg) = hdl.cl_hdl().unwrap().rx.try_recv() {
-//                match msg {
-//                    UIMsg::WindowClosed => { close = true; },
-//                    _ => {
-//                        println!("MSG FROM UI: {:?}", msg);
-//                    }
-//                }
-//            }
-//
-//            hdl.update_ui();
-//        }
-//
-//        if close {
-//            self.view = None;
-//        }
+        let mut closed = false;
+
+        if let Some(gui_hdl) = self.gui_hdl.as_mut() {
+            while let Ok(msg) = gui_hdl.rx.try_recv() {
+                println!("MSG FROM UI: {:?}", msg);
+                match msg {
+                    UIMsg::ValueChangeStart { id, value } => {
+                        if let Some(af) = self.params.params.get(id) {
+                            af.set(value);
+                        }
+                    },
+                    UIMsg::ValueChanged { id, value, single_change } => {
+                        if let Some(af) = self.params.params.get(id) {
+                            af.set(value);
+                        }
+                    },
+                    UIMsg::ValueChangeEnd { id, value } => {
+                        if let Some(af) = self.params.params.get(id) {
+                            af.set(value);
+                        }
+                    },
+                    UIMsg::WindowClosed => {
+                        closed = true;
+                        break;
+                    },
+                    _ => {},
+                }
+            }
+        }
+
+        if closed {
+            self.gui_hdl = None;
+        }
+
     }
 
     fn close(&mut self) {

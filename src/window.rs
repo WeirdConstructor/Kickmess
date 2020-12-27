@@ -75,10 +75,7 @@ impl FrameTimeMeasurement {
     }
 }
 
-const WINDOW_WIDTH:  usize = 800;
-const WINDOW_HEIGHT: usize = 512;
-
-pub struct TestWindowHandler {
+pub struct GUIWindowHandler {
     context:    GlContext,
     canvas:     Canvas<OpenGl>,
     font:       FontId,
@@ -87,6 +84,7 @@ pub struct TestWindowHandler {
     ftm_redraw: FrameTimeMeasurement,
     ui:         UI,
     scale:      f32,
+    size:       (f64, f64),
 }
 
 struct MyPainter<'a> {
@@ -183,7 +181,7 @@ impl<'a> Painter for MyPainter<'a> {
     }
 }
 
-impl WindowHandler for TestWindowHandler {
+impl WindowHandler for GUIWindowHandler {
 
     fn on_event(&mut self, _: &mut Window, event: Event) {
         match event {
@@ -238,12 +236,12 @@ impl WindowHandler for TestWindowHandler {
                         femtovg::ImageFlags::FLIP_Y).expect("making image buffer");
 
                 let ri = (w as f32) / (h as f32);
-                let rs = (WINDOW_WIDTH as f32) / (WINDOW_HEIGHT as f32);
+                let rs = (self.size.0 as f32) / (self.size.1 as f32);
 
                 if rs > ri {
-                    self.scale = (w as f32) / (WINDOW_WIDTH as f32);
+                    self.scale = (w as f32) / (self.size.0 as f32);
                 } else {
-                    self.scale = (h as f32) / (WINDOW_HEIGHT as f32);
+                    self.scale = (h as f32) / (self.size.1 as f32);
                 }
 
                 self.ui.queue_redraw();
@@ -303,26 +301,26 @@ impl WindowHandler for TestWindowHandler {
     }
 }
 
-pub fn open_window(parent: Option<*mut ::std::ffi::c_void>, ui_hdl: UIProviderHandle) -> Option<AppRunner> {
+pub fn open_window(title: &str, window_width: i32, window_height: i32, parent: Option<*mut ::std::ffi::c_void>, ui_hdl: UIProviderHandle) -> Option<AppRunner> {
     let options =
         if let Some(parent) = parent {
             let parent = raw_window_handle_from_parent(parent);
             WindowOpenOptions {
-                title:  "BaseviewTest".to_string(),
-                size:   Size::new(WINDOW_WIDTH as f64, WINDOW_HEIGHT as f64),
+                title:  title.to_string(),
+                size:   Size::new(window_width as f64, window_height as f64),
                 scale:  WindowScalePolicy::SystemScaleFactor,
                 parent: Parent::WithParent(parent),
             }
         } else {
             WindowOpenOptions {
-                title:  "BaseviewTest".to_string(),
-                size:   Size::new(WINDOW_WIDTH as f64, WINDOW_HEIGHT as f64),
+                title:  title.to_string(),
+                size:   Size::new(window_width as f64, window_height as f64),
                 scale:  WindowScalePolicy::SystemScaleFactor,
                 parent: Parent::None,
             }
         };
 
-    Window::open(options, |win| {
+    Window::open(options, move |win| {
         let context =
             GlContext::create(
                 win,
@@ -348,7 +346,7 @@ pub fn open_window(parent: Option<*mut ::std::ffi::c_void>, ui_hdl: UIProviderHa
                 .expect("Cannot create renderer");
 
         let mut canvas = Canvas::new(renderer).expect("Cannot create canvas");
-        canvas.set_size(WINDOW_WIDTH as u32, WINDOW_HEIGHT as u32, 1.0);
+        canvas.set_size(window_width as u32, window_height as u32, 1.0);
         let font = canvas.add_font_mem(std::include_bytes!("DejaVuSerif.ttf")).expect("can load font");
         let (w, h) = (canvas.width(), canvas.height());
         let img_buf =
@@ -359,10 +357,11 @@ pub fn open_window(parent: Option<*mut ::std::ffi::c_void>, ui_hdl: UIProviderHa
 
         let mut ui = UI::new(ui_hdl);
 
-        ui.set_window_size(WINDOW_WIDTH as f64, WINDOW_HEIGHT as f64);
+        ui.set_window_size(window_width as f64, window_height as f64);
 
-        TestWindowHandler {
+        GUIWindowHandler {
             ui,
+            size: (window_width as f64, window_height as f64),
             context,
             canvas,
             font,
