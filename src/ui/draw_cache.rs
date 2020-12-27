@@ -24,8 +24,8 @@ impl DrawCache {
             UI_BORDER_WIDTH * 0.5,
             UI_BORDER_CLR,
             &mut ([
-                (x, y + UI_ELEM_TXT_H),
-                (x + w, y + UI_ELEM_TXT_H)
+                (x, (y + UI_ELEM_TXT_H).round() + 0.5),
+                (x + w, (y + UI_ELEM_TXT_H).round() + 0.5)
             ].iter().copied()), false);
         p.label(UI_CONT_FONT_SIZE, 0, UI_CONT_FONT_CLR, UI_SAFETY_PAD * 2.0 + x, y, w , UI_ELEM_TXT_H, lbl);
     }

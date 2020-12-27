@@ -11,7 +11,7 @@ pub const UI_HLIGHT_CLR           : (f64, f64, f64) = (233.0 / 255.0,  248.0 / 2
 pub const UI_HLIGHT2_CLR          : (f64, f64, f64) = (181.0 / 255.0,  196.0 / 255.0,   18.0 / 255.0);
 
 pub const UI_CONT_FONT_SIZE       : f64 = 14.0;
-pub const UI_CONT_FONT_CLR        : (f64, f64, f64) = UI_PRIM2_CLR;
+pub const UI_CONT_FONT_CLR        : (f64, f64, f64) = UI_PRIM_CLR;
 
 pub const UI_BG_KNOB_STROKE       : f64 = 8.0;
 pub const UI_MG_KNOB_STROKE       : f64 = 3.0;
@@ -40,9 +40,9 @@ pub const UI_BTN_TXT_HOVER_CLR    : (f64, f64, f64) = UI_TXT_KNOB_HOVER_CLR;
 pub const UI_BTN_TXT_HLIGHT_CLR   : (f64, f64, f64) = UI_TXT_KNOB_HLIGHT_CLR;
 pub const UI_BTN_TXT_HLHOVR_CLR   : (f64, f64, f64) = UI_TXT_KNOB_HLHOVR_CLR;
 pub const UI_BTN_WIDTH            : f64 = 3.0 * UI_KNOB_RADIUS;
-pub const UI_BTN_BORDER_WIDTH     : f64 = 4.0;
-pub const UI_BTN_BORDER2_WIDTH    : f64 = 1.0;
-pub const UI_BTN_BEVEL            : f64 = UI_ELEM_TXT_H / 2.0;
+pub const UI_BTN_BORDER_WIDTH     : f64 = 6.0;
+pub const UI_BTN_BORDER2_WIDTH    : f64 = 4.0;
+pub const UI_BTN_BEVEL            : f64 = UI_ELEM_TXT_H / 4.0;
 
 pub const UI_GRPH_W               : f64 = 90.0;
 pub const UI_GRPH_H               : f64 = 40.0;
@@ -53,7 +53,10 @@ pub const UI_GRPH_FONT_SIZE       : f64 = UI_KNOB_FONT_SIZE;
 pub const UI_TAB_WIDTH            : f64 = 90.0;
 pub const UI_TAB_FONT_SIZE        : f64 = UI_KNOB_FONT_SIZE;
 pub const UI_TAB_BG_CLR           : (f64, f64, f64) = UI_LBL_BG_CLR;
-pub const UI_TAB_TXT_CLR          : (f64, f64, f64) = UI_BTN_TXT_CLR;
+pub const UI_TAB_DIV_WIDTH        : f64 = 2.0;
+pub const UI_TAB_DIV_CLR          : (f64, f64, f64) = UI_PRIM_CLR;
+pub const UI_TAB_TXT_CLR          : (f64, f64, f64) = UI_PRIM_CLR;
+pub const UI_TAB_TXT2_CLR         : (f64, f64, f64) = UI_PRIM2_CLR;
 pub const UI_TAB_TXT_HOVER_CLR    : (f64, f64, f64) = UI_BTN_TXT_HOVER_CLR;
 
 pub const UI_BOX_H          : f64 = 200.0;

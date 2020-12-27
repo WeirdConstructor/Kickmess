@@ -73,12 +73,20 @@ impl UIElement for Button {
 
         p.label(UI_KNOB_FONT_SIZE, 0, UI_BTN_TXT_CLR,
             x + xo,
-            y + yo + UI_ELEM_TXT_H + UI_BTN_BORDER_WIDTH,
+            y + yo + UI_ELEM_TXT_H + UI_BTN_BORDER2_WIDTH,
             w, (h / 2.0).round(), name);
 
         let color =
             match highlight {
-                HLStyle::Hover(_) => UI_BTN_TXT_HOVER_CLR,
+                HLStyle::Hover(_) => {
+                    self.draw_border(
+                        p, UI_BTN_BORDER2_WIDTH, UI_BTN_TXT_HOVER_CLR,
+                        x + xo - (UI_BTN_BORDER2_WIDTH * 0.5).round(),
+                        y + yo - (UI_BTN_BORDER2_WIDTH * 0.5).round(),
+                        w + UI_BTN_BORDER2_WIDTH,
+                        h + UI_BTN_BORDER2_WIDTH, false);
+                    UI_BTN_TXT_HOVER_CLR
+                },
                 HLStyle::HoverModTarget => {
                     self.draw_border(
                         p, UI_BTN_BORDER_WIDTH, UI_BTN_TXT_HLHOVR_CLR,
