@@ -48,31 +48,51 @@ impl UIValueSpec {
     }
 
     pub fn new_toggle(targets: &[&str]) -> Self {
-        let max_idx = (targets.len() as f64) - 1.0;
-
-//        let idx_fracts : Vec<f64> =
-//            targets.iter().enumerate().map(
-//                |(i, p)| ((i as f64) / max_idx)).collect();
+        let num_targets = targets.len() as f64;
+        let increment   = 1.0 / num_targets;
 
         let strings : Vec<String> =
             targets.iter().map(|p| p.to_string()).collect();
 
         Self {
-            fun: Arc::new(move |_x| {
-                0.0
+            fun: Arc::new(move |x| {
+                let prev = x < -0.0001;
+                let x = x.abs();
+                let x = if x < 0.0001 { increment * 0.5 } else { x };
+                if prev {
+                    if x - increment <= 0.0 {
+                        1.0 - (increment * 0.5)
+                    } else {
+                        x - increment
+                    }
+                } else {
+                    if x + increment >= 1.0 {
+                        increment * 0.5
+                    } else {
+                        x + increment
+                    }
+                }
             }),
             fmt: Arc::new(move |v, _, writer| {
-                let mut idx : usize = (v * max_idx).round() as usize;
-                if idx > strings.len() {
+                let mut idx : usize = (v * num_targets).floor() as usize;
+                if idx >= strings.len() {
                     write!(writer, "?").is_ok()
                 } else {
                     write!(writer, "{}", strings[idx]).is_ok()
                 }
             }),
-            coarse_step: (1.0 / max_idx),
-            fine_step:  -(1.0 / max_idx),
-            default:     0.0,
+            coarse_step: 0.0,
+            fine_step:   0.0,
+            default:     increment,
         }
+    }
+
+    pub fn toggle_next(&self, v: f32) -> f32 {
+        (self.fun)(v as f64) as f32
+    }
+
+    pub fn toggle_prev(&self, v: f32) -> f32 {
+        (self.fun)(-1.0 * v as f64) as f32
     }
 
     pub fn new_mod_target_list(targets: &[(usize, &str)], empty_label: &str) -> Self {

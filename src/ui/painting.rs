@@ -8,11 +8,13 @@ pub const AZ_COARSE_DRAG : i8 = 0;
 pub const AZ_FINE_DRAG   : i8 = 1;
 pub const AZ_MOD_SELECT  : i8 = 2;
 pub const AZ_TOGGLE      : i8 = 3;
+pub const AZ_SET_VALUE   : i8 = 4;
 
 #[derive(Debug, Clone, Copy)]
 pub struct ActiveZone {
     pub id:      usize,
     pub subtype: usize,
+    pub set_val: f64,
     pub x:       f64,
     pub y:       f64,
     pub w:       f64,
@@ -32,6 +34,7 @@ impl ActiveZone {
         Self {
             id: 0,
             subtype: subtype as usize,
+            set_val: 0.0,
             x: r.0 + xo,
             y: r.1 + yo,
             w: r.2,

@@ -46,6 +46,61 @@ fn main() {
         UIValueSpec::new_id(),
     ])).expect("mpsc ok");
 
+    let tabs_i =
+        UIInput::Tabs(UITabData {
+            pos: UIPos::center(12, 12),
+            id: 10,
+            labels: vec![String::from("XXX"), String::from("YYY"), String::from("ZZZ")],
+            childs: vec![
+                vec![
+                    vec![
+                        UIInput::label("TAB 1", 14.0, UIPos::center(12, 6).middle()),
+                    ],
+                ],
+                vec![
+                    vec![
+                        UIInput::label("TAB 2", 14.0, UIPos::center(12, 6).middle()),
+                    ],
+                ],
+                vec![
+                    vec![
+                        UIInput::label("TAB 3", 14.0, UIPos::center(12, 6).middle()),
+                    ],
+                ],
+            ],
+        });
+
+
+    let tabs =
+        UIInput::Tabs(UITabData {
+            pos: UIPos::center(12, 12),
+            id: 11,
+            labels: vec![String::from("ABCDEF"), String::from("OFOFEOFE"), String::from("FOFOO")],
+            childs: vec![
+                vec![
+                    vec![
+                        UIInput::label("TAB 1", 14.0, UIPos::center(12, 6).middle()),
+                    ],
+                    vec![
+                        UIInput::label("TAB 1", 14.0, UIPos::center(12, 6).middle()),
+                    ],
+                ],
+                vec![
+                    vec![
+                        UIInput::label("TAB 2", 14.0, UIPos::center(12, 6).middle()),
+                    ],
+                    vec![
+                        UIInput::label("TAB 2", 14.0, UIPos::center(12, 6).middle()),
+                    ],
+                ],
+                vec![
+                    vec![
+                        tabs_i
+                    ],
+                ],
+            ],
+        });
+
     cl_hdl.tx.send(UICmd::Define(vec![
         UILayout::Container {
             label: String::from("Test GUI"),
@@ -104,43 +159,9 @@ fn main() {
             ],
         },
         UILayout::Container {
-            label: String::from("Graph Test"),
+            label: String::from(""),
             xv: 1, yv: 9, wv: 10, hv: 3,
-            rows: vec![
-                vec![
-                    UIInput::Tabs(UITabData {
-                        pos: UIPos::center(12, 12),
-                        id: 11,
-                        labels: vec![String::from("ABCDEF"), String::from("OFOFEOFE"), String::from("FOFOO")],
-                        childs: vec![
-                            vec![
-                                vec![
-                                    UIInput::label("TAB 1", 14.0, UIPos::center(12, 6).middle()),
-                                ],
-                                vec![
-                                    UIInput::label("TAB 1", 14.0, UIPos::center(12, 6).middle()),
-                                ],
-                            ],
-                            vec![
-                                vec![
-                                    UIInput::label("TAB 2", 14.0, UIPos::center(12, 6).middle()),
-                                ],
-                                vec![
-                                    UIInput::label("TAB 2", 14.0, UIPos::center(12, 6).middle()),
-                                ],
-                            ],
-                            vec![
-                                vec![
-                                    UIInput::label("TAB 3", 14.0, UIPos::center(12, 6).middle()),
-                                ],
-                                vec![
-                                    UIInput::label("TAB 3", 14.0, UIPos::center(12, 6).middle()),
-                                ],
-                            ],
-                        ],
-                    }),
-                ],
-            ],
+            rows: vec![ vec![ tabs ], ],
         }
     ])).expect("mpsc ok");
 

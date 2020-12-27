@@ -50,6 +50,11 @@ pub const UI_GRPH_BORDER          : f64 = 2.0;
 pub const UI_GRPH_BORDER_CLR      : (f64, f64, f64) = UI_BORDER_CLR;
 pub const UI_GRPH_FONT_SIZE       : f64 = UI_KNOB_FONT_SIZE;
 
+pub const UI_TAB_WIDTH            : f64 = 90.0;
+pub const UI_TAB_FONT_SIZE        : f64 = UI_KNOB_FONT_SIZE;
+pub const UI_TAB_TXT_CLR          : (f64, f64, f64) = UI_BTN_TXT_CLR;
+pub const UI_TAB_TXT_HOVER_CLR    : (f64, f64, f64) = UI_BTN_TXT_HOVER_CLR;
+
 pub const UI_BOX_H          : f64 = 200.0;
 pub const UI_BOX_BORD       : f64 =   3.0;
 pub const UI_MARGIN         : f64 =   4.0;

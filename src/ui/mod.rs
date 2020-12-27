@@ -65,6 +65,7 @@ enum InputMode {
     SelectMod  { zone: ActiveZone },
     ToggleBtn  { zone: ActiveZone },
     SetDefault { zone: ActiveZone },
+    SetValue   { zone: ActiveZone },
 }
 
 impl InputMode {
@@ -75,6 +76,7 @@ impl InputMode {
             InputMode::SelectMod  { zone, .. } => zone.id,
             InputMode::ToggleBtn  { zone, .. } => zone.id,
             InputMode::SetDefault { zone, .. } => zone.id,
+            InputMode::SetValue   { zone, .. } => zone.id,
         }
     }
 }
@@ -347,7 +349,13 @@ impl UI {
                             painting::AZ_TOGGLE => {
                                 self.input_mode =
                                     InputMode::ToggleBtn {
-                                        zone:     self.hover_zone.unwrap(),
+                                        zone: self.hover_zone.unwrap(),
+                                    };
+                            },
+                            painting::AZ_SET_VALUE => {
+                                self.input_mode =
+                                    InputMode::SetValue {
+                                        zone: self.hover_zone.unwrap(),
                                     };
                             },
                             _ => {
@@ -425,6 +433,21 @@ impl UI {
                         }
 
                         self.queue_redraw();
+                    },
+                    InputMode::SetValue { zone, .. } => {
+                        if let Some(hover_zone) = self.hover_zone {
+                            if hover_zone.id == zone.id {
+                                self.set_element_value(zone.id, zone.set_val as f32);
+                                self.ui_handle.tx
+                                    .send(UIMsg::ValueChanged {
+                                        id:            zone.id,
+                                        value:         zone.set_val as f32,
+                                        single_change: true
+                                    })
+                                    .expect("Sending works");
+                                self.queue_redraw();
+                            }
+                        }
                     },
                     InputMode::SelectMod { zone, .. } => {
                         //d// println!("MOD SELECT RELEASE");
@@ -526,18 +549,12 @@ impl UI {
 
     fn get_prev_toggle_value(&self, id: usize) -> f32 {
         let cur = self.get_element_value(id);
-        let new_x = cur + self.value_specs[id].fine(1.0) as f32;
-
-        if new_x < -0.001 { 1.0 }
-        else              { new_x }
+        dbg!(self.value_specs[id].toggle_prev(cur))
     }
 
     fn get_next_toggle_value(&self, id: usize) -> f32 {
         let cur = self.get_element_value(id);
-        let new_x = cur + self.value_specs[id].coarse(1.0) as f32;
-
-        if (new_x - 1.0) > 0.001 { 0.0 }
-        else                     { new_x }
+        dbg!(self.value_specs[id].toggle_next(cur))
     }
 
     fn is_mod_target_value(&self, mod_id: usize, id: usize) -> bool {
@@ -801,19 +818,12 @@ impl UI {
                     UIInput::Tabs(UITabData { id, labels, childs, .. }) => {
                         let crect = el_rect;
 
-                        let el_v = self.get_element_value(*id) as f64;
-//                        let child_inc = 1.0 / (childs.len() as f64);
-                        let child_idx = (el_v * (childs.len() as f64)).floor() as usize;
-                        let child_idx =
-                            if child_idx >= childs.len() { childs.len() - 1 }
-                            else                         { child_idx };
-
                         let tab_h = UI_PADDING + UI_ELEM_TXT_H + UI_PADDING;
                         let tab_rect = Rect {
-                            x: crect.x,
-                            y: crect.y,
+                            x: UI_BORDER_WIDTH + crect.x,
+                            y: UI_BORDER_WIDTH + crect.y,
                             w: crect.w,
-                            h: tab_h,
+                            h: tab_h + UI_BORDER_WIDTH,
                         };
                         let crect = Rect {
                             x: crect.x,
@@ -822,14 +832,75 @@ impl UI {
                             h: crect.h - tab_h,
                         };
 
-                        self.layout_container(
-                            p, true, "",
-                            if border { depth + 1 } else { depth },
-                            crect, &childs[child_idx]);
+                        let mut selected_idx =
+                            (self.get_element_value(*id) * (labels.len() as f32)).floor() as usize;
+                        let selected_idx = selected_idx.min(labels.len() - 1);
 
-                        p.rect_fill(UI_BORDER_CLR, tab_rect.x, tab_rect.y, tab_rect.w, tab_rect.h);
-//                        p.label(12.0, -1, UI_TXT_KNOB_CLR,
-//                                crect.x, crect.y, crect.w, crect.h, "TABASBA");
+                        let next_depth =
+                            if border { depth + 1 } else { depth };
+
+                        self.layout_container(
+                            p, true, "", next_depth,
+                            crect, &childs[selected_idx]);
+
+                        let tab_bg_color =
+                            if next_depth % 2 == 0 { UI_GUI_BG_CLR }
+                            else                   { UI_GUI_BG2_CLR };
+                        let tab_inactive_bg_color =
+                            if depth % 2 == 0 { UI_GUI_BG_CLR }
+                            else              { UI_GUI_BG2_CLR };
+
+                        let mut hover_idx = 9999;
+
+                        if let Some(hover_zone) = self.hover_zone {
+                            if hover_zone.id == *id {
+                                hover_idx =
+                                    (hover_zone.set_val * (labels.len() as f64)).floor() as usize;
+                                hover_idx = hover_idx.min(labels.len() - 1);
+                            }
+                        }
+
+                        let val_inc = 1.0 / (labels.len() as f64);
+
+                        let mut lbl_x = tab_rect.x;
+                        for (i, lbl) in labels.iter().enumerate() {
+                            let mut z =
+                                ActiveZone::from_rect(
+                                    lbl_x, tab_rect.y,
+                                    painting::AZ_SET_VALUE,
+                                    (0.0, 0.0, UI_TAB_WIDTH, tab_rect.h));
+                            z.set_val = (val_inc * 0.5) + (i as f64) * val_inc;
+                            self.add_active_zone(*id, z);
+
+                            p.rect_fill(
+                                UI_BORDER_CLR,
+                                lbl_x, tab_rect.y,
+                                UI_TAB_WIDTH,
+                                tab_rect.h);
+
+                            if i == selected_idx {
+                                p.rect_fill(
+                                    tab_bg_color,
+                                    lbl_x + UI_BORDER_WIDTH, tab_rect.y + UI_BORDER_WIDTH,
+                                    UI_TAB_WIDTH - 2.0 * UI_BORDER_WIDTH,
+                                    tab_rect.h + UI_BORDER_WIDTH + 0.5);
+                            } else {
+                                p.rect_fill(
+                                    tab_inactive_bg_color,
+                                    lbl_x + UI_BORDER_WIDTH, tab_rect.y + UI_BORDER_WIDTH,
+                                    UI_TAB_WIDTH - 2.0 * UI_BORDER_WIDTH,
+                                    tab_rect.h - 2.0 * UI_BORDER_WIDTH);
+                            }
+                            if i == hover_idx {
+                                p.label(UI_TAB_FONT_SIZE, 0, UI_TAB_TXT_HOVER_CLR,
+                                    lbl_x, tab_rect.y, UI_TAB_WIDTH, tab_rect.h, lbl);
+                            } else {
+                                p.label(UI_TAB_FONT_SIZE, 0, UI_TAB_TXT_CLR,
+                                    lbl_x, tab_rect.y, UI_TAB_WIDTH, tab_rect.h, lbl);
+                            }
+
+                            lbl_x += UI_TAB_WIDTH - UI_BORDER_WIDTH;
+                        }
                     },
                 }
             }
