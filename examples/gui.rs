@@ -90,10 +90,12 @@ fn main() {
                 vec![
                     UIInput::container_border(UIPos::center(12, 5), vec![
                         vec![
-                            UIInput::graph_small(1, String::from("Wavey (s)"),  UIPos::left(12, 5), graph_fun),
+                            UIInput::graph_small(1, String::from("Wavey (s)"),  UIPos::left(6, 5), graph_fun),
+                            UIInput::lines("Text ää\nfeof\nfeowfwe", 14.0, UIPos::center(6, 5).middle()),
                         ],
                         vec![
-                            UIInput::knob_small(11, String::from("w"),          UIPos::left(12, 7)),
+                            UIInput::knob_small(11, String::from("w"),          UIPos::left(6, 7)),
+                            UIInput::lines_border("- Text ää\nfeof\nfeowfwe", 13.0, UIPos::center(6, 7).middle()),
                         ]
                     ])
                 ],

@@ -255,6 +255,7 @@ impl UIElementData for UIGraphData {
 pub enum UIInput {
     None(UIPos),
     Container(UIPos, Vec<Vec<UIInput>>, bool),
+    Label(UIPos, f32, String),
     KnobSmall(UIKnobData),
     Knob(UIKnobData),
     KnobHuge(UIKnobData),
@@ -272,6 +273,7 @@ impl UIInput {
         match self {
             UIInput::None(p)                             => *p,
             UIInput::Container(p, _, _)                  => *p,
+            UIInput::Label(p, _, _)                      => *p,
             UIInput::KnobSmall(UIKnobData { pos, .. })   => *pos,
             UIInput::Knob(UIKnobData { pos, .. })        => *pos,
             UIInput::KnobHuge(UIKnobData { pos, .. })    => *pos,
@@ -280,6 +282,28 @@ impl UIInput {
             UIInput::GraphHuge(UIGraphData { pos, .. })  => *pos,
             UIInput::GraphSmall(UIGraphData { pos, .. }) => *pos,
         }
+    }
+
+    pub fn label(label: &str, font_size: f32, pos: UIPos) -> Self {
+        UIInput::Label(pos, font_size, label.to_string())
+    }
+
+    pub fn lines(label: &str, font_size: f32, pos: UIPos) -> Self {
+        UIInput::lines_intern(label, font_size, pos, false)
+    }
+
+    pub fn lines_border(label: &str, font_size: f32, pos: UIPos) -> Self {
+        UIInput::lines_intern(label, font_size, pos, true)
+    }
+
+    fn lines_intern(label: &str, font_size: f32, pos: UIPos, border: bool) -> Self {
+        let lines : Vec<String> = label.split("\n").map(|s| s.to_string()).collect();
+        let mut childs = vec![];
+        let height = (12.0 / (lines.len() as f32)).ceil() as u8;
+        for l in lines {
+            childs.push(vec![ UIInput::Label(UIPos::left(12, height), font_size, l.to_string()) ]);
+        }
+        UIInput::Container(pos, childs, border)
     }
 
     pub fn btn_drag_value(id: usize, label: String, pos: UIPos) -> Self {

@@ -786,6 +786,11 @@ impl UI {
                                 _                      => ElementType::GraphHuge,
                             });
                     },
+                    UIInput::Label(_, font_size, label) => {
+                        let crect = el_rect;
+                        p.label(*font_size as f64, -1, UI_TXT_KNOB_CLR,
+                                crect.x, crect.y, crect.w, crect.h, &label);
+                    },
                     UIInput::Container(_, childs, next_border) => {
                         let crect = el_rect;
                         self.layout_container(

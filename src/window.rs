@@ -347,7 +347,7 @@ pub fn open_window(title: &str, window_width: i32, window_height: i32, parent: O
 
         let mut canvas = Canvas::new(renderer).expect("Cannot create canvas");
         canvas.set_size(window_width as u32, window_height as u32, 1.0);
-        let font = canvas.add_font_mem(std::include_bytes!("DejaVuSerif.ttf")).expect("can load font");
+        let font = canvas.add_font_mem(std::include_bytes!("font.ttf")).expect("can load font");
         let (w, h) = (canvas.width(), canvas.height());
         let img_buf =
             canvas.create_image_empty(
