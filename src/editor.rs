@@ -2,6 +2,8 @@ use crate::KickmessVSTParams;
 use vst::editor::Editor;
 use std::sync::Arc;
 use std::rc::Rc;
+use vst::plugin::{HostCallback};
+use vst::host::Host;
 
 use crate::ui::protocol::*;
 use crate::ui::constants::*;
@@ -13,14 +15,16 @@ const WINDOW_HEIGHT: i32 = 600;
 
 pub(crate) struct KickmessEditor {
 //    view:      Option<Box<PuglView<PuglUI>>>,
+    host:       HostCallback,
     params:     Arc<KickmessVSTParams>,
     gui_hdl:    Option<ui::protocol::UIClientHandle>,
 }
 
 impl KickmessEditor {
-    pub(crate) fn new(params: Arc<KickmessVSTParams>) -> Self {
+    pub(crate) fn new(host: HostCallback, params: Arc<KickmessVSTParams>) -> Self {
         Self {
 //            view: None,
+            host,
             params,
             gui_hdl: None,
         }
@@ -125,16 +129,19 @@ impl Editor for KickmessEditor {
                     UIMsg::ValueChangeStart { id, value } => {
                         if let Some(af) = self.params.params.get(id) {
                             af.set(value);
+                            self.host.automate(id as i32, value);
                         }
                     },
                     UIMsg::ValueChanged { id, value, single_change } => {
                         if let Some(af) = self.params.params.get(id) {
                             af.set(value);
+                            self.host.automate(id as i32, value);
                         }
                     },
                     UIMsg::ValueChangeEnd { id, value } => {
                         if let Some(af) = self.params.params.get(id) {
                             af.set(value);
+                            self.host.automate(id as i32, value);
                         }
                     },
                     UIMsg::WindowClosed => {
