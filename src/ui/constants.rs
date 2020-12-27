@@ -52,6 +52,7 @@ pub const UI_GRPH_FONT_SIZE       : f64 = UI_KNOB_FONT_SIZE;
 
 pub const UI_TAB_WIDTH            : f64 = 90.0;
 pub const UI_TAB_FONT_SIZE        : f64 = UI_KNOB_FONT_SIZE;
+pub const UI_TAB_BG_CLR           : (f64, f64, f64) = UI_LBL_BG_CLR;
 pub const UI_TAB_TXT_CLR          : (f64, f64, f64) = UI_BTN_TXT_CLR;
 pub const UI_TAB_TXT_HOVER_CLR    : (f64, f64, f64) = UI_BTN_TXT_HOVER_CLR;
 

@@ -877,20 +877,20 @@ impl UI {
                                 lbl_x, tab_rect.y,
                                 UI_TAB_WIDTH,
                                 tab_rect.h);
+                            p.rect_fill(
+                                UI_TAB_BG_CLR,
+                                lbl_x + UI_BORDER_WIDTH, tab_rect.y + UI_BORDER_WIDTH,
+                                UI_TAB_WIDTH - 2.0 * UI_BORDER_WIDTH,
+                                tab_rect.h - 2.0 * UI_BORDER_WIDTH);
 
                             if i == selected_idx {
                                 p.rect_fill(
                                     tab_bg_color,
-                                    lbl_x + UI_BORDER_WIDTH, tab_rect.y + UI_BORDER_WIDTH,
+                                    lbl_x + UI_BORDER_WIDTH, tab_rect.y + tab_rect.h - (UI_BORDER_WIDTH + 1.0),
                                     UI_TAB_WIDTH - 2.0 * UI_BORDER_WIDTH,
-                                    tab_rect.h + UI_BORDER_WIDTH + 0.5);
-                            } else {
-                                p.rect_fill(
-                                    tab_inactive_bg_color,
-                                    lbl_x + UI_BORDER_WIDTH, tab_rect.y + UI_BORDER_WIDTH,
-                                    UI_TAB_WIDTH - 2.0 * UI_BORDER_WIDTH,
-                                    tab_rect.h - 2.0 * UI_BORDER_WIDTH);
+                                    UI_BORDER_WIDTH + 1.5);
                             }
+
                             if i == hover_idx {
                                 p.label(UI_TAB_FONT_SIZE, 0, UI_TAB_TXT_HOVER_CLR,
                                     lbl_x, tab_rect.y, UI_TAB_WIDTH, tab_rect.h, lbl);
