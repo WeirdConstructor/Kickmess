@@ -206,8 +206,6 @@ pub struct UIKnobData {
     pub pos:         UIPos,
     pub id:          usize,
     pub label:       String,
-    // TODO:
-    //   - Type:    LeftRight, Center
 }
 
 impl UIElementData for UIKnobData {
@@ -252,10 +250,19 @@ impl UIElementData for UIGraphData {
 }
 
 #[derive(Debug, Clone)]
+pub struct UITabData {
+    pub pos:         UIPos,
+    pub id:          usize,
+    pub labels:      Vec<String>,
+    pub childs:      Vec<Vec<Vec<UIInput>>>,
+}
+
+#[derive(Debug, Clone)]
 pub enum UIInput {
     None(UIPos),
     Container(UIPos, Vec<Vec<UIInput>>, bool),
     Label(UIPos, f32, String),
+    Tabs(UITabData),
     KnobSmall(UIKnobData),
     Knob(UIKnobData),
     KnobHuge(UIKnobData),
@@ -274,6 +281,7 @@ impl UIInput {
             UIInput::None(p)                             => *p,
             UIInput::Container(p, _, _)                  => *p,
             UIInput::Label(p, _, _)                      => *p,
+            UIInput::Tabs(UITabData { pos, .. })         => *pos,
             UIInput::KnobSmall(UIKnobData { pos, .. })   => *pos,
             UIInput::Knob(UIKnobData { pos, .. })        => *pos,
             UIInput::KnobHuge(UIKnobData { pos, .. })    => *pos,

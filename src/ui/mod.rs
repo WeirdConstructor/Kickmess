@@ -18,7 +18,7 @@ use crate::ui::element::*;
 use crate::ui::painting::{ActiveZone, HLStyle, Painter};
 use crate::ui::draw_cache::{DrawCache};
 use crate::ui::protocol::{UIMsg, UICmd, UIPos, UIKnobData, UIProviderHandle,
-                          UILayout, UIBtnData, UIInput, UIValueSpec, UIGraphValueSource};
+                          UITabData, UILayout, UIBtnData, UIInput, UIValueSpec, UIGraphValueSource};
 use crate::ui::constants::*;
 use keyboard_types::{Key, KeyboardEvent};
 
@@ -797,6 +797,39 @@ impl UI {
                             p, *next_border, "",
                             if border { depth + 1 } else { depth },
                             crect, childs);
+                    },
+                    UIInput::Tabs(UITabData { id, labels, childs, .. }) => {
+                        let crect = el_rect;
+
+                        let el_v = self.get_element_value(*id) as f64;
+//                        let child_inc = 1.0 / (childs.len() as f64);
+                        let child_idx = (el_v * (childs.len() as f64)).floor() as usize;
+                        let child_idx =
+                            if child_idx >= childs.len() { childs.len() - 1 }
+                            else                         { child_idx };
+
+                        let tab_h = UI_PADDING + UI_ELEM_TXT_H + UI_PADDING;
+                        let tab_rect = Rect {
+                            x: crect.x,
+                            y: crect.y,
+                            w: crect.w,
+                            h: tab_h,
+                        };
+                        let crect = Rect {
+                            x: crect.x,
+                            y: crect.y + tab_h,
+                            w: crect.w,
+                            h: crect.h - tab_h,
+                        };
+
+                        self.layout_container(
+                            p, true, "",
+                            if border { depth + 1 } else { depth },
+                            crect, &childs[child_idx]);
+
+                        p.rect_fill(UI_BORDER_CLR, tab_rect.x, tab_rect.y, tab_rect.w, tab_rect.h);
+//                        p.label(12.0, -1, UI_TXT_KNOB_CLR,
+//                                crect.x, crect.y, crect.w, crect.h, "TABASBA");
                     },
                 }
             }

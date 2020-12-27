@@ -9,7 +9,7 @@ use std::sync::Arc;
 fn main() {
     let (cl_hdl, p_hdl) = ui::protocol::UIClientHandle::create();
 
-    let runner = kickmessvst::window::open_window("Kickmess Test GUI", 800, 600, None, p_hdl);
+    let runner = kickmessvst::window::open_window("Kickmess Test GUI", 800, 800, None, p_hdl);
 
     let graph_fun = Arc::new(|_id: usize, src: &mut dyn UIGraphValueSource, out: &mut Vec<(f64, f64)>| {
         let samples = 40;
@@ -49,7 +49,7 @@ fn main() {
     cl_hdl.tx.send(UICmd::Define(vec![
         UILayout::Container {
             label: String::from("Test GUI"),
-            xv: 1, yv: 1, wv: 7, hv: 10,
+            xv: 1, yv: 1, wv: 7, hv: 8,
             rows: vec![
                 vec![
                     UIInput::container_border(UIPos::center(12, 4), vec![ vec![
@@ -79,7 +79,7 @@ fn main() {
         },
         UILayout::Container {
             label: String::from("Graph Test"),
-            xv: 8, yv: 1, wv: 3, hv: 10,
+            xv: 8, yv: 1, wv: 3, hv: 8,
             rows: vec![
                 vec![
                     UIInput::graph(      1, String::from("Wavey"),  UIPos::center(12, 3), graph_fun.clone()),
@@ -103,6 +103,45 @@ fn main() {
                 ],
             ],
         },
+        UILayout::Container {
+            label: String::from("Graph Test"),
+            xv: 1, yv: 9, wv: 10, hv: 3,
+            rows: vec![
+                vec![
+                    UIInput::Tabs(UITabData {
+                        pos: UIPos::center(12, 12),
+                        id: 11,
+                        labels: vec![String::from("ABCDEF"), String::from("OFOFEOFE"), String::from("FOFOO")],
+                        childs: vec![
+                            vec![
+                                vec![
+                                    UIInput::label("TAB 1", 14.0, UIPos::center(12, 6).middle()),
+                                ],
+                                vec![
+                                    UIInput::label("TAB 1", 14.0, UIPos::center(12, 6).middle()),
+                                ],
+                            ],
+                            vec![
+                                vec![
+                                    UIInput::label("TAB 2", 14.0, UIPos::center(12, 6).middle()),
+                                ],
+                                vec![
+                                    UIInput::label("TAB 2", 14.0, UIPos::center(12, 6).middle()),
+                                ],
+                            ],
+                            vec![
+                                vec![
+                                    UIInput::label("TAB 3", 14.0, UIPos::center(12, 6).middle()),
+                                ],
+                                vec![
+                                    UIInput::label("TAB 3", 14.0, UIPos::center(12, 6).middle()),
+                                ],
+                            ],
+                        ],
+                    }),
+                ],
+            ],
+        }
     ])).expect("mpsc ok");
 
      // TODO: Send VALUES!

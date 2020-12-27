@@ -129,6 +129,10 @@ impl Editor for KickmessEditor {
                     UIMsg::ValueChangeStart { id, value } => {
                         if let Some(af) = self.params.params.get(id) {
                             af.set(value);
+                            (self.host.raw_callback().unwrap())(
+                                self.host.raw_effect(),
+                                vst::host::OpCode::BeginEdit as i32,
+                                id as i32, 0, std::ptr::null_mut(), value);
                             self.host.automate(id as i32, value);
                         }
                     },
@@ -142,6 +146,10 @@ impl Editor for KickmessEditor {
                         if let Some(af) = self.params.params.get(id) {
                             af.set(value);
                             self.host.automate(id as i32, value);
+                            (self.host.raw_callback().unwrap())(
+                                self.host.raw_effect(),
+                                vst::host::OpCode::EndEdit as i32,
+                                id as i32, 0, std::ptr::null_mut(), value);
                         }
                     },
                     UIMsg::WindowClosed => {
