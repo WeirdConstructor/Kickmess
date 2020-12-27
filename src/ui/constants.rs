@@ -41,7 +41,7 @@ pub const UI_BTN_TXT_HLIGHT_CLR   : (f64, f64, f64) = UI_TXT_KNOB_HLIGHT_CLR;
 pub const UI_BTN_TXT_HLHOVR_CLR   : (f64, f64, f64) = UI_TXT_KNOB_HLHOVR_CLR;
 pub const UI_BTN_WIDTH            : f64 = 3.0 * UI_KNOB_RADIUS;
 pub const UI_BTN_BORDER_WIDTH     : f64 = 6.0;
-pub const UI_BTN_BORDER2_WIDTH    : f64 = 4.0;
+pub const UI_BTN_BORDER2_WIDTH    : f64 = 2.0;
 pub const UI_BTN_BEVEL            : f64 = UI_ELEM_TXT_H / 4.0;
 
 pub const UI_GRPH_W               : f64 = 90.0;

@@ -691,6 +691,119 @@ impl UI {
         }
     }
 
+    fn tac_on_tab_headers(&mut self, p: &mut dyn Painter, tab_rect: Rect,
+                          labels: &[String], selected_idx: usize, id: usize) {
+
+        let mut hover_idx = 9999;
+
+        if let Some(hover_zone) = self.hover_zone {
+            if hover_zone.id == id {
+                hover_idx =
+                    (hover_zone.set_val * (labels.len() as f64)).floor() as usize;
+                hover_idx = hover_idx.min(labels.len() - 1);
+            }
+        }
+
+        let val_inc = 1.0 / (labels.len() as f64);
+
+        let mut hover_border = None;
+
+        let mut lbl_x = tab_rect.x;
+        for (i, lbl) in labels.iter().enumerate() {
+            let mut z =
+                ActiveZone::from_rect(
+                    lbl_x, tab_rect.y,
+                    painting::AZ_SET_VALUE,
+                    (0.0, 0.0, UI_TAB_WIDTH, tab_rect.h));
+            z.set_val = (val_inc * 0.5) + (i as f64) * val_inc;
+            self.add_active_zone(id, z);
+
+            if i == selected_idx {
+                // Tab border
+                p.rect_fill(
+                    UI_BORDER_CLR,
+                    lbl_x, tab_rect.y,
+                    UI_TAB_WIDTH,
+                    tab_rect.h);
+
+                // Tab contrast
+                p.rect_fill(
+                    UI_TAB_BG_CLR,
+                    lbl_x      + UI_BORDER_WIDTH,
+                    tab_rect.y + UI_BORDER_WIDTH,
+                    UI_TAB_WIDTH - 2.0 * UI_BORDER_WIDTH,
+                    tab_rect.h - UI_BORDER_WIDTH);
+
+                // Tab text underline
+                p.path_stroke(
+                    UI_TAB_DIV_WIDTH,
+                    UI_TAB_DIV_CLR,
+                    &mut ([
+                        (lbl_x + UI_BORDER_WIDTH,                (tab_rect.y + tab_rect.h - UI_TAB_DIV_WIDTH * 0.5).round()),
+                        (lbl_x + UI_TAB_WIDTH - UI_BORDER_WIDTH, (tab_rect.y + tab_rect.h - UI_TAB_DIV_WIDTH * 0.5).round())
+                    ].iter().copied()), false);
+
+            } else {
+                // Tab border
+                p.rect_fill(
+                    UI_BORDER_CLR,
+                    lbl_x, tab_rect.y,
+                    UI_TAB_WIDTH,
+                    tab_rect.h);
+
+                // Tab contrast
+                p.rect_fill(
+                    UI_TAB_BG_CLR,
+                    lbl_x      + UI_BORDER_WIDTH,
+                    tab_rect.y + UI_BORDER_WIDTH,
+                    UI_TAB_WIDTH - 2.0 * UI_BORDER_WIDTH,
+                    tab_rect.h   - 2.0 * UI_BORDER_WIDTH);
+            }
+
+            if i != selected_idx && i == hover_idx {
+                // hover text label
+                p.label(
+                    UI_TAB_FONT_SIZE, 0, UI_TAB_TXT_HOVER_CLR,
+                    lbl_x, tab_rect.y,
+                    UI_TAB_WIDTH,
+                    tab_rect.h,
+                    lbl);
+
+                // remember the hover border for drawing after
+                // the loop.
+                let hover_pad = 1.0;
+                hover_border = Some(Rect {
+                    x: lbl_x      + hover_pad,
+                    y: tab_rect.y + hover_pad,
+                    w: UI_TAB_WIDTH - 2.0 * hover_pad,
+                    h: tab_rect.h   - 2.0 * hover_pad,
+                });
+
+            } else {
+                let txt_clr =
+                    if i == selected_idx { UI_TAB_TXT_CLR }
+                    else                 { UI_TAB_TXT2_CLR };
+
+                // normal text label, selected and non selected
+                p.label(
+                    UI_TAB_FONT_SIZE, 0, txt_clr,
+                    lbl_x, tab_rect.y,
+                    UI_TAB_WIDTH,
+                    tab_rect.h, lbl);
+            }
+
+            lbl_x += UI_TAB_WIDTH - UI_BORDER_WIDTH;
+        }
+
+        if let Some(hover_border) = hover_border {
+            p.rect_stroke(
+                UI_BORDER_WIDTH,
+                UI_TAB_TXT_HOVER_CLR,
+                hover_border.x, hover_border.y,
+                hover_border.w, hover_border.h);
+        }
+    }
+
     fn layout_container(&mut self, p: &mut dyn Painter, border: bool, label: &str, depth: u32, crect: Rect, rows: &Vec<Vec<UIInput>>) {
         let crect =
             if border {
@@ -819,7 +932,6 @@ impl UI {
                         let crect = el_rect;
 
                         let tab_h = UI_ELEM_TXT_H + UI_PADDING;
-                        let tab_txt_height = UI_ELEM_TXT_H;
                         let tab_rect = Rect {
                             x: UI_BORDER_WIDTH + crect.x,
                             y: UI_BORDER_WIDTH + crect.y,
@@ -844,116 +956,7 @@ impl UI {
                             p, true, "", next_depth,
                             crect, &childs[selected_idx]);
 
-                        let mut hover_idx = 9999;
-
-                        if let Some(hover_zone) = self.hover_zone {
-                            if hover_zone.id == *id {
-                                hover_idx =
-                                    (hover_zone.set_val * (labels.len() as f64)).floor() as usize;
-                                hover_idx = hover_idx.min(labels.len() - 1);
-                            }
-                        }
-
-                        let val_inc = 1.0 / (labels.len() as f64);
-
-                        let mut hover_border = None;
-                        let tab_bg_color =
-                            if next_depth % 2 == 0 { UI_GUI_BG_CLR }
-                            else                   { UI_GUI_BG2_CLR };
-
-                        let mut lbl_x = tab_rect.x;
-                        for (i, lbl) in labels.iter().enumerate() {
-                            let mut z =
-                                ActiveZone::from_rect(
-                                    lbl_x, tab_rect.y,
-                                    painting::AZ_SET_VALUE,
-                                    (0.0, 0.0, UI_TAB_WIDTH, tab_rect.h));
-                            z.set_val = (val_inc * 0.5) + (i as f64) * val_inc;
-                            self.add_active_zone(*id, z);
-
-                            if i == selected_idx {
-                                // Tab border
-                                p.rect_fill(
-                                    UI_BORDER_CLR,
-                                    lbl_x, tab_rect.y,
-                                    UI_TAB_WIDTH,
-                                    tab_rect.h);
-
-                                // Tab contrast
-                                p.rect_fill(
-                                    UI_TAB_BG_CLR,
-                                    lbl_x      + UI_BORDER_WIDTH,
-                                    tab_rect.y + UI_BORDER_WIDTH,
-                                    UI_TAB_WIDTH - 2.0 * UI_BORDER_WIDTH,
-                                    tab_rect.h - UI_BORDER_WIDTH);
-
-                                // Tab text underline
-                                p.path_stroke(
-                                    UI_TAB_DIV_WIDTH,
-                                    UI_TAB_DIV_CLR,
-                                    &mut ([
-                                        (lbl_x + UI_BORDER_WIDTH,                (tab_rect.y + tab_rect.h - UI_TAB_DIV_WIDTH * 0.5).round()),
-                                        (lbl_x + UI_TAB_WIDTH - UI_BORDER_WIDTH, (tab_rect.y + tab_rect.h - UI_TAB_DIV_WIDTH * 0.5).round())
-                                    ].iter().copied()), false);
-
-                            } else {
-                                // Tab border
-                                p.rect_fill(
-                                    UI_BORDER_CLR,
-                                    lbl_x, tab_rect.y,
-                                    UI_TAB_WIDTH,
-                                    tab_rect.h);
-
-                                // Tab contrast
-                                p.rect_fill(
-                                    UI_TAB_BG_CLR,
-                                    lbl_x      + UI_BORDER_WIDTH,
-                                    tab_rect.y + UI_BORDER_WIDTH,
-                                    UI_TAB_WIDTH - 2.0 * UI_BORDER_WIDTH,
-                                    tab_rect.h   - 2.0 * UI_BORDER_WIDTH);
-                            }
-
-                            if i != selected_idx && i == hover_idx {
-                                // hover text label
-                                p.label(
-                                    UI_TAB_FONT_SIZE, 0, UI_TAB_TXT_HOVER_CLR,
-                                    lbl_x, tab_rect.y,
-                                    UI_TAB_WIDTH,
-                                    tab_rect.h,
-                                    lbl);
-
-                                // remember the hover border for drawing after
-                                // the loop.
-                                hover_border = Some(Rect {
-                                    x: lbl_x,
-                                    y: tab_rect.y,
-                                    w: UI_TAB_WIDTH,
-                                    h: tab_rect.h,
-                                });
-
-                            } else {
-                                let txt_clr =
-                                    if i == selected_idx { UI_TAB_TXT_CLR }
-                                    else                 { UI_TAB_TXT2_CLR };
-
-                                // normal text label, selected and non selected
-                                p.label(
-                                    UI_TAB_FONT_SIZE, 0, txt_clr,
-                                    lbl_x, tab_rect.y,
-                                    UI_TAB_WIDTH,
-                                    tab_rect.h, lbl);
-                            }
-
-                            lbl_x += UI_TAB_WIDTH - UI_BORDER_WIDTH;
-                        }
-
-                        if let Some(hover_border) = hover_border {
-                            p.rect_stroke(
-                                UI_BORDER_WIDTH,
-                                UI_TAB_TXT_HOVER_CLR,
-                                hover_border.x, hover_border.y,
-                                hover_border.w, hover_border.h);
-                        }
+                        self.tac_on_tab_headers(p, tab_rect, labels, selected_idx, *id);
                     },
                 }
             }
