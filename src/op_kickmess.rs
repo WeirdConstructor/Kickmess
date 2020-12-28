@@ -36,6 +36,7 @@ const PI2 : f64 = std::f64::consts::PI * 2.0;
 
 macro_rules! param_model {
     ($x: ident) => {
+        //  scope  name         exp/lin smooth   idx  min    max     def    name
         $x!{public freq_start      exp no_smooth 0,   5.0,   3000.0, 150.0, "Start Freq."}
         $x!{public freq_end        exp no_smooth 1,   5.0,   2000.0,  40.0, "End Freq."}
         $x!{public f_env_release   exp no_smooth 2,   5.0,   5000.0, 440.0, "Length"}
