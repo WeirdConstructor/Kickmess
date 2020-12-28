@@ -15,7 +15,9 @@ keyboard-types     = { version = "0.5.0", default-features = false }
 raw-window-handle  = "0.3"
 gl                 = "0.14.0"
 glutin             = "0.24.1"
-vst                = { git = "https://github.com/rustaudio/vst-rs" }
+vst                = { git = "https://github.com/WeirdConstructor/vst-rs", branch = "host_begin_end_edit" }
+#vst                = { git = "https://github.com/rustaudio/vst-rs" }
+#vst                = { path = "/home/weictr/devel/other/vst-rs" }
 femtovg            = { git = "https://github.com/femtovg/femtovg" }
 raw-gl-context     = { git = "https://github.com/glowcoil/raw-gl-context" }
 baseview           = { git = "https://github.com/RustAudio/baseview.git" }
