@@ -18,6 +18,8 @@ pub struct UIValueSpec {
     coarse_step:    f64,
     fine_step:      f64,
     default:        f64,
+    help_name:      String,
+    help_text:      String,
 }
 
 impl std::fmt::Debug for UIValueSpec {
@@ -34,6 +36,8 @@ impl UIValueSpec {
             coarse_step: 0.05,
             fine_step:   0.01,
             default:     0.0,
+            help_name:   "".to_string(),
+            help_text:   "".to_string(),
         }
     }
 
@@ -44,7 +48,15 @@ impl UIValueSpec {
             coarse_step: 0.05,
             fine_step:   0.01,
             default:     0.0,
+            help_name:   "".to_string(),
+            help_text:   "".to_string(),
         }
+    }
+
+    pub fn help(mut self, name: &str, text: &str) -> Self {
+        self.help_name = name.to_string();
+        self.help_text = text.to_string();
+        self
     }
 
     pub fn new_toggle(targets: &[&str]) -> Self {
@@ -84,6 +96,8 @@ impl UIValueSpec {
             coarse_step: 0.0,
             fine_step:   0.0,
             default:     increment,
+            help_name:   "".to_string(),
+            help_text:   "".to_string(),
         }
     }
 
@@ -93,6 +107,14 @@ impl UIValueSpec {
 
     pub fn toggle_prev(&self, v: f32) -> f32 {
         (self.fun)(-1.0 * v as f64) as f32
+    }
+
+    pub fn get_help_tuple(&self) -> Option<(String, String)> {
+        if self.help_text.len() > 0 {
+            Some((self.help_name.clone(), self.help_text.clone()))
+        } else {
+            None
+        }
     }
 
     pub fn new_mod_target_list(targets: &[(usize, &str)], empty_label: &str) -> Self {
@@ -126,6 +148,8 @@ impl UIValueSpec {
             coarse_step: 0.0,
             fine_step:   0.0,
             default:     0.0,
+            help_name:   "".to_string(),
+            help_text:   "".to_string(),
         }
     }
 
@@ -136,6 +160,8 @@ impl UIValueSpec {
             coarse_step: 0.05,
             fine_step:   0.001,
             default:     0.0,
+            help_name:   "".to_string(),
+            help_text:   "".to_string(),
         }
     }
 
@@ -146,6 +172,8 @@ impl UIValueSpec {
             coarse_step: 0.05,
             fine_step:   0.001,
             default:     0.0,
+            help_name:   "".to_string(),
+            help_text:   "".to_string(),
         }
     }
 
@@ -168,6 +196,8 @@ impl UIValueSpec {
             coarse_step: 0.05,
             fine_step:   0.001,
             default:     0.0,
+            help_name:   "".to_string(),
+            help_text:   "".to_string(),
         }
     }
 

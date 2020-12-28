@@ -66,12 +66,14 @@ enum InputMode {
     ToggleBtn  { zone: ActiveZone },
     SetDefault { zone: ActiveZone },
     SetValue   { zone: ActiveZone },
+    GetHelp,
 }
 
 impl InputMode {
     fn id(&self) -> usize {
         match self {
             InputMode::None                    => IMAGINARY_MAX_ID,
+            InputMode::GetHelp                 => IMAGINARY_MAX_ID,
             InputMode::ValueDrag  { zone, .. } => zone.id,
             InputMode::SelectMod  { zone, .. } => zone.id,
             InputMode::ToggleBtn  { zone, .. } => zone.id,
@@ -100,6 +102,8 @@ pub struct UI {
     last_mouse_pos: (f64, f64),
     input_mode:     InputMode,
     fine_drag_key_held: bool,
+    help_texts:     Vec<Option<(String, String)>>,
+    help_id:        Option<usize>,
 
     needs_redraw_flag: bool,
 }
@@ -149,6 +153,8 @@ impl UI {
                 last_mouse_pos:     (0.0, 0.0),
                 needs_redraw_flag:  true,
                 input_mode:         InputMode::None,
+                help_id:            None,
+                help_texts:         vec![],
 //                font:               None,
             };
         this.init_draw_cache();
@@ -449,6 +455,14 @@ impl UI {
                             }
                         }
                     },
+                    InputMode::GetHelp => {
+                        if let Some(hover_zone) = self.hover_zone {
+                            if let Some(_) = self.get_element_help(hover_zone.id) {
+                                self.help_id = Some(hover_zone.id);
+                                self.queue_redraw();
+                            }
+                        }
+                    },
                     InputMode::SelectMod { zone, .. } => {
                         //d// println!("MOD SELECT RELEASE");
                         if let Some(hover_zone) = self.hover_zone {
@@ -502,7 +516,27 @@ impl UI {
             },
             UIEvent::KeyReleased(key_event) => {
                 match key_event.key {
-                    Key::Shift => { self.fine_drag_key_held = false; },
+                    Key::Shift  => { self.fine_drag_key_held = false; },
+                    Key::F1     => {
+                        if let Some(_) = self.help_id {
+                            self.input_mode = InputMode::None;
+                            self.help_id    = None;
+
+                        } else if let InputMode::GetHelp = self.input_mode {
+                            self.input_mode = InputMode::None;
+                            self.help_id    = None;
+
+                        } else {
+                            self.input_mode = InputMode::GetHelp;
+                        }
+
+                        self.queue_redraw();
+                    },
+                    Key::Escape => {
+                        self.input_mode = InputMode::None;
+                        self.help_id    = None;
+                        self.queue_redraw();
+                    },
                     _ => { }
                 }
             },
@@ -515,7 +549,13 @@ impl UI {
     }
 
     fn set_value_specs(&mut self, valspecs: Vec<UIValueSpec>) {
-        for (i, _) in valspecs.iter().enumerate() {
+        for (i, vspec) in valspecs.iter().enumerate() {
+            if i >= self.help_texts.len() {
+                self.help_texts.resize(i + 1, None);
+            }
+
+            self.help_texts[i] = vspec.get_help_tuple();
+
             self.touch_element_value(i);
         }
 
@@ -601,6 +641,14 @@ impl UI {
         v
     }
 
+    fn get_element_help(&self, id: usize) -> Option<(&str, &str)> {
+        if let Some(Some((n, t))) = self.help_texts.get(id) {
+            Some((n, t))
+        } else {
+            None
+        }
+    }
+
     fn add_active_zone(&mut self, id: usize, mut az: ActiveZone) {
         az.id = id;
         self.zones.push(az);
@@ -653,6 +701,15 @@ impl UI {
 
         let highlight =
             match self.input_mode {
+                InputMode::GetHelp => {
+                    if let HLStyle::Hover(_) = self.hover_highligh_for_id(id) {
+                        HLStyle::HoverModTarget
+                    } else if let Some(_) = self.get_element_help(id) {
+                        HLStyle::ModTarget
+                    } else {
+                        HLStyle::None
+                    }
+                },
                 InputMode::SelectMod { zone } => {
                     if let HLStyle::Hover(_) = self.hover_highligh_for_id(id) {
                         if self.is_mod_target_value(zone.id, id) {
@@ -679,7 +736,8 @@ impl UI {
 
         let mut buf : [u8; 64] = [0_u8; 64];
         let mut bw = std::io::BufWriter::new(&mut buf[..]);
-        let val     = self.get_element_value(id) as f64;
+        let val    = self.get_element_value(id) as f64;
+
         if !self.get_formatted_value(id, &mut bw) {
             self.cache.draw_data(p, xe, ye, cache_idx as usize,
                                  highlight, element_data, val,
@@ -970,17 +1028,6 @@ impl UI {
 
         p.rect_fill(UI_GUI_BG_CLR, 0.0, 0.0, ww, wh);
 
-//        if let Some(ff) = self.font.as_ref() {
-//            cr.set_font_face(ff);
-//        } else {
-//            let ff = cairo::FontFace::toy_create(
-//                "serif",
-//                cairo::FontSlant::Normal,
-//                cairo::FontWeight::Normal);
-//            cr.set_font_face(&ff);
-//            self.font = Some(ff);
-//        }
-
         self.zones.clear();
 
         let layout = self.layout.clone();
@@ -1004,6 +1051,46 @@ impl UI {
 
                     //d// println!("DRAW CONTAINER {},{},{},{}", x, y, w, h);
                 },
+            }
+        }
+
+        if let Some(help_id) = self.help_id {
+            p.rect_fill(UI_GUI_BG_CLR, 0.0, 0.0, ww, wh);
+            p.rect_stroke(
+                UI_BORDER_WIDTH,
+                UI_BORDER_CLR,
+                UI_MARGIN, UI_MARGIN,
+                ww - 2.0 * UI_MARGIN,
+                wh - 2.0 * UI_MARGIN);
+
+            if let Some((name, txt)) = self.get_element_help(help_id) {
+                let y_increment = UI_ELEM_TXT_H;
+                let mut y = UI_MARGIN + UI_BORDER_WIDTH + UI_PADDING;
+                let x     = UI_MARGIN + UI_BORDER_WIDTH + UI_PADDING;
+
+                p.label(1.5 * UI_HELP_FONT_SIZE, 0, UI_HELP_TXT_CLR,
+                        x, y,
+                        ww - 2.0 * (UI_MARGIN + UI_BORDER_WIDTH + UI_PADDING),
+                        UI_ELEM_TXT_H,
+                        name);
+
+                y += 2.0 * y_increment;
+
+                for line in txt.split("\n") {
+                    p.label(UI_HELP_FONT_SIZE, -1, UI_HELP_TXT_CLR,
+                            x, y,
+                            ww - 2.0 * (UI_MARGIN + UI_BORDER_WIDTH + UI_PADDING),
+                            UI_ELEM_TXT_H,
+                            line);
+                    y += y_increment;
+                }
+
+                p.label(UI_HELP_FONT_SIZE, 0, UI_HELP_TXT_CLR,
+                    x,
+                    wh - 2.0 * (UI_MARGIN + UI_BORDER_WIDTH + UI_PADDING),
+                    ww - 2.0 * (UI_MARGIN + UI_BORDER_WIDTH + UI_PADDING),
+                    UI_ELEM_TXT_H,
+                    "Press <Escape> or <F1> to exit help");
             }
         }
 
