@@ -976,8 +976,15 @@ impl UI {
                     },
                     UIInput::Label(_, font_size, label) => {
                         let crect = el_rect;
-                        p.label(*font_size as f64, -1, UI_LBL_TXT_CLR,
-                                crect.x, crect.y, crect.w, crect.h, &label);
+                        p.label(
+                            *font_size as f64, -1, UI_LBL_TXT_CLR,
+                            crect.x, crect.y, crect.w, crect.h, &label);
+                    },
+                    UIInput::LabelMono(_, font_size, label) => {
+                        let crect = el_rect;
+                        p.label_mono(
+                            *font_size as f64, -1, UI_LBL_TXT_CLR,
+                            crect.x, crect.y, crect.w, crect.h, &label);
                     },
                     UIInput::Container(_, childs, next_border) => {
                         let crect = el_rect;
@@ -1004,7 +1011,8 @@ impl UI {
                         };
 
                         let mut selected_idx =
-                            (self.get_element_value(*id) * (labels.len() as f32)).floor() as usize;
+                            (self.get_element_value(*id)
+                             * (labels.len() as f32)).floor() as usize;
                         let selected_idx = selected_idx.min(labels.len() - 1);
 
                         let next_depth =
@@ -1014,7 +1022,8 @@ impl UI {
                             p, true, "", next_depth,
                             crect, &childs[selected_idx]);
 
-                        self.tac_on_tab_headers(p, tab_rect, labels, selected_idx, *id);
+                        self.tac_on_tab_headers(
+                            p, tab_rect, labels, selected_idx, *id);
                     },
                 }
             }
@@ -1047,7 +1056,7 @@ impl UI {
 
                     let crect = Rect { x, y, w, h };
 
-                    self.layout_container(p, true, label, 0, crect, rows);
+                    self.layout_container(p, label.len() > 0, label, 0, crect, rows);
 
                     //d// println!("DRAW CONTAINER {},{},{},{}", x, y, w, h);
                 },
@@ -1068,7 +1077,7 @@ impl UI {
                 let mut y = UI_MARGIN + UI_BORDER_WIDTH + UI_PADDING;
                 let x     = UI_MARGIN + UI_BORDER_WIDTH + UI_PADDING;
 
-                p.label(1.5 * UI_HELP_FONT_SIZE, 0, UI_HELP_TXT_CLR,
+                p.label_mono(1.5 * UI_HELP_FONT_SIZE, 0, UI_HELP_TXT_CLR,
                         x, y,
                         ww - 2.0 * (UI_MARGIN + UI_BORDER_WIDTH + UI_PADDING),
                         UI_ELEM_TXT_H,
@@ -1077,7 +1086,7 @@ impl UI {
                 y += 2.0 * y_increment;
 
                 for line in txt.split("\n") {
-                    p.label(UI_HELP_FONT_SIZE, -1, UI_HELP_TXT_CLR,
+                    p.label_mono(UI_HELP_FONT_SIZE, -1, UI_HELP_TXT_CLR,
                             x, y,
                             ww - 2.0 * (UI_MARGIN + UI_BORDER_WIDTH + UI_PADDING),
                             UI_ELEM_TXT_H,
@@ -1085,7 +1094,7 @@ impl UI {
                     y += y_increment;
                 }
 
-                p.label(UI_HELP_FONT_SIZE, 0, UI_HELP_TXT_CLR,
+                p.label_mono(UI_HELP_FONT_SIZE, 0, UI_HELP_TXT_CLR,
                     x,
                     wh - 2.0 * (UI_MARGIN + UI_BORDER_WIDTH + UI_PADDING),
                     ww - 2.0 * (UI_MARGIN + UI_BORDER_WIDTH + UI_PADDING),

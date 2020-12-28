@@ -312,6 +312,7 @@ pub enum UIInput {
     None(UIPos),
     Container(UIPos, Vec<Vec<UIInput>>, bool),
     Label(UIPos, f32, String),
+    LabelMono(UIPos, f32, String),
     Tabs(UITabData),
     KnobSmall(UIKnobData),
     Knob(UIKnobData),
@@ -331,6 +332,7 @@ impl UIInput {
             UIInput::None(p)                             => *p,
             UIInput::Container(p, _, _)                  => *p,
             UIInput::Label(p, _, _)                      => *p,
+            UIInput::LabelMono(p, _, _)                  => *p,
             UIInput::Tabs(UITabData { pos, .. })         => *pos,
             UIInput::KnobSmall(UIKnobData { pos, .. })   => *pos,
             UIInput::Knob(UIKnobData { pos, .. })        => *pos,
@@ -346,20 +348,38 @@ impl UIInput {
         UIInput::Label(pos, font_size, label.to_string())
     }
 
+    pub fn label_mono(label: &str, font_size: f32, pos: UIPos) -> Self {
+        UIInput::LabelMono(pos, font_size, label.to_string())
+    }
+
+    pub fn lines_mono(label: &str, font_size: f32, pos: UIPos) -> Self {
+        UIInput::lines_intern(label, font_size, pos, false, true)
+    }
+
+    pub fn lines_border_mono(label: &str, font_size: f32, pos: UIPos) -> Self {
+        UIInput::lines_intern(label, font_size, pos, true, true)
+    }
+
     pub fn lines(label: &str, font_size: f32, pos: UIPos) -> Self {
-        UIInput::lines_intern(label, font_size, pos, false)
+        UIInput::lines_intern(label, font_size, pos, false, false)
     }
 
     pub fn lines_border(label: &str, font_size: f32, pos: UIPos) -> Self {
-        UIInput::lines_intern(label, font_size, pos, true)
+        UIInput::lines_intern(label, font_size, pos, true, false)
     }
 
-    fn lines_intern(label: &str, font_size: f32, pos: UIPos, border: bool) -> Self {
+    fn lines_intern(label: &str, font_size: f32, pos: UIPos, border: bool, mono: bool) -> Self {
         let lines : Vec<String> = label.split("\n").map(|s| s.to_string()).collect();
         let mut childs = vec![];
         let height = (12.0 / (lines.len() as f32)).ceil() as u8;
         for l in lines {
-            childs.push(vec![ UIInput::Label(UIPos::left(12, height), font_size, l.to_string()) ]);
+            childs.push(vec![
+                if mono {
+                    UIInput::LabelMono(UIPos::left(12, height), font_size, l.to_string())
+                } else {
+                    UIInput::Label(UIPos::left(12, height), font_size, l.to_string())
+                }
+            ]);
         }
         UIInput::Container(pos, childs, border)
     }

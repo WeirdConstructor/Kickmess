@@ -53,6 +53,27 @@ impl KickmessEditor {
             UIValueSpec::new_id(),
         ])).expect("mpsc ok");
 
+        /*
+           ________________
+           | MAIN | About |
+           |======|-------|--------------------------------------------|
+           ||-------------------------------------| |-----------------||
+           || Osc                                 | |   O     O       ||
+           || |---------------|  |---------------|| |                 ||
+           || |               |  |               || |  Gain Noise     ||
+           || |  Waveform     |  |[N.St] [N.End] || |                 ||
+           || |_______________|  |_______________|| |_________________||
+           ||                                     |                    |
+           ||    O       O           O          O |                    |
+           || Length Amp Slope Amp Release  Click |                    |
+           ||                                     | |-----------------||
+           ||     O          O        O           | | Distortion      ||
+           ||  F. Start   F. End   F. Slope       | |  O       O      ||
+           ||                                     | | Start   End     ||
+           ||_____________________________________| |_________________||
+           |___________________________________________________________|
+        */
+
         self.gui_hdl.as_ref().unwrap().tx.send(UICmd::Define(vec![
             UILayout::Container {
                 label: String::from("Test GUI"),

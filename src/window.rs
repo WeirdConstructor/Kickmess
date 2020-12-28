@@ -79,6 +79,7 @@ pub struct GUIWindowHandler {
     context:    GlContext,
     canvas:     Canvas<OpenGl>,
     font:       FontId,
+    font_mono:  FontId,
     img_buf:    ImageId,
     ftm:        FrameTimeMeasurement,
     ftm_redraw: FrameTimeMeasurement,
@@ -88,8 +89,9 @@ pub struct GUIWindowHandler {
 }
 
 struct MyPainter<'a> {
-    canvas: &'a mut Canvas<OpenGl>,
-    font:   FontId,
+    canvas:     &'a mut Canvas<OpenGl>,
+    font:       FontId,
+    font_mono:  FontId,
 }
 
 fn color_paint(color: (f64, f64, f64)) -> femtovg::Paint {
@@ -98,6 +100,30 @@ fn color_paint(color: (f64, f64, f64)) -> femtovg::Paint {
             color.0 as f32,
             color.1 as f32,
             color.2 as f32))
+}
+
+impl<'a> MyPainter<'a> {
+    fn label_with_font(&mut self, size: f64, align: i8, color: (f64, f64, f64), x: f64, y: f64, w: f64, h: f64, text: &str, font: FontId) {
+        let mut paint = color_paint(color);
+        paint.set_font(&[font]);
+        paint.set_font_size(1.0 + size as f32);
+        paint.set_text_baseline(femtovg::Baseline::Middle);
+        let x = x.round();
+        match align {
+            -1 => {
+                paint.set_text_align(femtovg::Align::Left);
+                self.canvas.fill_text(x as f32, (y + h / 2.0).round() as f32, text, paint);
+            },
+            0  => {
+                paint.set_text_align(femtovg::Align::Center);
+                self.canvas.fill_text((x + (w / 2.0)) as f32, (y + h / 2.0).round() as f32, text, paint);
+            },
+            _  => {
+                paint.set_text_align(femtovg::Align::Right);
+                self.canvas.fill_text((x + w) as f32, (y + h / 2.0).round() as f32, text, paint);
+            },
+        }
+    }
 }
 
 impl<'a> Painter for MyPainter<'a> {
@@ -158,26 +184,11 @@ impl<'a> Painter for MyPainter<'a> {
     }
 
     fn label(&mut self, size: f64, align: i8, color: (f64, f64, f64), x: f64, y: f64, w: f64, h: f64, text: &str) {
-        let mut paint = color_paint(color);
-        paint.set_font_size(1.0 + size as f32);
-        paint.set_text_baseline(femtovg::Baseline::Middle);
-        let x = x.round();
-        match align {
-            -1 => {
-                paint.set_text_align(femtovg::Align::Left);
-                self.canvas.fill_text(x as f32, (y + h / 2.0).round() as f32, text, paint);
-            },
-            0  => {
-                paint.set_text_align(femtovg::Align::Center);
-                self.canvas.fill_text((x + (w / 2.0)) as f32, (y + h / 2.0).round() as f32, text, paint);
-            },
-            _  => {
-                paint.set_text_align(femtovg::Align::Right);
-                self.canvas.fill_text((x + w) as f32, (y + h / 2.0).round() as f32, text, paint);
-            },
-        }
-        //d// self.rect_stroke(0.5, (1.0, 0.0, 1.0), x, y, w, h);
-//        println!("DRAW LABEL {}", text);
+        self.label_with_font(size, align, color, x, y, w, h, text, self.font);
+    }
+
+    fn label_mono(&mut self, size: f64, align: i8, color: (f64, f64, f64), x: f64, y: f64, w: f64, h: f64, text: &str) {
+        self.label_with_font(size, align, color, x, y, w, h, text, self.font_mono);
     }
 }
 
@@ -274,7 +285,11 @@ impl WindowHandler for GUIWindowHandler {
                     UI_GUI_BG_CLR.0 as f32,
                     UI_GUI_BG_CLR.1 as f32,
                     UI_GUI_BG_CLR.2 as f32));
-            self.ui.draw(&mut MyPainter { canvas: &mut self.canvas, font: self.font });
+            self.ui.draw(&mut MyPainter {
+                canvas:     &mut self.canvas,
+                font:       self.font,
+                font_mono:  self.font_mono,
+            });
             self.canvas.restore();
             self.ftm_redraw.end_measure();
         }
@@ -347,7 +362,8 @@ pub fn open_window(title: &str, window_width: i32, window_height: i32, parent: O
 
         let mut canvas = Canvas::new(renderer).expect("Cannot create canvas");
         canvas.set_size(window_width as u32, window_height as u32, 1.0);
-        let font = canvas.add_font_mem(std::include_bytes!("font.ttf")).expect("can load font");
+        let font      = canvas.add_font_mem(std::include_bytes!("font.ttf")).expect("can load font");
+        let font_mono = canvas.add_font_mem(std::include_bytes!("font_mono.ttf")).expect("can load font");
         let (w, h) = (canvas.width(), canvas.height());
         let img_buf =
             canvas.create_image_empty(
@@ -365,6 +381,7 @@ pub fn open_window(title: &str, window_width: i32, window_height: i32, parent: O
             context,
             canvas,
             font,
+            font_mono,
             img_buf,
             ftm:        FrameTimeMeasurement::new("img"),
             ftm_redraw: FrameTimeMeasurement::new("redraw"),

@@ -75,7 +75,11 @@ fn main() {
         UIInput::Tabs(UITabData {
             pos: UIPos::center(12, 12),
             id: 11,
-            labels: vec![String::from("ABCDEF"), String::from("OFOFEOFE"), String::from("FOFOO")],
+            labels: vec![
+                String::from("ABCDEF"),
+                String::from("OFOFEOFE"),
+                String::from("FOFOO")
+            ],
             childs: vec![
                 vec![
                     vec![
@@ -150,7 +154,7 @@ fn main() {
                         ],
                         vec![
                             UIInput::knob_small(11, String::from("w"),          UIPos::left(6, 7)),
-                            UIInput::lines_border("- Text ää\nfeof\nfeowfwe", 13.0, UIPos::center(6, 7).middle()),
+                            UIInput::lines_border_mono("- Text ää\nfeof\nfeowfwe", 13.0, UIPos::center(6, 4).middle()),
                         ]
                     ])
                 ],
