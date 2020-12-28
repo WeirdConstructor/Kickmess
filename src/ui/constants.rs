@@ -3,6 +3,7 @@
 
 pub const UI_BG_CLR               : (f64, f64, f64) = (46.0  / 255.0,   41.0 / 255.0,   47.0 / 255.0);
 pub const UI_BG2_CLR              : (f64, f64, f64) = (57.0 / 255.0,   50.0 / 255.0,  59.0 / 255.0);
+pub const UI_TXT_CLR              : (f64, f64, f64) = (220.0 / 255.0,  220.0 / 255.0,  240.0 / 255.0);
 pub const UI_LBL_BG_CLR           : (f64, f64, f64) = (21.0  / 255.0,   18.0 / 255.0,   22.0 / 255.0);
 pub const UI_ACCENT_CLR           : (f64, f64, f64) = (143.0 / 255.0,   16.0 / 255.0,  136.0 / 255.0);
 pub const UI_PRIM_CLR             : (f64, f64, f64) = (105.0 / 255.0,  232.0 / 255.0,  237.0 / 255.0);
@@ -11,7 +12,9 @@ pub const UI_HLIGHT_CLR           : (f64, f64, f64) = (233.0 / 255.0,  248.0 / 2
 pub const UI_HLIGHT2_CLR          : (f64, f64, f64) = (181.0 / 255.0,  196.0 / 255.0,   18.0 / 255.0);
 
 pub const UI_HELP_FONT_SIZE       : f64 = 16.0;
-pub const UI_HELP_TXT_CLR         : (f64, f64, f64) = (200.0 / 255.0,  200.0 / 255.0,  200.0 / 255.0);
+pub const UI_HELP_TXT_CLR         : (f64, f64, f64) = UI_TXT_CLR;
+
+pub const UI_LBL_TXT_CLR          : (f64, f64, f64) = UI_TXT_CLR;
 
 pub const UI_CONT_FONT_SIZE       : f64 = 14.0;
 pub const UI_CONT_FONT_CLR        : (f64, f64, f64) = UI_PRIM_CLR;

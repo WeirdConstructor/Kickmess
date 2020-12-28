@@ -976,7 +976,7 @@ impl UI {
                     },
                     UIInput::Label(_, font_size, label) => {
                         let crect = el_rect;
-                        p.label(*font_size as f64, -1, UI_TXT_KNOB_CLR,
+                        p.label(*font_size as f64, -1, UI_LBL_TXT_CLR,
                                 crect.x, crect.y, crect.w, crect.h, &label);
                     },
                     UIInput::Container(_, childs, next_border) => {
