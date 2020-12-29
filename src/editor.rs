@@ -53,8 +53,7 @@ impl KickmessEditor {
             UIValueSpec::new_id(),
         ])).expect("mpsc ok");
 
-        /*
-           ________________
+        /* ________________
            | MAIN | About |
            |======|-------|--------------------------------------------|
            ||-------------------------------------| |-----------------||
@@ -64,12 +63,12 @@ impl KickmessEditor {
            || |  Waveform     |  |[N.St] [N.End] || |                 ||
            || |_______________|  |_______________|| |_________________||
            ||                                     |                    |
-           ||    O       O           O          O |                    |
-           || Length Amp Slope Amp Release  Click |                    |
+           ||    O       O           O          O | ____________       |
+           || Length Amp Slope Amp Release  Click | |Dist | Off |      |
            ||                                     | |-----------------||
-           ||     O          O        O           | | Distortion      ||
-           ||  F. Start   F. End   F. Slope       | |  O       O      ||
-           ||                                     | | Start   End     ||
+           ||     O          O        O           | |                 ||
+           ||  F. Start   F. End   F. Slope       | |  O       O   O  ||
+           ||                                     | | Start   End Gain||
            ||_____________________________________| |_________________||
            |___________________________________________________________|
         */
