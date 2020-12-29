@@ -50,7 +50,8 @@ macro_rules! param_model {
         $x!{public freq_note_end   lin no_smooth 10,  0.0,   1.0,      1.0, "End from note"}
         $x!{public env_release     lin no_smooth 11,  1.0,1000.0,      5.0, "Env Release"}
         $x!{public phase_offs      lin smooth    12,  0.0,   1.0,      0.0, "Click"}
-        $x!{private phase_test     lin smooth    13,  0.0,   1.0,      0.0, "Click2"}
+        $x!{public dist_on         lin no_smooth 13,  0.0,   1.0,      0.0, "Dist. On"}
+        $x!{private phase_test     lin smooth    14,  0.0,   1.0,      0.0, "Click2"}
     }
 }
 
@@ -115,19 +116,6 @@ pub struct OpKickmess {
 
 impl MonoProcessor for OpKickmess {
     fn init_params(ps: &mut ParamSet, public_ps: &mut ParamSet) {
-//        public_ps.add2(ps, ParamDefinition::from(Param::Freq1,      5.0,   3000.0, 150.0, "Start Freq.").exp().no_smooth());
-//        public_ps.add2(ps, ParamDefinition::from(Param::Freq2,      5.0,   2000.0,  40.0, "End Freq.").exp().no_smooth());
-//        public_ps.add2(ps, ParamDefinition::from(Param::Decay1,     5.0,   5000.0, 440.0, "Length").exp().no_smooth());
-//        public_ps.add2(ps, ParamDefinition::from(Param::Dist1,      0.0,   100.0,    0.8, "Dist. Start"));
-//        public_ps.add2(ps, ParamDefinition::from(Param::Dist2,      0.0,   100.0,    0.8, "Dist. End"));
-//        public_ps.add2(ps, ParamDefinition::from(Param::Gain1,      0.1,   5.0,      1.0, "Dist. Gain"));
-//        public_ps.add2(ps, ParamDefinition::from(Param::Env1,       0.01,  1.0,    0.163, "Env. slope"));
-//        public_ps.add2(ps, ParamDefinition::from(Param::Release1,   0.001, 1.0,     0.06, "Freq. slope"));
-//        public_ps.add2(ps, ParamDefinition::from(Param::Noise1,     0.0,   1.0,      0.0, "Noise"));
-//        public_ps.add2(ps, ParamDefinition::from(Param::S1,         0.0,   1.0,      1.0, "Start from note").no_smooth());
-//        public_ps.add2(ps, ParamDefinition::from(Param::S2,         0.0,   1.0,      1.0, "End from note").no_smooth());
-//        public_ps.add2(ps, ParamDefinition::from(Param::Release2,   1.0,1000.0,      5.0, "Env Release").no_smooth());
-//        public_ps.add2(ps, ParamDefinition::from(Param::Phase1,     0.0,   1.0,      0.0, "Click"));
         ParamModel::init_public_set(public_ps);
         ParamModel::init_private_set(ps);
     }
@@ -180,7 +168,7 @@ impl MonoProcessor for OpKickmess {
 
                 kick_sample = s * gain;
 
-                if (params.dist_start() - params.dist_end()).abs() > 0.0001 {
+                if params.dist_on() > 0.5 {
                     let thres = p2range(env_value as f32, params.dist_start(), params.dist_end());
                     kick_sample = f_distort(params.gain(), thres, kick_sample as f32) as f64;
                 } else {
