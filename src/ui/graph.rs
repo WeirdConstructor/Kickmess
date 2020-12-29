@@ -48,7 +48,10 @@ impl UIElement for Graph {
 
         p.path_stroke(
             1.0, UI_BTN_TXT_CLR,
-            &mut (data.iter().map(|p: &(f64, f64)| (p.0 * w + xo + x, p.1 * h + yo + y))),
+            &mut (data.iter().map(
+                |p: &(f64, f64)|
+                    (p.0 * w       + xo + x,
+                     (h - p.1 * h) + yo + y))),
             false);
         p.label(
             self.font_size, 0, UI_BTN_TXT_CLR,

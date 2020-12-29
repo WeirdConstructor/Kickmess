@@ -13,8 +13,8 @@ use crate::ui::constants::*;
 use crate::ui::{UI, UIEvent};
 use crate::ui;
 
-const WINDOW_WIDTH:  i32 = 800;
-const WINDOW_HEIGHT: i32 = 600;
+pub const WINDOW_WIDTH:  i32 = 700;
+pub const WINDOW_HEIGHT: i32 = 400;
 
 pub(crate) struct KickmessEditor {
 //    view:      Option<Box<PuglView<PuglUI>>>,
@@ -24,34 +24,79 @@ pub(crate) struct KickmessEditor {
 }
 
 pub fn define_gui(gui_hdl: &ui::protocol::UIClientHandle) {
-    gui_hdl.tx.send(UICmd::DefineValues(vec![
-        UIValueSpec::new_id().help("S Freq", "fie fwof ewiof ew\nfewfwiuofewoi fewoi fewoif \nfiewfoiew foiew jfewoij \nfwefiwfh weifuhi "),
-//        UIValueSpec::new_min_max_exp(5.0, 3000.0, 6, 1).steps(0.04, 0.01).help("S Freq", "fie fwof ewiof ew\nfewfwiuofewoi fewoi fewoif \nfiewfoiew foiew jfewoij \nfwefiwfh weifuhi "),
-//        UIValueSpec::new_min_max_exp(5.0, 2000.0, 6, 1).steps(0.04, 0.01).help("E Freq", "END fwof ewiof ew\nfewfwiuofewoi ENDoi fewoif \nfiewfoiew ENDew jfewoij \nfwefiwfh ENDfuhi "),
-        UIValueSpec::new_min_max_exp(5.0, 3000.0, 6, 1).steps(0.04, 0.01),
-        UIValueSpec::new_min_max_exp(5.0, 2000.0, 6, 1).steps(0.04, 0.01),
-        UIValueSpec::new_min_max_exp(5.0, 5000.0, 6, 1).steps(0.04, 0.01).help("3", "fie fwof ewiof ew\nfewfwiuofewoi fewoi fewoif \nfiewfoiew foiew jfewoij \nfwefiwfh weifuhi "),
-        UIValueSpec::new_min_max(0.0, 100.0, 5, 1).steps(0.04, 0.01).help("4", "fie fwof ewiof ew\nfewfwiuofewoi fewoi fewoif \nfiewfoiew foiew jfewoij \nfwefiwfh weifuhi "),
-        UIValueSpec::new_min_max(0.0, 100.0, 5, 1).steps(0.04, 0.01),
-        UIValueSpec::new_id(),
-        UIValueSpec::new_id(),
-        UIValueSpec::new_id(),
-        UIValueSpec::new_mod_target_list(&[
-            (1, "Start (Hz)"),
-            (2, "End (Hz)"),
-            (3, "Length (ms)"),
-        ], "?"),
-        UIValueSpec::new_toggle(&[ "Off", "On", "Left", "Right" ]),
-        UIValueSpec::new_id(),
-        UIValueSpec::new_id(),
-        UIValueSpec::new_id(),
-        UIValueSpec::new_id(),
-        UIValueSpec::new_id(),
-        UIValueSpec::new_id(),
-        UIValueSpec::new_id(),
-        UIValueSpec::new_id(),
-        UIValueSpec::new_id(),
-    ])).expect("mpsc ok");
+    let mut values = vec![];
+    values.resize(15, UIValueSpec::new_id());
+
+    let id_s_freq    = 0;
+    let id_e_freq    = 1;
+    let id_f_env_rel = 2;
+    let id_env_slope = 6;
+    let id_f_slope   = 7;
+    let id_env_rel   = 11;
+    let id_click     = 12;
+    let id_main_tab  = 13;
+    let id_lic_tab   = 14;
+
+//        UIValueSpec::new_id().help("S Freq", "fie fwof ewiof ew\nfewfwiuofewoi fewoi fewoif \nfiewfoiew foiew jfewoij \nfwefiwfh weifuhi "),
+////        UIValueSpec::new_min_max_exp(5.0, 3000.0, 6, 1).steps(0.04, 0.01).help("S Freq", "fie fwof ewiof ew\nfewfwiuofewoi fewoi fewoif \nfiewfoiew foiew jfewoij \nfwefiwfh weifuhi "),
+////        UIValueSpec::new_min_max_exp(5.0, 2000.0, 6, 1).steps(0.04, 0.01).help("E Freq", "END fwof ewiof ew\nfewfwiuofewoi ENDoi fewoif \nfiewfoiew ENDew jfewoij \nfwefiwfh ENDfuhi "),
+//        UIValueSpec::new_min_max_exp(5.0, 3000.0, 6, 1).steps(0.04, 0.01),
+//        UIValueSpec::new_min_max_exp(5.0, 2000.0, 6, 1).steps(0.04, 0.01),
+//        UIValueSpec::new_min_max_exp(5.0, 5000.0, 6, 1).steps(0.04, 0.01).help("3", "fie fwof ewiof ew\nfewfwiuofewoi fewoi fewoif \nfiewfoiew foiew jfewoij \nfwefiwfh weifuhi "),
+//        UIValueSpec::new_min_max(0.0, 100.0, 5, 1).steps(0.04, 0.01).help("4", "fie fwof ewiof ew\nfewfwiuofewoi fewoi fewoif \nfiewfoiew foiew jfewoij \nfwefiwfh weifuhi "),
+//        UIValueSpec::new_min_max(0.0, 100.0, 5, 1).steps(0.04, 0.01),
+//        UIValueSpec::new_id(),
+//        UIValueSpec::new_id(),
+//        UIValueSpec::new_id(),
+//        UIValueSpec::new_mod_target_list(&[
+//            (1, "Start (Hz)"),
+//            (2, "End (Hz)"),
+//            (3, "Length (ms)"),
+//        ], "?"),
+//        UIValueSpec::new_toggle(&[ "Off", "On", "Left", "Right" ]),
+//        UIValueSpec::new_id(),
+//        UIValueSpec::new_id(),
+//        UIValueSpec::new_id(),
+//        UIValueSpec::new_id(),
+//        UIValueSpec::new_id(),
+//        UIValueSpec::new_id(),
+//        UIValueSpec::new_id(),
+//        UIValueSpec::new_id(),
+//        UIValueSpec::new_id(),
+
+    gui_hdl.tx.send(UICmd::DefineValues(values)).expect("mpsc ok");
+
+    let id_s_freq_f = id_s_freq;
+    let f_env_fun =
+        Arc::new(move |_id: usize, src: &mut dyn UIGraphValueSource, out: &mut Vec<(f64, f64)>| {
+            let samples = 40;
+            for x in 0..(samples + 1) {
+                let x = x as f64 / (samples as f64);
+                out.push((
+                    x,
+                    ((x
+                     * (4.0 * src.param_value(id_s_freq) + 1.0)
+                     * 2.0 * std::f64::consts::PI)
+                    .sin() + 1.0) / 2.0));
+            }
+        });
+
+    let id_ae_f_env_rel = id_f_env_rel;
+    let amp_env_fun =
+        Arc::new(move |_id: usize, src: &mut dyn UIGraphValueSource, out: &mut Vec<(f64, f64)>| {
+//            let samples = 40;
+            out.push((0.0, 1.0));
+            out.push((src.param_value(id_ae_f_env_rel).powf(2.0), 0.0));
+//            for x in 0..(samples + 1) {
+//                let x = x as f64 / (samples as f64);
+//                out.push((
+//                    x,
+//                    ((x
+//                     * (4.0 * src.param_value(id_s_freq) + 1.0)
+//                     * 2.0 * std::f64::consts::PI)
+//                    .sin() + 1.0) / 2.0));
+//            }
+        });
 
     /* ________________
        | MAIN | About |
@@ -81,7 +126,7 @@ pub fn define_gui(gui_hdl: &ui::protocol::UIClientHandle) {
                 vec![
                     UIInput::Tabs(UITabData {
                         pos: UIPos::center(12, 12),
-                        id: 13,
+                        id: id_main_tab,
                         labels: vec![
                             String::from("Main"),
                             String::from("About"),
@@ -89,35 +134,61 @@ pub fn define_gui(gui_hdl: &ui::protocol::UIClientHandle) {
                         childs: vec![
                             vec![
                                 vec![
-                                    UIInput::knob(      4, String::from("Dist S."), UIPos::center(3, 12)),
-                                ]
+                                    UIInput::graph_huge(
+                                        0,
+                                        String::from("Amp Env"),
+                                        UIPos::center(3, 4).bottom(),
+                                        amp_env_fun.clone()),
+                                    UIInput::knob(
+                                        id_f_env_rel,
+                                        String::from("Length (ms)"),
+                                        UIPos::center(2, 4).bottom()),
+                                    UIInput::knob(
+                                        id_env_slope,
+                                        String::from("Env Slope"),
+                                        UIPos::center(2, 4).bottom()),
+                                    UIInput::knob(
+                                        id_env_rel,
+                                        String::from("Release (ms)"),
+                                        UIPos::center(2, 4).bottom()),
+                                ],
+                                vec![
+                                    UIInput::graph_huge(
+                                        0,
+                                        String::from("Freq. Env"),
+                                        UIPos::center(3, 4).bottom(),
+                                        f_env_fun.clone()),
+                                    UIInput::knob(
+                                        id_s_freq,
+                                        String::from("Start (Hz)"),
+                                        UIPos::center(2, 4).bottom()),
+                                    UIInput::knob(
+                                        id_e_freq,
+                                        String::from("End (Hz)"),
+                                        UIPos::center(2, 4).bottom()),
+                                    UIInput::knob(
+                                        id_f_slope,
+                                        String::from("Slope"),
+                                        UIPos::center(2, 4).bottom()),
+                                    UIInput::knob(
+                                        id_click,
+                                        String::from("Click"),
+                                        UIPos::right(3, 4).bottom()),
+                                ],
                             ],
                             vec![
                                 vec![
-                                    UIInput::label_mono(
+                                    UIInput::Tabs(UITabData {
+                                        pos: UIPos::center(12, 12),
+                                        id: id_lic_tab,
+                                        labels: vec![
+                                            String::from("Plugin"),
+                                            String::from("Fonts"),
+                                        ],
+                                        childs: vec![
+                                    vec![vec![UIInput::label_mono(
 r#"Kickmess - A Kick Drum Synthesizer Plugin
 Copyright (c) 2020-2021 Weird Constructor <weirdconstructor@gmail.com>
-
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU Affero General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU Affero General Public License for more details.
-
-You should have received a copy of the GNU Affero General Public License
-along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
-----------------------------
-You may retrieve the source code along with a full copy of
-the license at one of the following locations:
-
-- <https://github.com/WeirdConstructor/Kickmess>
-- <https://m8geil.de/repo/Kickmess>
-----------------------------
 
 The DSP code that was translated from LMMS C++ to Rust and was originally
 released under GNU General Public License Version 2 or any later.
@@ -126,15 +197,25 @@ The former authors were:
 * Copyright (c) 2006-2014 Tobias Doerffel <tobydox/at/users.sourceforge.net>
 * Copyright (c) 2014 grejppi <grejppi/at/gmail.com>
 
-The fonts used are:
-DejaVuSerif.ttf and DejaVuSansMono.ttf under the license:
+You may retrieve the source code along with a full copy of
+the license at one of the following locations:
 
-Fonts are (c) Bitstream (see below). DejaVu changes are in public domain.
-Glyphs imported from Arev fonts are (c) Tavmjong Bah (see below)
+- <https://github.com/WeirdConstructor/Kickmess>
+- <https://m8geil.de/repo/Kickmess>
 "#,
                                         14.0,
-                                        UIPos::left(12, 12).top()),
-                                ]
+                                        UIPos::left(12, 12).top())]],
+                                    vec![vec![UIInput::label_mono(
+r#"The fonts used are:
+DejaVuSerif.ttf and DejaVuSansMono.ttf under the license:
+
+Fonts are (c) Bitstream. DejaVu changes are in public domain.
+Glyphs imported from Arev fonts are (c) Tavmjong Bah
+"#,
+                                        14.0,
+                                        UIPos::left(12, 12).top())]],
+                                    ]}),
+                                ],
                             ],
                         ]
                     })

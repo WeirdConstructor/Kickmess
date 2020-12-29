@@ -9,7 +9,12 @@ use std::sync::Arc;
 fn main() {
     let (cl_hdl, p_hdl) = ui::protocol::UIClientHandle::create();
 
-    let runner = kickmessvst::window::open_window("Kickmess Test GUI", 800, 800, None, p_hdl);
+    let runner =
+        kickmessvst::window::open_window(
+            "Kickmess Test GUI",
+            kickmessvst::editor::WINDOW_WIDTH,
+            kickmessvst::editor::WINDOW_HEIGHT,
+            None, p_hdl);
 
     kickmessvst::editor::define_gui(&cl_hdl);
 

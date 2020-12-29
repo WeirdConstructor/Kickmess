@@ -37,8 +37,9 @@ Run the pugl standalone GUI example (without audio engine):
 This project is licensed under the GNU Affero General Public License Version 3 or
 later.
 
-The code that was translated from LMMS C++ was released under GNU General
-Public License Version 2 or any later. The former authors were:
+The DSP code that was translated from LMMS C++ to Rust and was originally
+released under GNU General Public License Version 2 or any later.
+The former authors were:
 
 * Copyright (c) 2006-2014 Tobias Doerffel <tobydox/at/users.sourceforge.net>
 * Copyright (c) 2014 grejppi <grejppi/at/gmail.com>
