@@ -60,15 +60,15 @@ impl KickmessEditor {
            || Osc                                 | |   O     O       ||
            || |---------------|  |---------------|| |                 ||
            || |               |  |               || |  Gain Noise     ||
-           || |  Waveform     |  |[N.St] [N.End] || |                 ||
+           || | Freq Env      |  | Amp Env + Rel || |                 ||
            || |_______________|  |_______________|| |_________________||
            ||                                     |                    |
-           ||    O       O           O          O | ____________       |
-           || Length Amp Slope Amp Release  Click | |Dist | Off |      |
-           ||                                     | |-----------------||
+           ||    O       O           O       _v__ | ____________       |
+           || Length Amp Slope Amp Release  |Phas|| |Dist | Off |      |
+           ||                               |____|| |-----------------||
            ||     O          O        O           | |                 ||
-           ||  F. Start   F. End   F. Slope       | |  O       O   O  ||
-           ||                                     | | Start   End Gain||
+           ||  F. Start   F. End   F. Slope   O   | |  O       O   O  ||
+           ||  [N.St]     [N.End]           Click | | Start   End Gain||
            ||_____________________________________| |_________________||
            |___________________________________________________________|
         */
