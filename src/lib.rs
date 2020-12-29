@@ -6,7 +6,7 @@ pub mod proc;
 pub mod helpers;
 mod op_kickmess;
 mod env;
-mod editor;
+pub mod editor;
 pub mod ui;
 pub mod window;
 

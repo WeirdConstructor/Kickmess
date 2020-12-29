@@ -106,7 +106,7 @@ impl<'a> MyPainter<'a> {
     fn label_with_font(&mut self, size: f64, align: i8, color: (f64, f64, f64), x: f64, y: f64, w: f64, h: f64, text: &str, font: FontId) {
         let mut paint = color_paint(color);
         paint.set_font(&[font]);
-        paint.set_font_size(1.0 + size as f32);
+        paint.set_font_size(size as f32);
         paint.set_text_baseline(femtovg::Baseline::Middle);
         let x = x.round();
         match align {
@@ -189,6 +189,21 @@ impl<'a> Painter for MyPainter<'a> {
 
     fn label_mono(&mut self, size: f64, align: i8, color: (f64, f64, f64), x: f64, y: f64, w: f64, h: f64, text: &str) {
         self.label_with_font(size, align, color, x, y, w, h, text, self.font_mono);
+    }
+
+    fn font_height(&mut self, size: f32, mono: bool) -> f32 {
+        let mut paint = color_paint(UI_PRIM_CLR);
+        if mono {
+            paint.set_font(&[self.font_mono]);
+        } else {
+            paint.set_font(&[self.font]);
+        }
+        paint.set_font_size(size);
+        if let Ok(metr) = self.canvas.measure_font(paint) {
+            metr.height()
+        } else {
+            UI_ELEM_TXT_H as f32
+        }
     }
 }
 

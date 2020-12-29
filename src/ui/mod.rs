@@ -976,15 +976,15 @@ impl UI {
                     },
                     UIInput::Label(_, font_size, label) => {
                         let crect = el_rect;
-                        p.label(
-                            *font_size as f64, -1, UI_LBL_TXT_CLR,
-                            crect.x, crect.y, crect.w, crect.h, &label);
+                        self.draw_text_lines(
+                            p, label, *font_size as f64, UI_LBL_TXT_CLR,
+                            crect.x, crect.y, crect.w, crect.h, false, None);
                     },
                     UIInput::LabelMono(_, font_size, label) => {
                         let crect = el_rect;
-                        p.label_mono(
-                            *font_size as f64, -1, UI_LBL_TXT_CLR,
-                            crect.x, crect.y, crect.w, crect.h, &label);
+                        self.draw_text_lines(
+                            p, label, *font_size as f64, UI_LBL_TXT_CLR,
+                            crect.x, crect.y, crect.w, crect.h, true, None);
                     },
                     UIInput::Container(_, childs, next_border) => {
                         let crect = el_rect;
@@ -1032,6 +1032,40 @@ impl UI {
         }
     }
 
+    pub fn draw_text_lines(&self, p: &mut dyn Painter, s: &str, font_size: f64,
+                           color: (f64, f64, f64),
+                           x: f64, mut y: f64, w: f64, h: f64,
+                           mono: bool, title: Option<&str>) {
+        let y_increment = p.font_height(font_size as f32, mono) as f64;
+
+        if let Some(title) = title {
+            p.label_mono(
+                1.5 * font_size, 0, color,
+                x, y, w, UI_ELEM_TXT_H, title);
+
+            y += 2.0 * y_increment;
+        }
+
+        for line in s.split("\n") {
+            if mono {
+                p.label_mono(
+                    font_size, -1, color, x, y, w, UI_ELEM_TXT_H, line);
+            } else {
+                p.label(
+                    font_size, -1, color, x, y, w, UI_ELEM_TXT_H, line);
+            }
+            y += y_increment;
+        }
+
+        if let Some(_) = title {
+            p.label_mono(font_size, 0, color,
+                x,
+                h - 2.0 * (UI_MARGIN + UI_BORDER_WIDTH + UI_PADDING),
+                w, UI_ELEM_TXT_H,
+                "Press <Escape> or <F1> to exit help");
+        }
+    }
+
     pub fn draw(&mut self, p: &mut dyn Painter) {
         let (ww, wh) = self.window_size;
 
@@ -1074,32 +1108,40 @@ impl UI {
 
             if let Some((name, txt)) = self.get_element_help(help_id) {
                 let y_increment = UI_ELEM_TXT_H;
-                let mut y = UI_MARGIN + UI_BORDER_WIDTH + UI_PADDING;
-                let x     = UI_MARGIN + UI_BORDER_WIDTH + UI_PADDING;
+                let y = UI_MARGIN + UI_BORDER_WIDTH + UI_PADDING;
+                let x = UI_MARGIN + UI_BORDER_WIDTH + UI_PADDING;
 
-                p.label_mono(1.5 * UI_HELP_FONT_SIZE, 0, UI_HELP_TXT_CLR,
-                        x, y,
-                        ww - 2.0 * (UI_MARGIN + UI_BORDER_WIDTH + UI_PADDING),
-                        UI_ELEM_TXT_H,
-                        name);
-
-                y += 2.0 * y_increment;
-
-                for line in txt.split("\n") {
-                    p.label_mono(UI_HELP_FONT_SIZE, -1, UI_HELP_TXT_CLR,
-                            x, y,
-                            ww - 2.0 * (UI_MARGIN + UI_BORDER_WIDTH + UI_PADDING),
-                            UI_ELEM_TXT_H,
-                            line);
-                    y += y_increment;
-                }
-
-                p.label_mono(UI_HELP_FONT_SIZE, 0, UI_HELP_TXT_CLR,
-                    x,
-                    wh - 2.0 * (UI_MARGIN + UI_BORDER_WIDTH + UI_PADDING),
-                    ww - 2.0 * (UI_MARGIN + UI_BORDER_WIDTH + UI_PADDING),
-                    UI_ELEM_TXT_H,
-                    "Press <Escape> or <F1> to exit help");
+                self.draw_text_lines(
+                    p, txt, UI_HELP_FONT_SIZE, UI_HELP_TXT_CLR,
+                    x, y, ww, wh, true, Some(name));
+//
+//
+//
+//                self.
+//
+//                p.label_mono(1.5 * UI_HELP_FONT_SIZE, 0, UI_HELP_TXT_CLR,
+//                        x, y,
+//                        ww - 2.0 * (UI_MARGIN + UI_BORDER_WIDTH + UI_PADDING),
+//                        UI_ELEM_TXT_H,
+//                        name);
+//
+//                y += 2.0 * y_increment;
+//
+//                for line in txt.split("\n") {
+//                    p.label_mono(UI_HELP_FONT_SIZE, -1, UI_HELP_TXT_CLR,
+//                            x, y,
+//                            ww - 2.0 * (UI_MARGIN + UI_BORDER_WIDTH + UI_PADDING),
+//                            UI_ELEM_TXT_H,
+//                            line);
+//                    y += y_increment;
+//                }
+//
+//                p.label_mono(UI_HELP_FONT_SIZE, 0, UI_HELP_TXT_CLR,
+//                    x,
+//                    wh - 2.0 * (UI_MARGIN + UI_BORDER_WIDTH + UI_PADDING),
+//                    ww - 2.0 * (UI_MARGIN + UI_BORDER_WIDTH + UI_PADDING),
+//                    UI_ELEM_TXT_H,
+//                    "Press <Escape> or <F1> to exit help");
             }
         }
 
