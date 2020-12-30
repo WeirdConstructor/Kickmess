@@ -32,10 +32,15 @@ pub fn define_gui(gui_hdl: &ui::protocol::UIClientHandle) {
     let id_f_env_rel = 2;
     let id_env_slope = 6;
     let id_f_slope   = 7;
+    let id_n_s_freq  = 9;
+    let id_n_e_freq  = 10;
     let id_env_rel   = 11;
     let id_click     = 12;
     let id_main_tab  = 13;
     let id_lic_tab   = 14;
+
+    values[id_n_s_freq] = UIValueSpec::new_toggle(&[ "Off", "On" ]);
+    values[id_n_e_freq] = UIValueSpec::new_toggle(&[ "Off", "On" ]);
 
 //        UIValueSpec::new_id().help("S Freq", "fie fwof ewiof ew\nfewfwiuofewoi fewoi fewoif \nfiewfoiew foiew jfewoij \nfwefiwfh weifuhi "),
 ////        UIValueSpec::new_min_max_exp(5.0, 3000.0, 6, 1).steps(0.04, 0.01).help("S Freq", "fie fwof ewiof ew\nfewfwiuofewoi fewoi fewoif \nfiewfoiew foiew jfewoij \nfwefiwfh weifuhi "),
@@ -174,6 +179,17 @@ pub fn define_gui(gui_hdl: &ui::protocol::UIClientHandle) {
                                         id_click,
                                         String::from("Click"),
                                         UIPos::right(3, 4).bottom()),
+                                ],
+                                vec![
+                                    UIInput::none(UIPos::center(3, 4).bottom()),
+                                    UIInput::btn_toggle(
+                                        id_n_s_freq,
+                                        String::from("Note S."),
+                                        UIPos::center(2, 4).middle()),
+                                    UIInput::btn_toggle(
+                                        id_n_e_freq,
+                                        String::from("Note E."),
+                                        UIPos::center(2, 4).middle()),
                                 ],
                             ],
                             vec![

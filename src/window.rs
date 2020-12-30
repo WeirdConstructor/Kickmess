@@ -92,6 +92,7 @@ struct MyPainter<'a> {
     canvas:     &'a mut Canvas<OpenGl>,
     font:       FontId,
     font_mono:  FontId,
+    scale:      f32,
 }
 
 fn color_paint(color: (f64, f64, f64)) -> femtovg::Paint {
@@ -200,7 +201,7 @@ impl<'a> Painter for MyPainter<'a> {
         }
         paint.set_font_size(size);
         if let Ok(metr) = self.canvas.measure_font(paint) {
-            metr.height()
+            metr.height() / self.scale
         } else {
             UI_ELEM_TXT_H as f32
         }
@@ -304,6 +305,7 @@ impl WindowHandler for GUIWindowHandler {
                 canvas:     &mut self.canvas,
                 font:       self.font,
                 font_mono:  self.font_mono,
+                scale:      self.scale,
             });
             self.canvas.restore();
             self.ftm_redraw.end_measure();
