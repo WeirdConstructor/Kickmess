@@ -184,11 +184,11 @@ pub fn define_gui(gui_hdl: &ui::protocol::UIClientHandle) {
                                     UIInput::none(UIPos::center(3, 4).bottom()),
                                     UIInput::btn_toggle(
                                         id_n_s_freq,
-                                        String::from("Note S."),
+                                        String::from("S. from Note"),
                                         UIPos::center(2, 4).middle()),
                                     UIInput::btn_toggle(
                                         id_n_e_freq,
-                                        String::from("Note E."),
+                                        String::from("E. from Note"),
                                         UIPos::center(2, 4).middle()),
                                 ],
                             ],
