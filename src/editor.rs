@@ -71,18 +71,24 @@ pub fn define_gui(gui_hdl: &ui::protocol::UIClientHandle) {
 
     gui_hdl.tx.send(UICmd::DefineValues(values)).expect("mpsc ok");
 
-    let id_s_freq_f = id_s_freq;
+    let id_s_freq_f     = id_s_freq;
+    let id_ae_f_env_rel = id_f_env_rel;
+    let id_ae_f_slope   = id_f_slope;
     let f_env_fun =
         Arc::new(move |_id: usize, src: &mut dyn UIGraphValueSource, out: &mut Vec<(f64, f64)>| {
-            let samples = 40;
+            let min_x = 0.3;
+            let max_x =
+                min_x + (1.0 - min_x) * src.param_value(id_ae_f_env_rel).sqrt();
+            let slope = src.param_value(id_ae_f_slope).max(0.01);
+
+            let samples = 80;
+
             for x in 0..(samples + 1) {
-                let x = x as f64 / (samples as f64);
-                out.push((
-                    x,
-                    ((x
-                     * (4.0 * src.param_value(id_s_freq) + 1.0)
-                     * 2.0 * std::f64::consts::PI)
-                    .sin() + 1.0) / 2.0));
+                let x = max_x * (x as f64 / (samples as f64));
+                out.push((x, 1.0 - (x / max_x).powf(slope)));
+//                     * (4.0 * src.param_value(id_s_freq) + 1.0)
+//                     * 2.0 * std::f64::consts::PI)
+//                    .sin() + 1.0) / 2.0));
             }
         });
 
