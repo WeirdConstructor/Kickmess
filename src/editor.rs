@@ -14,7 +14,7 @@ use crate::ui::{UI, UIEvent};
 use crate::ui;
 
 pub const WINDOW_WIDTH:  i32 = 700;
-pub const WINDOW_HEIGHT: i32 = 400;
+pub const WINDOW_HEIGHT: i32 = 440;
 
 pub(crate) struct KickmessEditor {
 //    view:      Option<Box<PuglView<PuglUI>>>,
@@ -74,39 +74,66 @@ pub fn define_gui(gui_hdl: &ui::protocol::UIClientHandle) {
     let id_s_freq_f     = id_s_freq;
     let id_ae_f_env_rel = id_f_env_rel;
     let id_ae_f_slope   = id_f_slope;
+    let id_ae_s_freq    = id_s_freq;
+    let id_ae_e_freq    = id_e_freq;
     let f_env_fun =
         Arc::new(move |_id: usize, src: &mut dyn UIGraphValueSource, out: &mut Vec<(f64, f64)>| {
-            let min_x = 0.3;
+            let min_x = 0.2;
             let max_x =
                 min_x + (1.0 - min_x) * src.param_value(id_ae_f_env_rel).sqrt();
             let slope = src.param_value(id_ae_f_slope).max(0.01);
+
+            let (sign, y_offs) =
+                if src.param_value(id_ae_s_freq) - src.param_value(id_ae_e_freq) < 0.0 {
+                    (-1.0, -1.0)
+                } else {
+                    (1.0, 0.0)
+                };
 
             let samples = 80;
 
             for x in 0..(samples + 1) {
                 let x = max_x * (x as f64 / (samples as f64));
-                out.push((x, 1.0 - (x / max_x).powf(slope)));
-//                     * (4.0 * src.param_value(id_s_freq) + 1.0)
-//                     * 2.0 * std::f64::consts::PI)
-//                    .sin() + 1.0) / 2.0));
+                out.push(
+                    (x,
+                     y_offs
+                     + (1.0 - sign * (x / max_x).powf(slope))));
             }
         });
 
+    let id_s_freq_f     = id_s_freq;
     let id_ae_f_env_rel = id_f_env_rel;
+    let id_ae_env_slope = id_env_slope;
+    let id_ae_s_freq    = id_s_freq;
+    let id_ae_e_freq    = id_e_freq;
     let amp_env_fun =
         Arc::new(move |_id: usize, src: &mut dyn UIGraphValueSource, out: &mut Vec<(f64, f64)>| {
-//            let samples = 40;
-            out.push((0.0, 1.0));
-            out.push((src.param_value(id_ae_f_env_rel).powf(2.0), 0.0));
-//            for x in 0..(samples + 1) {
-//                let x = x as f64 / (samples as f64);
-//                out.push((
-//                    x,
-//                    ((x
-//                     * (4.0 * src.param_value(id_s_freq) + 1.0)
-//                     * 2.0 * std::f64::consts::PI)
-//                    .sin() + 1.0) / 2.0));
-//            }
+            let slope = src.param_value(id_ae_env_slope).max(0.01);
+            let min_x = 0.2;
+            let max_x =
+                min_x + (1.0 - min_x) * src.param_value(id_ae_f_env_rel).sqrt();
+
+            let samples = 80;
+
+            for x in 0..(samples + 1) {
+                let x = max_x * (x as f64 / (samples as f64));
+                out.push(
+                    (x, (1.0 - (x / max_x).powf(slope))));
+            }
+        });
+
+    let id_ph_click = id_click;
+    let phase_fun =
+        Arc::new(move |_id: usize, src: &mut dyn UIGraphValueSource, out: &mut Vec<(f64, f64)>| {
+            let samples = 80;
+
+            for x in 0..(samples + 1) {
+                let x = x as f64 / (samples as f64);
+                out.push((
+                    x,
+                    (((x + src.param_value(id_ph_click))
+                       * 2.0 * std::f64::consts::PI).sin() + 1.0) / 2.0));
+            }
         });
 
     /* ________________
@@ -181,13 +208,23 @@ pub fn define_gui(gui_hdl: &ui::protocol::UIClientHandle) {
                                         id_f_slope,
                                         String::from("Slope"),
                                         UIPos::center(2, 4).bottom()),
-                                    UIInput::knob(
-                                        id_click,
-                                        String::from("Click"),
-                                        UIPos::right(3, 4).bottom()),
                                 ],
                                 vec![
-                                    UIInput::none(UIPos::center(3, 4).bottom()),
+                                    UIInput::container_border(
+                                        UIPos::left(3, 4).bottom(),
+                                        vec![
+                                            vec![
+                                                UIInput::knob_small(
+                                                    id_click,
+                                                    String::from("Click"),
+                                                    UIPos::center(6, 12).middle()),
+                                                UIInput::graph_small(
+                                                    0,
+                                                    String::from("Click"),
+                                                    UIPos::center(6, 12).middle(),
+                                                    phase_fun.clone()),
+                                            ],
+                                        ]),
                                     UIInput::btn_toggle(
                                         id_n_s_freq,
                                         String::from("S. from Note"),
