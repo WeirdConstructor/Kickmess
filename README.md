@@ -28,18 +28,13 @@ project to be notified once I release a beta or stable release.
 
     cp target/release/libkickmessvst.so ~/.vst/
 
-## Running the GUI examples
+## Running the development GUI example
 
-There are currently two examples that use the [Baseview](https://github.com/RustAudio/baseview)
-crate and the other one uses [Pugl](https://github.com/johannes-mueller/pugl-sys).
+For development the GUI can be executed without any DSP code running
+in the background:
 
-Run the baseview standalone GUI example (without audio engine):
+    cargo run --release --example gui
 
-    cargo run --release --example baseview_gui
-
-Run the pugl standalone GUI example (without audio engine):
-
-    cargo run --release --example baseview_gui
 
 ## License
 
