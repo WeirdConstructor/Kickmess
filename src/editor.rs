@@ -212,6 +212,7 @@ pub fn define_gui(gui_hdl: &ui::protocol::UIClientHandle) {
                                 vec![
                                     UIInput::container_border(
                                         UIPos::left(3, 4).bottom(),
+                                        0.8,
                                         vec![
                                             vec![
                                                 UIInput::knob_small(

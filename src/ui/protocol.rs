@@ -310,7 +310,7 @@ pub struct UITabData {
 #[derive(Debug, Clone)]
 pub enum UIInput {
     None(UIPos),
-    Container(UIPos, Vec<Vec<UIInput>>, bool),
+    Container(UIPos, Vec<Vec<UIInput>>, bool, f32),
     Label(UIPos, f32, String),
     LabelMono(UIPos, f32, String),
     Tabs(UITabData),
@@ -321,7 +321,6 @@ pub enum UIInput {
     Graph(UIGraphData),
     GraphHuge(UIGraphData),
     GraphSmall(UIGraphData),
-    //      SubContainer    (size always fills)
 }
 
 impl UIInput {
@@ -330,7 +329,7 @@ impl UIInput {
     pub fn position(&self) -> UIPos {
         match self {
             UIInput::None(p)                             => *p,
-            UIInput::Container(p, _, _)                  => *p,
+            UIInput::Container(p, _, _, _)               => *p,
             UIInput::Label(p, _, _)                      => *p,
             UIInput::LabelMono(p, _, _)                  => *p,
             UIInput::Tabs(UITabData { pos, .. })         => *pos,
@@ -381,7 +380,7 @@ impl UIInput {
                 }
             ]);
         }
-        UIInput::Container(pos, childs, border)
+        UIInput::Container(pos, childs, border, 1.0)
     }
 
     pub fn btn_drag_value(id: usize, label: String, pos: UIPos) -> Self {
@@ -420,12 +419,12 @@ impl UIInput {
         UIInput::KnobHuge(UIKnobData { id, label, pos })
     }
 
-    pub fn container_border(pos: UIPos, childs: Vec<Vec<UIInput>>) -> Self {
-        UIInput::Container(pos, childs, true)
+    pub fn container_border(pos: UIPos, size_factor: f32, childs: Vec<Vec<UIInput>>) -> Self {
+        UIInput::Container(pos, childs, true, size_factor)
     }
 
-    pub fn container(pos: UIPos, childs: Vec<Vec<UIInput>>) -> Self {
-        UIInput::Container(pos, childs, false)
+    pub fn container(pos: UIPos, size_factor: f32, childs: Vec<Vec<UIInput>>) -> Self {
+        UIInput::Container(pos, childs, false, size_factor)
     }
 }
 

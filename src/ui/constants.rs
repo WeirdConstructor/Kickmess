@@ -1,11 +1,11 @@
 // Copyright (c) 2020-2021 Weird Constructor <weirdconstructor@gmail.com>
 // This is a part of Kickmess. See README.md and COPYING for details.
 
-pub const UI_BG_CLR               : (f64, f64, f64) = (46.0  / 255.0,   41.0 / 255.0,   47.0 / 255.0);
-pub const UI_BG2_CLR              : (f64, f64, f64) = (57.0 / 255.0,   50.0 / 255.0,  59.0 / 255.0);
+pub const UI_BG_CLR               : (f64, f64, f64) = ( 71.0 / 255.0,   63.0 / 255.0,   73.0 / 255.0);
+pub const UI_BG2_CLR              : (f64, f64, f64) = ( 89.0 / 255.0,   79.0 / 255.0,   93.0 / 255.0);
 pub const UI_TXT_CLR              : (f64, f64, f64) = (220.0 / 255.0,  220.0 / 255.0,  240.0 / 255.0);
-pub const UI_LBL_BG_CLR           : (f64, f64, f64) = (21.0  / 255.0,   18.0 / 255.0,   22.0 / 255.0);
-pub const UI_ACCENT_CLR           : (f64, f64, f64) = (143.0 / 255.0,   16.0 / 255.0,  136.0 / 255.0);
+pub const UI_LBL_BG_CLR           : (f64, f64, f64) = ( 31.0 / 255.0,   27.0 / 255.0,   33.0 / 255.0);
+pub const UI_ACCENT_CLR           : (f64, f64, f64) = (179.0 / 255.0,   20.0 / 255.0,  170.0 / 255.0);
 pub const UI_PRIM_CLR             : (f64, f64, f64) = (105.0 / 255.0,  232.0 / 255.0,  237.0 / 255.0);
 pub const UI_PRIM2_CLR            : (f64, f64, f64) = (26.0  / 255.0,  174.0 / 255.0,  179.0 / 255.0);
 pub const UI_HLIGHT_CLR           : (f64, f64, f64) = (233.0 / 255.0,  248.0 / 255.0,   64.0 / 255.0);

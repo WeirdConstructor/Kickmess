@@ -117,6 +117,20 @@ struct Rect {
 }
 
 impl Rect {
+    fn mul_size(&self, factor: f64) -> Self {
+        let w = self.w * factor;
+        let h = self.h * factor;
+        let wd = (self.w - w) / 2.0;
+        let hd = (self.h - h) / 2.0;
+
+        Self {
+            x: self.x + wd,
+            y: self.y + hd,
+            w: self.w - wd,
+            h: self.h - hd,
+        }
+    }
+
     fn calc_element_box(&self, row_offs: u8, col_offs: u8, pos: UIPos) -> (Rect, u8, u8) {
         let x = self.x + ((self.w * (col_offs     as f64)) / 12.0).round();
         let y = self.y + ((self.h * (row_offs     as f64)) / 12.0).round();
@@ -986,8 +1000,8 @@ impl UI {
                             p, label, *font_size as f64, UI_LBL_TXT_CLR,
                             crect.x, crect.y, crect.w, crect.h, true, None);
                     },
-                    UIInput::Container(_, childs, next_border) => {
-                        let crect = el_rect;
+                    UIInput::Container(_, childs, next_border, size_factor) => {
+                        let crect = el_rect.mul_size(*size_factor as f64);
                         self.layout_container(
                             p, *next_border, "",
                             if border { depth + 1 } else { depth },
