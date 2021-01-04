@@ -13,6 +13,15 @@ Support for other platforms (Windows or MacOS) is currently out of scope,
 but depending on the amount of code I might be okay to maintain
 contributions.
 
+## State of Development
+
+This project is currently (2021-01-05) under heavy development and considered
+absolutely unstable and alpha. So use or try to compile at your own risk :-)
+
+Make sure to follow [Weird Constructors Mastodon
+account](https://mastodon.online/web/accounts/150371) or the releases of this
+project to be notified once I release a beta or stable release.
+
 ## Building & Installing
 
     cargo build --release
