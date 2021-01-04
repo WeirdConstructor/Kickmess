@@ -18,8 +18,8 @@ glutin             = "0.24.1"
 vst                = { git = "https://github.com/WeirdConstructor/vst-rs", branch = "host_begin_end_edit" }
 #vst                = { git = "https://github.com/rustaudio/vst-rs" }
 #vst                = { path = "/home/weictr/devel/other/vst-rs" }
-#femtovg            = { git = "https://github.com/femtovg/femtovg" }
-femtovg            = { path = "/home/weictr/devel/other/femtovg" }
+femtovg            = { git = "https://github.com/femtovg/femtovg", rev = "9c5de268cd1f85d9e32d20c8a37341709c92bdb5" }
+#femtovg            = { path = "/home/weictr/devel/other/femtovg" }
 raw-gl-context     = { git = "https://github.com/glowcoil/raw-gl-context" }
-baseview           = { git = "https://github.com/RustAudio/baseview.git" }
+baseview           = { git = "https://github.com/RustAudio/baseview.git", rev = "36e4474c8aeb88" }
 #baseview           = { path = "/home/weictr/devel/other/baseview" }

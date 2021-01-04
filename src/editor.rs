@@ -304,7 +304,6 @@ Glyphs imported from Arev fonts are (c) Tavmjong Bah
 impl KickmessEditor {
     pub(crate) fn new(host: HostCallback, params: Arc<KickmessVSTParams>) -> Self {
         Self {
-//            view: None,
             host,
             params,
             gui_hdl: None,
@@ -328,14 +327,10 @@ impl Editor for KickmessEditor {
     fn open(&mut self, parent: *mut std::ffi::c_void) -> bool {
         let (cl_hdl, p_hdl) = ui::protocol::UIClientHandle::create();
 
-        let runner =
-            crate::window::open_window(
-                "Kickmess",
-                WINDOW_WIDTH, WINDOW_HEIGHT,
-                Some(parent), p_hdl);
-        std::thread::spawn(move || {
-            runner.unwrap().app_run_blocking();
-        });
+        crate::window::open_window(
+            "Kickmess",
+            WINDOW_WIDTH, WINDOW_HEIGHT,
+            Some(parent), p_hdl);
 
         self.gui_hdl = Some(cl_hdl);
         self.define_gui();

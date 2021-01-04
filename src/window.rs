@@ -17,8 +17,8 @@ use raw_window_handle::{
 
 #[macro_use]
 use baseview::{
-    Size, Event, WindowEvent, WindowInfo, MouseEvent, MouseButton, Parent, Window,
-    WindowHandler, WindowOpenOptions, WindowScalePolicy, AppRunner,
+    Size, Event, WindowEvent, WindowInfo, MouseEvent, MouseButton, Window,
+    WindowHandler, WindowOpenOptions, WindowScalePolicy,
 };
 
 use vst::plugin::{Info, Plugin};
@@ -333,26 +333,27 @@ impl WindowHandler for GUIWindowHandler {
     }
 }
 
-pub fn open_window(title: &str, window_width: i32, window_height: i32, parent: Option<*mut ::std::ffi::c_void>, ui_hdl: UIProviderHandle) -> Option<AppRunner> {
+struct StupidWindowHandleHolder {
+    handle: *mut ::std::ffi::c_void,
+}
+
+unsafe impl Send for StupidWindowHandleHolder { }
+
+unsafe impl raw_window_handle::HasRawWindowHandle for StupidWindowHandleHolder {
+    fn raw_window_handle(&self) -> RawWindowHandle {
+        raw_window_handle_from_parent(self.handle)
+    }
+}
+
+pub fn open_window(title: &str, window_width: i32, window_height: i32, parent: Option<*mut ::std::ffi::c_void>, ui_hdl: UIProviderHandle) {
     let options =
-        if let Some(parent) = parent {
-            let parent = raw_window_handle_from_parent(parent);
-            WindowOpenOptions {
-                title:  title.to_string(),
-                size:   Size::new(window_width as f64, window_height as f64),
-                scale:  WindowScalePolicy::SystemScaleFactor,
-                parent: Parent::WithParent(parent),
-            }
-        } else {
-            WindowOpenOptions {
-                title:  title.to_string(),
-                size:   Size::new(window_width as f64, window_height as f64),
-                scale:  WindowScalePolicy::SystemScaleFactor,
-                parent: Parent::None,
-            }
+        WindowOpenOptions {
+            title:  title.to_string(),
+            size:   Size::new(window_width as f64, window_height as f64),
+            scale:  WindowScalePolicy::SystemScaleFactor,
         };
 
-    Window::open(options, move |win| {
+    let window_create_fun = move |win: &mut Window| {
         let context =
             GlContext::create(
                 win,
@@ -403,14 +404,15 @@ pub fn open_window(title: &str, window_width: i32, window_height: i32, parent: O
             ftm:        FrameTimeMeasurement::new("img"),
             ftm_redraw: FrameTimeMeasurement::new("redraw"),
             scale:      1.0,
-//                    drawable: window,
-//                    display: display as *mut x11::xlib::Display,
-//                    visual: vis,
-//                    gui_surf: None,
         }
-//        unsafe {
-//        }
-    })
+    };
+
+    if let Some(parent) = parent {
+        let swhh = StupidWindowHandleHolder { handle: parent };
+        Window::open_parented(&swhh, options, window_create_fun)
+    } else {
+        Window::open_blocking(options, window_create_fun)
+    }
 }
 
 #[cfg(target_os = "macos")]

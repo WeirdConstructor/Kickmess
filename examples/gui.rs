@@ -9,14 +9,26 @@ use std::sync::Arc;
 fn main() {
     let (cl_hdl, p_hdl) = ui::protocol::UIClientHandle::create();
 
-    let runner =
-        kickmessvst::window::open_window(
-            "Kickmess Test GUI",
-            kickmessvst::editor::WINDOW_WIDTH,
-            kickmessvst::editor::WINDOW_HEIGHT,
-            None, p_hdl);
-
     kickmessvst::editor::define_gui(&cl_hdl);
+
+    std::thread::spawn(move || {
+        let mut closed = false;
+        while !closed {
+            while let Ok(msg) = cl_hdl.rx.recv() {
+                match msg {
+                    UIMsg::WindowClosed => { closed = true; break; },
+                    _ => {},
+                }
+            }
+        }
+    });
+
+    kickmessvst::window::open_window(
+        "Kickmess Test GUI",
+        kickmessvst::editor::WINDOW_WIDTH,
+        kickmessvst::editor::WINDOW_HEIGHT,
+        None, p_hdl);
+
 
 //    let graph_fun = Arc::new(|_id: usize, src: &mut dyn UIGraphValueSource, out: &mut Vec<(f64, f64)>| {
 //        let samples = 40;
@@ -185,23 +197,4 @@ fn main() {
 //        }
 //    });
 
-    std::thread::spawn(move || {
-        let mut closed = false;
-        while !closed {
-            while let Ok(msg) = cl_hdl.rx.recv() {
-//                println!("MSG FROM UI: {:?}", msg);
-                match msg {
-                    UIMsg::WindowClosed => { closed = true; break; },
-                    _ => {},
-                }
-            }
-        }
-
-//        while let Ok(msg) = cl_hdl.rx.recv_timeout(
-//            std::time::Duration::from_millis(1000)) {
-//            println!("MSG FROM UI: {:?}", msg);
-//        }
-    });
-
-    runner.unwrap().app_run_blocking();
 }
