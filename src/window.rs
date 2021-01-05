@@ -24,11 +24,10 @@ use baseview::{
 use vst::plugin::{Info, Plugin};
 use vst::editor::Editor;
 
-use crate::ui::protocol::UIClientHandle;
-use crate::ui::protocol::UIProviderHandle;
+use crate::ui::protocol::UIController;
 use crate::ui::constants::*;
 use crate::ui::painting::Painter;
-use crate::ui::{UI, UIEvent};
+use crate::ui::{WValuePlugUI, UIEvent};
 use crate::ui;
 
 struct FrameTimeMeasurement {
@@ -83,7 +82,7 @@ pub struct GUIWindowHandler {
     img_buf:    ImageId,
     ftm:        FrameTimeMeasurement,
     ftm_redraw: FrameTimeMeasurement,
-    ui:         UI,
+    ui:         WValuePlugUI,
     scale:      f32,
     size:       (f64, f64),
 }
@@ -280,8 +279,6 @@ impl WindowHandler for GUIWindowHandler {
     }
 
     fn on_frame(&mut self) {
-        self.ui.handle_client_command();
-
         let redraw = self.ui.needs_redraw();
 
         if redraw {
@@ -345,7 +342,7 @@ unsafe impl raw_window_handle::HasRawWindowHandle for StupidWindowHandleHolder {
     }
 }
 
-pub fn open_window(title: &str, window_width: i32, window_height: i32, parent: Option<*mut ::std::ffi::c_void>, ui_hdl: UIProviderHandle) {
+pub fn open_window(title: &str, window_width: i32, window_height: i32, parent: Option<*mut ::std::ffi::c_void>, controller: std::sync::Arc<dyn UIController>) {
     let options =
         WindowOpenOptions {
             title:  title.to_string(),
@@ -389,7 +386,7 @@ pub fn open_window(title: &str, window_width: i32, window_height: i32, parent: O
                 femtovg::PixelFormat::Rgb8,
                 femtovg::ImageFlags::FLIP_Y).expect("making image buffer");
 
-        let mut ui = UI::new(ui_hdl);
+        let mut ui = WValuePlugUI::new(controller);
 
         ui.set_window_size(window_width as f64, window_height as f64);
 

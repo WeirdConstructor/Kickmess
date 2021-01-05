@@ -440,46 +440,18 @@ pub enum UILayout {
     },
 }
 
-/// Flows from UI "user" aka the plugin aka the client
-/// to the UI provider (the UI thread / window abstraction).
-#[derive(Debug, Clone)]
-pub enum UICmd {
-    Define(Vec<UILayout>),
-    DefineValues(Vec<UIValueSpec>),
-    SetValues(Vec<UIInputValue>),
+pub trait UI {
+    fn define_layout(&mut self, layout: Vec<UILayout>);
+    fn define_value_spec(&mut self, spec: Vec<UIValueSpec>);
+    fn set_values(&mut self, vals: &[UIInputValue]);
 }
 
-/// Flows back from the UI provider to the UI client.
-/// See also `UICmd`.
-#[derive(Debug, Clone)]
-pub enum UIMsg {
-    ValueChangeStart { id: usize, value: f32 },
-    ValueChangeEnd   { id: usize, value: f32 },
-    ValueChanged     { id: usize, value: f32, single_change: bool },
-    WindowClosed,
-}
-
-pub struct UIClientHandle {
-    pub rx: Receiver<UIMsg>,
-    pub tx: Sender<UICmd>,
-}
-
-impl UIClientHandle {
-    pub fn create() -> (UIClientHandle, UIProviderHandle) {
-        let (tx_cl,  rx_cl)  = std::sync::mpsc::channel();
-        let (tx_srv, rx_srv) = std::sync::mpsc::channel();
-
-        (UIClientHandle {
-            rx: rx_cl,
-            tx: tx_srv,
-         }, UIProviderHandle {
-            rx: rx_srv,
-            tx: tx_cl,
-         })
-    }
-}
-
-pub struct UIProviderHandle {
-    pub rx: Receiver<UICmd>,
-    pub tx: Sender<UIMsg>,
+pub trait UIController : Send + Sync {
+    fn init(&self, ui: &mut dyn UI);
+    fn value_change_start(&self, ui: &mut dyn UI, id: usize, value: f32) { }
+    fn value_change(&self, ui: &mut dyn UI, id: usize, value: f32, single_change: bool) { }
+    fn value_change_stop(&self, ui: &mut dyn UI, id: usize, value: f32) { }
+    fn window_closed(&self, ui: &mut dyn UI) {}
+    fn pre_frame(&self, ui: &mut dyn UI) {}
+    fn post_frame(&self, ui: &mut dyn UI) {}
 }

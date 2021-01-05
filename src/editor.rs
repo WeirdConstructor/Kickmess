@@ -10,20 +10,68 @@ use vst::host::Host;
 
 use crate::ui::protocol::*;
 use crate::ui::constants::*;
-use crate::ui::{UI, UIEvent};
 use crate::ui;
 
 pub const WINDOW_WIDTH:  i32 = 700;
 pub const WINDOW_HEIGHT: i32 = 440;
 
-pub(crate) struct KickmessEditor {
-//    view:      Option<Box<PuglView<PuglUI>>>,
-    host:       HostCallback,
-    params:     Arc<KickmessVSTParams>,
-    gui_hdl:    Option<ui::protocol::UIClientHandle>,
+pub(crate) struct KickmessEditorController {
+    host:    HostCallback,
+    params:  Arc<KickmessVSTParams>,
+    is_open: std::sync::atomic::AtomicBool,
+    close_request: std::sync::atomic::AtomicBool,
 }
 
-pub fn define_gui(gui_hdl: &ui::protocol::UIClientHandle) {
+pub(crate) struct KickmessEditor {
+    controller: Arc<KickmessEditorController>,
+}
+
+impl KickmessEditorController {
+    pub fn request_close(&self) {
+        self.close_request.store(true, std::sync::atomic::Ordering::Relaxed)
+    }
+    pub fn is_still_open(&self) -> bool {
+        self.is_open.load(std::sync::atomic::Ordering::Relaxed)
+    }
+}
+
+impl UIController for KickmessEditorController {
+    fn init(&self, ui: &mut dyn UI) {
+        self.is_open.store(true, std::sync::atomic::Ordering::Relaxed);
+        define_gui(ui);
+    }
+
+    fn window_closed(&self, _ui: &mut dyn UI) {
+        self.is_open.store(false, std::sync::atomic::Ordering::Relaxed);
+    }
+
+    fn value_change_start(&self, ui: &mut dyn UI, id: usize, value: f32) {
+        if let Some(af) = self.params.params.get(id) {
+            af.set(value);
+            self.host.begin_edit(id as i32);
+            self.host.automate(id as i32, value);
+        }
+    }
+
+    fn value_change(&self, ui: &mut dyn UI, id: usize, value: f32, single_change: bool) {
+        if let Some(af) = self.params.params.get(id) {
+            af.set(value);
+            if single_change { self.host.begin_edit(id as i32); }
+            self.host.automate(id as i32, value);
+            if single_change { self.host.end_edit(id as i32); }
+        }
+    }
+
+    fn value_change_stop(&self, ui: &mut dyn UI, id: usize, value: f32) {
+        if let Some(af) = self.params.params.get(id) {
+            af.set(value);
+            self.host.automate(id as i32, value);
+            self.host.end_edit(id as i32);
+        }
+    }
+}
+
+pub fn define_gui(gui: &mut dyn ui::protocol::UI) {
     let mut values = vec![];
     values.resize(15, UIValueSpec::new_id());
 
@@ -69,7 +117,7 @@ pub fn define_gui(gui_hdl: &ui::protocol::UIClientHandle) {
 //        UIValueSpec::new_id(),
 //        UIValueSpec::new_id(),
 
-    gui_hdl.tx.send(UICmd::DefineValues(values)).expect("mpsc ok");
+    gui.define_value_spec(values);
 
     let id_s_freq_f     = id_s_freq;
     let id_ae_f_env_rel = id_f_env_rel;
@@ -156,7 +204,7 @@ pub fn define_gui(gui_hdl: &ui::protocol::UIClientHandle) {
        |___________________________________________________________|
     */
 
-    gui_hdl.tx.send(UICmd::Define(vec![
+    gui.define_layout(vec![
         UILayout::Container {
             label: String::from(""),
             xv: 0, yv: 0, wv: 12, hv: 12,
@@ -298,20 +346,19 @@ Glyphs imported from Arev fonts are (c) Tavmjong Bah
 //                    ],
             ],
         },
-    ])).expect("sending GUI definition works");
+    ]);
 }
 
 impl KickmessEditor {
     pub(crate) fn new(host: HostCallback, params: Arc<KickmessVSTParams>) -> Self {
         Self {
-            host,
-            params,
-            gui_hdl: None,
+            controller: Arc::new(KickmessEditorController {
+                host,
+                params,
+                is_open: std::sync::atomic::AtomicBool::new(true),
+                close_request: std::sync::atomic::AtomicBool::new(false),
+            }),
         }
-    }
-
-    fn define_gui(&self) {
-        define_gui(self.gui_hdl.as_ref().unwrap());
     }
 }
 
@@ -325,66 +372,62 @@ impl Editor for KickmessEditor {
     }
 
     fn open(&mut self, parent: *mut std::ffi::c_void) -> bool {
-        let (cl_hdl, p_hdl) = ui::protocol::UIClientHandle::create();
-
         crate::window::open_window(
             "Kickmess",
             WINDOW_WIDTH, WINDOW_HEIGHT,
-            Some(parent), p_hdl);
-
-        self.gui_hdl = Some(cl_hdl);
-        self.define_gui();
+            Some(parent), self.controller.clone());
 
         true
     }
 
     fn is_open(&mut self) -> bool {
-        self.gui_hdl.is_some()
+        self.controller.is_still_open()
     }
 
     fn idle(&mut self) {
-        let mut closed = false;
+//        let mut closed = false;
 
-        if let Some(gui_hdl) = self.gui_hdl.as_mut() {
-            while let Ok(msg) = gui_hdl.rx.try_recv() {
-                println!("MSG FROM UI: {:?}", msg);
-                match msg {
-                    UIMsg::ValueChangeStart { id, value } => {
-                        if let Some(af) = self.params.params.get(id) {
-                            af.set(value);
-                            self.host.begin_edit(id as i32);
-                            self.host.automate(id as i32, value);
-                        }
-                    },
-                    UIMsg::ValueChanged { id, value, single_change } => {
-                        if let Some(af) = self.params.params.get(id) {
-                            af.set(value);
-                            self.host.automate(id as i32, value);
-                        }
-                    },
-                    UIMsg::ValueChangeEnd { id, value } => {
-                        if let Some(af) = self.params.params.get(id) {
-                            af.set(value);
-                            self.host.automate(id as i32, value);
-                            self.host.end_edit(id as i32);
-                        }
-                    },
-                    UIMsg::WindowClosed => {
-                        closed = true;
-                        break;
-                    },
-                    _ => {},
-                }
-            }
-        }
-
-        if closed {
-            self.gui_hdl = None;
-        }
+//        if let Some(gui_hdl) = self.gui_hdl.as_mut() {
+//            while let Ok(msg) = gui_hdl.rx.try_recv() {
+//                println!("MSG FROM UI: {:?}", msg);
+//                match msg {
+//                    UIMsg::ValueChangeStart { id, value } => {
+//                        if let Some(af) = self.params.params.get(id) {
+//                            af.set(value);
+//                            self.host.begin_edit(id as i32);
+//                            self.host.automate(id as i32, value);
+//                        }
+//                    },
+//                    UIMsg::ValueChanged { id, value, single_change } => {
+//                        if let Some(af) = self.params.params.get(id) {
+//                            af.set(value);
+//                            self.host.automate(id as i32, value);
+//                        }
+//                    },
+//                    UIMsg::ValueChangeEnd { id, value } => {
+//                        if let Some(af) = self.params.params.get(id) {
+//                            af.set(value);
+//                            self.host.automate(id as i32, value);
+//                            self.host.end_edit(id as i32);
+//                        }
+//                    },
+//                    UIMsg::WindowClosed => {
+//                        closed = true;
+//                        break;
+//                    },
+//                    _ => {},
+//                }
+//            }
+//        }
+//
+//        if closed {
+//            self.gui_hdl = None;
+//        }
 
     }
 
     fn close(&mut self) {
+        self.controller.request_close();
 //        self.view.as_mut().unwrap().as_mut().handle().close_request()
     }
 }

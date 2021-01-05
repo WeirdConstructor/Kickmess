@@ -2,32 +2,44 @@
 // This is a part of Kickmess. See README.md and COPYING for details.
 
 use kickmessvst;
-use kickmessvst::ui;
 use kickmessvst::ui::protocol::*;
 use std::sync::Arc;
 
+
+struct TestController {
+}
+
+impl UIController for TestController {
+    fn init(&self, ui: &mut dyn UI) {
+//        self.is_open.store(true, std::sync::atomic::Ordering::Relaxed);
+        kickmessvst::editor::define_gui(ui);
+    }
+
+    fn window_closed(&self, ui: &mut dyn UI) {
+//        self.is_open.store(false, std::sync::atomic::Ordering::Relaxed);
+    }
+}
+
 fn main() {
-    let (cl_hdl, p_hdl) = ui::protocol::UIClientHandle::create();
+    let ctrl = Arc::new(TestController { });
 
-    kickmessvst::editor::define_gui(&cl_hdl);
-
-    std::thread::spawn(move || {
-        let mut closed = false;
-        while !closed {
-            while let Ok(msg) = cl_hdl.rx.recv() {
-                match msg {
-                    UIMsg::WindowClosed => { closed = true; break; },
-                    _ => {},
-                }
-            }
-        }
-    });
+//    std::thread::spawn(move || {
+//        let mut closed = false;
+//        while !closed {
+//            while let Ok(msg) = cl_hdl.rx.recv() {
+//                match msg {
+//                    UIMsg::WindowClosed => { closed = true; break; },
+//                    _ => {},
+//                }
+//            }
+//        }
+//    });
 
     kickmessvst::window::open_window(
         "Kickmess Test GUI",
         kickmessvst::editor::WINDOW_WIDTH,
         kickmessvst::editor::WINDOW_HEIGHT,
-        None, p_hdl);
+        None, ctrl);
 
 
 //    let graph_fun = Arc::new(|_id: usize, src: &mut dyn UIGraphValueSource, out: &mut Vec<(f64, f64)>| {

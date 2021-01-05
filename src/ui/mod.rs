@@ -13,12 +13,15 @@ pub mod protocol;
 
 use std::rc::Rc;
 use std::cell::RefCell;
+use std::sync::Arc;
 
 use crate::ui::element::*;
 use crate::ui::painting::{ActiveZone, HLStyle, Painter};
 use crate::ui::draw_cache::{DrawCache};
-use crate::ui::protocol::{UIMsg, UICmd, UIPos, UIKnobData, UIProviderHandle,
-                          UITabData, UILayout, UIBtnData, UIInput, UIValueSpec, UIGraphValueSource};
+use crate::ui::protocol::{UIPos, UIKnobData,
+                          UITabData, UILayout, UIBtnData, UIInput,
+                          UIValueSpec, UIGraphValueSource,
+                          UIInputValue, UI, UIController};
 use crate::ui::constants::*;
 use keyboard_types::{Key, KeyboardEvent};
 
@@ -83,8 +86,8 @@ impl InputMode {
     }
 }
 
-pub struct UI {
-    ui_handle:      UIProviderHandle,
+pub struct WValuePlugUI {
+    controller:     Arc<dyn UIController>,
 
 //    font:           Option<cairo::FontFace>,
 
@@ -144,17 +147,36 @@ impl Rect {
     }
 }
 
-impl UIGraphValueSource for UI {
+impl UIGraphValueSource for WValuePlugUI {
     fn param_value(&mut self, idx: usize) -> f64 {
         self.get_element_value(idx) as f64
     }
 }
 
-impl UI {
-    pub fn new(ui_handle: UIProviderHandle) -> Self {
+impl UI for WValuePlugUI {
+    fn define_layout(&mut self, layout: Vec<UILayout>) {
+        self.layout = Rc::new(RefCell::new(layout));
+        self.queue_redraw();
+    }
+
+    fn define_value_spec(&mut self, valspecs: Vec<UIValueSpec>) {
+        self.set_value_specs(valspecs);
+        self.queue_redraw();
+    }
+
+    fn set_values(&mut self, vals: &[UIInputValue]) {
+        for v in vals.iter() {
+            self.set_element_value(v.id, v.value);
+        }
+        self.queue_redraw();
+    }
+}
+
+impl WValuePlugUI {
+    pub fn new(controller: Arc<dyn UIController>) -> Self {
         let mut this =
             Self {
-                ui_handle,
+                controller,
                 layout:             Rc::new(RefCell::new(vec![])),
                 window_size:        (0.0, 0.0),
                 zones:              vec![],
@@ -172,6 +194,7 @@ impl UI {
 //                font:               None,
             };
         this.init_draw_cache();
+        this.controller.clone().init(&mut this);
         this
     }
 
@@ -238,26 +261,6 @@ impl UI {
         self.window_size = (w, h);
     }
 
-    pub fn handle_client_command(&mut self) {
-        while let Ok(cmd) = self.ui_handle.rx.try_recv() {
-            match cmd {
-                UICmd::Define(layout) => {
-                    self.layout = Rc::new(RefCell::new(layout));
-                    self.queue_redraw();
-                },
-                UICmd::DefineValues(valspecs) => {
-                    self.set_value_specs(valspecs);
-                },
-                UICmd::SetValues(vals) => {
-                    for v in vals.iter() {
-                        self.set_element_value(v.id, v.value);
-                    }
-                },
-            }
-        }
-        // check ui_handle
-    }
-
     fn hover_zone_submode(&self) -> i8 {
         if let Some(hz) = self.hover_zone { hz.subtype as i8 } else { -1 }
     }
@@ -305,13 +308,9 @@ impl UI {
                         self.recalc_drag_value();
 
                         let id = zone.id;
-                        self.ui_handle.tx
-                            .send(UIMsg::ValueChanged {
-                                id:            id,
-                                value:         self.get_element_value(id),
-                                single_change: false,
-                            })
-                            .expect("Sending works");
+                        let value = self.get_element_value(id);
+                        self.controller.clone().value_change(
+                            self, id, value, false);
                     },
                     _ => {
                         self.hover_zone = None;
@@ -357,11 +356,9 @@ impl UI {
                                     };
                                 self.recalc_drag_value();
 
-                                self.ui_handle.tx
-                                    .send(UIMsg::ValueChangeStart {
-                                        id: id, value: self.get_element_value(id)
-                                    })
-                                    .expect("Sending works");
+                                let value = self.get_element_value(id);
+                                self.controller.clone().value_change_start(
+                                    self, id, value);
                                 self.queue_redraw();
 
                                 //d// println!("drag start! {:?}", self.input_mode);
@@ -411,10 +408,9 @@ impl UI {
 
                         self.set_element_value(id, v);
 
-                        self.ui_handle.tx
-                            .send(UIMsg::ValueChangeEnd { id: id, value: v })
-                            .expect("Sending works");
-
+                        let value = self.get_element_value(id);
+                        self.controller.clone().value_change_stop(
+                            self, id, value);
                         self.queue_redraw();
                     },
                     InputMode::SetDefault { zone } => {
@@ -442,13 +438,8 @@ impl UI {
                                     };
 
                                 self.set_element_value(zone.id, next);
-                                self.ui_handle.tx
-                                    .send(UIMsg::ValueChanged {
-                                        id:            zone.id,
-                                        value:         0.0,
-                                        single_change: true
-                                    })
-                                    .expect("Sending works");
+                                self.controller.clone().value_change(
+                                    self, zone.id, 0.0, true);
                             }
                         }
 
@@ -458,13 +449,8 @@ impl UI {
                         if let Some(hover_zone) = self.hover_zone {
                             if hover_zone.id == zone.id {
                                 self.set_element_value(zone.id, zone.set_val as f32);
-                                self.ui_handle.tx
-                                    .send(UIMsg::ValueChanged {
-                                        id:            zone.id,
-                                        value:         zone.set_val as f32,
-                                        single_change: true
-                                    })
-                                    .expect("Sending works");
+                                self.controller.clone().value_change(
+                                    self, zone.id, zone.set_val as f32, true);
                                 self.queue_redraw();
                             }
                         }
@@ -483,13 +469,8 @@ impl UI {
                             if hover_zone.id == zone.id {
                                 self.set_element_value(zone.id, 0.0);
 
-                                self.ui_handle.tx
-                                    .send(UIMsg::ValueChanged {
-                                        id:            zone.id,
-                                        value:         0.0,
-                                        single_change: true
-                                    })
-                                    .expect("Sending works");
+                                self.controller.clone().value_change(
+                                    self, zone.id, 0.0, true);
                                 self.queue_redraw();
 
                             } else if self.is_mod_target_value(zone.id, hover_zone.id) {
@@ -497,13 +478,8 @@ impl UI {
                                 //d//          zone.id,
                                 //d//          hover_zone.id);
                                 self.set_element_value(zone.id, hover_zone.id as f32);
-                                self.ui_handle.tx
-                                    .send(UIMsg::ValueChanged {
-                                        id:            zone.id,
-                                        value:         hover_zone.id as f32,
-                                        single_change: true
-                                    })
-                                    .expect("Sending works");
+                                self.controller.clone().value_change(
+                                    self, zone.id, hover_zone.id as f32, true);
                                 self.queue_redraw();
                             } else {
                                 // do not exit select modulation mode
@@ -555,8 +531,7 @@ impl UI {
                 }
             },
             UIEvent::WindowClose => {
-                self.ui_handle.tx.send(
-                    UIMsg::WindowClosed).expect("Sending works");
+                self.controller.clone().window_closed(self);
             },
             _ => {},
         }
