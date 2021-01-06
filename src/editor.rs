@@ -88,7 +88,7 @@ impl UIController for KickmessEditorController {
 
 pub fn define_gui(gui: &mut dyn ui::protocol::UI) {
     let mut values = vec![];
-    values.resize(15, UIValueSpec::new_id());
+    values.resize(16, UIValueSpec::new_id());
 
     let id_s_freq    = 0;
     let id_e_freq    = 1;
