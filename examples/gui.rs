@@ -11,8 +11,12 @@ struct TestController {
 
 impl UIController for TestController {
     fn init(&self, ui: &mut dyn UI) {
+        use kickmessvst::MonoProcessor;
 //        self.is_open.store(true, std::sync::atomic::Ordering::Relaxed);
-        kickmessvst::editor::define_gui(ui);
+        let mut ps        = kickmessvst::ParamSet::new();
+        let mut public_ps = kickmessvst::ParamSet::new();
+        kickmessvst::OpKickmess::init_params(&mut ps, &mut public_ps);
+        kickmessvst::editor::define_gui(&ps, ui);
     }
 
     fn window_closed(&self, ui: &mut dyn UI) {

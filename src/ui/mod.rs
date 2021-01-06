@@ -61,7 +61,7 @@ pub enum UIEvent {
     WindowClose,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 enum InputMode {
     None,
     ValueDrag  { zone: ActiveZone, orig_pos: (f64, f64), fine_key: bool },
@@ -69,6 +69,7 @@ enum InputMode {
     ToggleBtn  { zone: ActiveZone },
     SetDefault { zone: ActiveZone },
     SetValue   { zone: ActiveZone },
+    InputValue { zone: ActiveZone, value: String },
     GetHelp,
 }
 
@@ -82,6 +83,7 @@ impl InputMode {
             InputMode::ToggleBtn  { zone, .. } => zone.id,
             InputMode::SetDefault { zone, .. } => zone.id,
             InputMode::SetValue   { zone, .. } => zone.id,
+            InputMode::InputValue { zone, .. } => zone.id,
         }
     }
 }
@@ -487,6 +489,10 @@ impl WValuePlugUI {
                             // do not exit select modulation mode
                             return;
                         }
+                    },
+                    InputMode::InputValue { .. } => {
+                        // stay in input value mode
+                        return;
                     },
                 }
 

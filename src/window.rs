@@ -239,6 +239,7 @@ impl WindowHandler for GUIWindowHandler {
             },
             Event::Keyboard(ev) => {
                 use keyboard_types::KeyState;
+                println!("KEYEV: {:?}", ev);
                 match ev.state {
                     KeyState::Up => {
                         self.ui.handle_ui_event(UIEvent::KeyReleased(ev));

@@ -11,7 +11,11 @@ pub mod editor;
 pub mod ui;
 pub mod window;
 
-use proc::{ParamProvider, VoiceManager, ParamDefinition, ParamSet, MonoProcessor, MonoVoice, SmoothParameters};
+pub use op_kickmess::OpKickmess;
+
+use proc::{ParamProvider, VoiceManager, ParamDefinition, MonoVoice, SmoothParameters};
+pub use proc::MonoProcessor;
+pub use proc::ParamSet;
 use op_kickmess::*;
 use helpers::note_to_freq;
 

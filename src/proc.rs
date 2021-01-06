@@ -1,6 +1,8 @@
 // Copyright (c) 2020-2021 Weird Constructor <weirdconstructor@gmail.com>
 // This is a part of Kickmess. See README.md and COPYING for details.
 
+use crate::ui::protocol::UIValueSpec;
+
 pub trait ParamProvider {
     fn param(&self, p: usize) -> f32;
 }
@@ -21,6 +23,14 @@ pub struct ParamDefinition(usize, f32, f32, f32, &'static str, bool, bool);
 impl ParamDefinition {
     pub fn new() -> Self {
         Self(0, 0.0, 0.0, 0.0, "", false, false)
+    }
+
+    pub fn to_ui_value_spec(&self) -> UIValueSpec {
+        if self.5 {
+            UIValueSpec::new_min_max_exp(self.1 as f64, self.2 as f64, 5, 2)
+        } else {
+            UIValueSpec::new_min_max(self.1 as f64, self.2 as f64, 5, 2)
+        }
     }
 
     pub fn from(idx: usize, min: f32, max: f32, def: f32, desc: &'static str) -> Self {

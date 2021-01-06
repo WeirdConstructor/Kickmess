@@ -38,7 +38,7 @@ impl KickmessEditorController {
 impl UIController for KickmessEditorController {
     fn init(&self, ui: &mut dyn UI) {
         self.is_open.store(true, std::sync::atomic::Ordering::Relaxed);
-        define_gui(ui);
+        define_gui(&self.params.ps, ui);
 
         for (i, p) in self.params.params.iter().enumerate() {
             ui.set_values(
@@ -94,9 +94,9 @@ impl UIController for KickmessEditorController {
     }
 }
 
-pub fn define_gui(gui: &mut dyn ui::protocol::UI) {
+pub fn define_gui(ps: &crate::ParamSet, gui: &mut dyn ui::protocol::UI) {
     let mut values = vec![];
-    values.resize(16, UIValueSpec::new_id());
+    values.resize(17, UIValueSpec::new_id());
 
     let id_s_freq    = 0;
     let id_e_freq    = 1;
@@ -116,6 +116,9 @@ pub fn define_gui(gui: &mut dyn ui::protocol::UI) {
     let id_main_tab  = 15;
     let id_lic_tab   = 16;
 
+    for i in 0..ps.param_count() {
+        values[i] = ps.definition(i).unwrap().to_ui_value_spec();
+    }
     values[id_n_s_freq] = UIValueSpec::new_toggle(&[ "Off", "On" ]);
     values[id_n_e_freq] = UIValueSpec::new_toggle(&[ "Off", "On" ]);
 
@@ -362,7 +365,7 @@ pub fn define_gui(gui: &mut dyn ui::protocol::UI) {
                         id: id_main_tab,
                         labels: vec![
                             String::from("Main"),
-                            String::from("About"),
+                            String::from("Help"),
                         ],
                         childs: vec![
                             vec![vec![
@@ -381,10 +384,20 @@ pub fn define_gui(gui: &mut dyn ui::protocol::UI) {
                                         pos: UIPos::center(12, 12),
                                         id: id_lic_tab,
                                         labels: vec![
-                                            String::from("Plugin"),
+                                            String::from("Input"),
+                                            String::from("Copying"),
                                             String::from("Fonts"),
                                         ],
                                         childs: vec![
+                                    vec![vec![UIInput::label_mono(
+r#"Keyboard / Mouse Controls
+
+    F1                  - Enter Help mode for elements
+    Middle Mouse Button - Set Default value
+    Shift + Drag        - fine adjustment
+"#,
+                                        14.0,
+                                        UIPos::left(12, 12).top())]],
                                     vec![vec![UIInput::label_mono(
 r#"Kickmess - A Kick Drum Synthesizer Plugin
 Copyright (c) 2020-2021 Weird Constructor <weirdconstructor@gmail.com>
