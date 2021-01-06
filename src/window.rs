@@ -279,6 +279,7 @@ impl WindowHandler for GUIWindowHandler {
     }
 
     fn on_frame(&mut self) {
+        self.ui.pre_frame();
         let redraw = self.ui.needs_redraw();
 
         if redraw {
@@ -327,6 +328,8 @@ impl WindowHandler for GUIWindowHandler {
         if redraw {
             self.ftm.end_measure();
         }
+
+        self.ui.post_frame();
     }
 }
 

@@ -146,6 +146,17 @@ pub(crate) struct KickmessVSTParams {
     ps:             ParamSet,
     public_ps:      ParamSet,
     params:         Vec<AtomicFloat>,
+    dirty_params:   Vec<std::sync::atomic::AtomicBool>,
+}
+
+impl KickmessVSTParams {
+    fn set(&self, idx: usize, val: f32) {
+        if let Some(af) = self.params.get(idx) {
+            af.set(val);
+            self.dirty_params[idx].store(true,
+                std::sync::atomic::Ordering::Relaxed);
+        }
+    }
 }
 
 impl ParamProvider for KickmessVSTParams {
@@ -169,15 +180,18 @@ impl Default for KickmessVSTParams {
         OpKickmess::init_params(&mut ps, &mut public_ps);
 
         let mut params = vec![];
+        let mut dirty_params = vec![];
 
         for idx in 0..ps.param_count() {
             params.push(AtomicFloat::new(ps.definition(idx).unwrap().default_p()));
+            dirty_params.push(std::sync::atomic::AtomicBool::new(true));
         }
 
         KickmessVSTParams {
             ps,
             public_ps,
             params,
+            dirty_params,
         }
     }
 }
@@ -189,9 +203,7 @@ impl PluginParameters for KickmessVSTParams {
 
     fn set_parameter(&self, index: i32, val: f32) {
         if let Some(pd) = self.public_ps.definition(index as usize) {
-            if let Some(af) = self.params.get(pd.idx()) {
-                af.set(val);
-            }
+            self.set(pd.idx(), val);
         }
     }
 

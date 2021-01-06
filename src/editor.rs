@@ -45,10 +45,23 @@ impl UIController for KickmessEditorController {
         self.is_open.store(false, std::sync::atomic::Ordering::Relaxed);
     }
 
+    fn pre_frame(&self, ui: &mut dyn UI) {
+        use crate::proc::ParamProvider;
+
+        for (i, flag) in self.params.dirty_params.iter().enumerate() {
+            if flag.swap(false, std::sync::atomic::Ordering::Relaxed) {
+                //d// println!("SET VALUE {}: {}", i, self.params.param(i));
+                ui.set_values(
+                    &[UIInputValue { id: i, value: self.params.param(i) }]);
+            }
+        }
+    }
+
     fn value_change_start(&self, ui: &mut dyn UI, id: usize, value: f32) {
         if let Some(af) = self.params.params.get(id) {
             af.set(value);
             self.host.begin_edit(id as i32);
+            //d// println!("START AUTOM {}: {}", id, value);
             self.host.automate(id as i32, value);
         }
     }
@@ -57,6 +70,7 @@ impl UIController for KickmessEditorController {
         if let Some(af) = self.params.params.get(id) {
             af.set(value);
             if single_change { self.host.begin_edit(id as i32); }
+            //d// println!("AUTOM {}: {}", id, value);
             self.host.automate(id as i32, value);
             if single_change { self.host.end_edit(id as i32); }
         }
@@ -65,6 +79,7 @@ impl UIController for KickmessEditorController {
     fn value_change_stop(&self, ui: &mut dyn UI, id: usize, value: f32) {
         if let Some(af) = self.params.params.get(id) {
             af.set(value);
+            //d// println!("STOP AUTOM {}: {}", id, value);
             self.host.automate(id as i32, value);
             self.host.end_edit(id as i32);
         }

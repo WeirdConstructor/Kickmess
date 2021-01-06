@@ -408,9 +408,7 @@ impl WValuePlugUI {
 
                         self.set_element_value(id, v);
 
-                        let value = self.get_element_value(id);
-                        self.controller.clone().value_change_stop(
-                            self, id, value);
+                        self.controller.clone().value_change_stop(self, id, v);
                         self.queue_redraw();
                     },
                     InputMode::SetDefault { zone } => {
@@ -1053,6 +1051,15 @@ impl WValuePlugUI {
                 w, UI_ELEM_TXT_H,
                 "Press <Escape> or <F1> to exit help");
         }
+    }
+
+    pub fn pre_frame(&mut self) {
+        let ctrl = self.controller.clone();
+        ctrl.pre_frame(self);
+    }
+
+    pub fn post_frame(&mut self) {
+        self.controller.clone().post_frame(self);
     }
 
     pub fn draw(&mut self, p: &mut dyn Painter) {
