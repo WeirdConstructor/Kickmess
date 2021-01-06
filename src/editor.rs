@@ -39,6 +39,14 @@ impl UIController for KickmessEditorController {
     fn init(&self, ui: &mut dyn UI) {
         self.is_open.store(true, std::sync::atomic::Ordering::Relaxed);
         define_gui(ui);
+
+        for (i, p) in self.params.params.iter().enumerate() {
+            ui.set_values(
+                &[UIInputValue {
+                    id: i,
+                    value: p.get(),
+                }]);
+        }
     }
 
     fn window_closed(&self, _ui: &mut dyn UI) {
