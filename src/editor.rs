@@ -48,12 +48,12 @@ impl UIController for KickmessEditorController {
     fn pre_frame(&self, ui: &mut dyn UI) {
         use crate::proc::ParamProvider;
 
-        for (i, flag) in self.params.dirty_params.iter().enumerate() {
-            if flag.swap(false, std::sync::atomic::Ordering::Relaxed) {
-                //d// println!("SET VALUE {}: {}", i, self.params.param(i));
-                ui.set_values(
-                    &[UIInputValue { id: i, value: self.params.param(i) }]);
-            }
+        while let Some(id) = self.params.dirty_params.pop() {
+            ui.set_values(
+                &[UIInputValue {
+                    id: id,
+                    value: self.params.param(id)
+                }]);
         }
     }
 

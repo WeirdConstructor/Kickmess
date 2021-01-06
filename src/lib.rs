@@ -6,6 +6,7 @@ pub mod proc;
 pub mod helpers;
 mod op_kickmess;
 mod env;
+mod ringbuf_shared;
 pub mod editor;
 pub mod ui;
 pub mod window;
@@ -146,15 +147,14 @@ pub(crate) struct KickmessVSTParams {
     ps:             ParamSet,
     public_ps:      ParamSet,
     params:         Vec<AtomicFloat>,
-    dirty_params:   Vec<std::sync::atomic::AtomicBool>,
+    dirty_params:   ringbuf_shared::RingBuf<usize>,
 }
 
 impl KickmessVSTParams {
     fn set(&self, idx: usize, val: f32) {
         if let Some(af) = self.params.get(idx) {
             af.set(val);
-            self.dirty_params[idx].store(true,
-                std::sync::atomic::Ordering::Relaxed);
+            self.dirty_params.push(idx);
         }
     }
 }
@@ -180,18 +180,23 @@ impl Default for KickmessVSTParams {
         OpKickmess::init_params(&mut ps, &mut public_ps);
 
         let mut params = vec![];
-        let mut dirty_params = vec![];
+
+        // 10 times the parameter count, just to make sure it fits if the
+        // DAW is sending too many updates per frame. Or the GUI thread is too
+        // slow.
+        let buf =
+            crate::ringbuf_shared::RingBuf::<usize>::new(
+                public_ps.param_count() * 10);
 
         for idx in 0..ps.param_count() {
             params.push(AtomicFloat::new(ps.definition(idx).unwrap().default_p()));
-            dirty_params.push(std::sync::atomic::AtomicBool::new(true));
         }
 
         KickmessVSTParams {
             ps,
             public_ps,
             params,
-            dirty_params,
+            dirty_params: buf,
         }
     }
 }
