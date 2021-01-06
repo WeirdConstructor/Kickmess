@@ -36,22 +36,22 @@ const PI2 : f64 = std::f64::consts::PI * 2.0;
 
 macro_rules! param_model {
     ($x: ident) => {
-        //  scope  name         exp/lin smooth   idx  min    max     def    name
-        $x!{public freq_start      exp no_smooth 0,   5.0,   3000.0, 150.0, "Start Freq."}
-        $x!{public freq_end        exp no_smooth 1,   5.0,   2000.0,  40.0, "End Freq."}
-        $x!{public f_env_release   exp no_smooth 2,   5.0,   5000.0, 440.0, "Length"}
-        $x!{public dist_start      lin smooth    3,   0.0,   100.0,    0.8, "Dist. Start"}
-        $x!{public dist_end        lin smooth    4,   0.0,   100.0,    0.8, "Dist. End"}
-        $x!{public gain            lin smooth    5,   0.1,   5.0,      1.0, "Gain"}
-        $x!{public env_slope       lin smooth    6,   0.01,  1.0,    0.163, "Env. slope"}
-        $x!{public freq_slope      lin smooth    7,   0.001, 1.0,     0.06, "Freq. slope"}
-        $x!{public noise           exp smooth    8,   0.0,   1.0,      0.0, "Noise"}
-        $x!{public freq_note_start lin no_smooth 9,   0.0,   1.0,      1.0, "Start from note"}
-        $x!{public freq_note_end   lin no_smooth 10,  0.0,   1.0,      1.0, "End from note"}
-        $x!{public env_release     lin no_smooth 11,  1.0,1000.0,      5.0, "Env Release"}
-        $x!{public phase_offs      lin smooth    12,  0.0,   1.0,      0.0, "Click"}
-        $x!{public dist_on         lin no_smooth 13,  0.0,   1.0,      0.0, "Dist. On"}
-        $x!{private phase_test     lin smooth    14,  0.0,   1.0,      0.0, "Click2"}
+        //  scope  name         exp/lin smooth   idx  min    max     def    width  prec  name
+        $x!{public freq_start      exp no_smooth 0,   5.0,   3000.0, 150.0,     7,    2, "Start Freq."}
+        $x!{public freq_end        exp no_smooth 1,   5.0,   2000.0,  40.0,     7,    2, "End Freq."}
+        $x!{public f_env_release   exp no_smooth 2,   5.0,   5000.0, 440.0,     6,    1, "Length"}
+        $x!{public dist_start      lin smooth    3,   0.0,   100.0,    0.8,     4,    2, "Dist. Start"}
+        $x!{public dist_end        lin smooth    4,   0.0,   100.0,    0.8,     4,    2, "Dist. End"}
+        $x!{public gain            lin smooth    5,   0.1,   5.0,      1.0,     4,    2, "Gain"}
+        $x!{public env_slope       lin smooth    6,   0.01,  1.0,    0.163,     5,    3, "Env. slope"}
+        $x!{public freq_slope      lin smooth    7,   0.001, 1.0,     0.06,     5,    3, "Freq. slope"}
+        $x!{public noise           exp smooth    8,   0.0,   1.0,      0.0,     4,    2, "Noise"}
+        $x!{public freq_note_start lin no_smooth 9,   0.0,   1.0,      1.0,     3,    1, "Start from note"}
+        $x!{public freq_note_end   lin no_smooth 10,  0.0,   1.0,      1.0,     3,    1, "End from note"}
+        $x!{public env_release     lin no_smooth 11,  1.0,1000.0,      5.0,     4,    2, "Env Release"}
+        $x!{public phase_offs      lin smooth    12,  0.0,   1.0,      0.0,     4,    2, "Click"}
+        $x!{public dist_on         lin no_smooth 13,  0.0,   1.0,      0.0,     3,    1, "Dist. On"}
+        $x!{private phase_test     lin smooth    14,  0.0,   1.0,      0.0,     5,    2, "Click2"}
     }
 }
 
@@ -74,8 +74,8 @@ impl<'a> ParamModel<'a> {
 
     fn init_public_set(ps: &mut ParamSet) {
         macro_rules! param_add_ps {
-            (public $name:ident $e:ident $s:ident $idx:expr, $min:expr, $max:expr, $def:expr, $lbl:expr) => {
-                ps.add(ParamDefinition::from($idx, $min, $max, $def, $lbl).$e().$s());
+            (public $name:ident $e:ident $s:ident $idx:expr, $min:expr, $max:expr, $def:expr, $width:expr, $prec:expr, $lbl:expr) => {
+                ps.add(ParamDefinition::from($idx, $min, $max, $def, $width, $prec, $lbl).$e().$s());
             };
             (private $($tt:tt)*) => {
             }
@@ -86,8 +86,8 @@ impl<'a> ParamModel<'a> {
 
     fn init_private_set(ps: &mut ParamSet) {
         macro_rules! param_add_ps_priv {
-            ($_:ident $name:ident $e:ident $s:ident $idx:expr, $min:expr, $max:expr, $def:expr, $lbl:expr) => {
-                ps.add(ParamDefinition::from($idx, $min, $max, $def, $lbl).$e().$s());
+            ($_:ident $name:ident $e:ident $s:ident $idx:expr, $min:expr, $max:expr, $def:expr, $width:expr, $prec:expr, $lbl:expr) => {
+                ps.add(ParamDefinition::from($idx, $min, $max, $def, $width, $prec, $lbl).$e().$s());
             }
         }
 

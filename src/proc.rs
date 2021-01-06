@@ -18,23 +18,23 @@ impl ParamProvider for std::vec::Vec<f32> {
 }
 
 #[derive(Debug, Clone, Copy)]
-pub struct ParamDefinition(usize, f32, f32, f32, &'static str, bool, bool);
+pub struct ParamDefinition(usize, f32, f32, f32, &'static str, bool, bool, usize, usize);
 
 impl ParamDefinition {
     pub fn new() -> Self {
-        Self(0, 0.0, 0.0, 0.0, "", false, false)
+        Self(0, 0.0, 0.0, 0.0, "", false, false, 5, 2)
     }
 
     pub fn to_ui_value_spec(&self) -> UIValueSpec {
         if self.5 {
-            UIValueSpec::new_min_max_exp(self.1 as f64, self.2 as f64, 5, 2)
+            UIValueSpec::new_min_max_exp(self.1 as f64, self.2 as f64, self.7, self.8)
         } else {
-            UIValueSpec::new_min_max(self.1 as f64, self.2 as f64, 5, 2)
+            UIValueSpec::new_min_max(self.1 as f64, self.2 as f64, self.7, self.8)
         }
     }
 
-    pub fn from(idx: usize, min: f32, max: f32, def: f32, desc: &'static str) -> Self {
-        Self(idx, min, max, def, desc, false, true)
+    pub fn from(idx: usize, min: f32, max: f32, def: f32, width: usize, prec: usize, desc: &'static str) -> Self {
+        Self(idx, min, max, def, desc, false, true, width, prec)
     }
 
     pub fn lin(mut self) -> Self {
