@@ -93,14 +93,20 @@ pub fn define_gui(gui: &mut dyn ui::protocol::UI) {
     let id_s_freq    = 0;
     let id_e_freq    = 1;
     let id_f_env_rel = 2;
+    let id_d_start   = 3;
+    let id_d_end     = 4;
+    let id_gain      = 5;
     let id_env_slope = 6;
     let id_f_slope   = 7;
+    let id_noise     = 8;
     let id_n_s_freq  = 9;
     let id_n_e_freq  = 10;
     let id_env_rel   = 11;
     let id_click     = 12;
-    let id_main_tab  = 13;
-    let id_lic_tab   = 14;
+    let id_dist_on   = 13;
+
+    let id_main_tab  = 15;
+    let id_lic_tab   = 16;
 
     values[id_n_s_freq] = UIValueSpec::new_toggle(&[ "Off", "On" ]);
     values[id_n_e_freq] = UIValueSpec::new_toggle(&[ "Off", "On" ]);
@@ -219,6 +225,124 @@ pub fn define_gui(gui: &mut dyn ui::protocol::UI) {
        |___________________________________________________________|
     */
 
+    let oscillator_params =
+        UIInput::container_border(UIPos::center(8, 12), 1.0,
+            vec![
+                vec![
+                    UIInput::graph_huge(
+                        0,
+                        String::from("Amp Env"),
+                        UIPos::center(5, 4).bottom(),
+                        amp_env_fun.clone()),
+                    UIInput::container(UIPos::center(7, 4), 1.0, vec![vec![
+                        UIInput::knob(
+                            id_f_env_rel,
+                            String::from("Length (ms)"),
+                            UIPos::center(4, 12).bottom()),
+                        UIInput::knob(
+                            id_env_slope,
+                            String::from("Env Slope"),
+                            UIPos::center(4, 12).bottom()),
+                        UIInput::knob(
+                            id_env_rel,
+                            String::from("Release (ms)"),
+                            UIPos::center(4, 12).bottom()),
+                    ]]),
+                ],
+                vec![
+                    UIInput::graph_huge(
+                        0,
+                        String::from("Freq. Env"),
+                        UIPos::center(5, 4).bottom(),
+                        f_env_fun.clone()),
+                    UIInput::container(UIPos::center(7, 4), 1.0, vec![vec![
+                        UIInput::knob(
+                            id_s_freq,
+                            String::from("Start (Hz)"),
+                            UIPos::center(4, 12).bottom()),
+                        UIInput::knob(
+                            id_e_freq,
+                            String::from("End (Hz)"),
+                            UIPos::center(4, 12).bottom()),
+                        UIInput::knob(
+                            id_f_slope,
+                            String::from("Slope"),
+                            UIPos::center(4, 12).bottom()),
+                    ]]),
+                ],
+                vec![
+                    UIInput::container_border(
+                        UIPos::left(5, 4).bottom(),
+                        0.8,
+                        vec![
+                            vec![
+                                UIInput::knob_small(
+                                    id_click,
+                                    String::from("Click"),
+                                    UIPos::center(6, 12).middle()),
+                                UIInput::graph_small(
+                                    0,
+                                    String::from("Click"),
+                                    UIPos::center(6, 12).middle(),
+                                    phase_fun.clone()),
+                            ],
+                        ]),
+                    UIInput::btn_toggle(
+                        id_n_s_freq,
+                        String::from("S. from Note"),
+                        UIPos::center(3, 4).middle()),
+                    UIInput::btn_toggle(
+                        id_n_e_freq,
+                        String::from("E. from Note"),
+                        UIPos::center(3, 4).middle()),
+                ],
+            ]);
+
+    let mixer_params =
+        UIInput::container_border(UIPos::center(12, 4), 1.0,
+            vec![
+                vec![
+                    UIInput::knob(
+                        id_gain,
+                        String::from("Gain"),
+                        UIPos::center(6, 12).bottom()),
+                    UIInput::knob(
+                        id_noise,
+                        String::from("Noise"),
+                        UIPos::center(6, 12).bottom()),
+                ],
+            ]);
+
+    let dist_params =
+        UIInput::Tabs(UITabData {
+            pos: UIPos::center(12, 6),
+            id: id_dist_on,
+            labels: vec![
+                String::from("Off"),
+                String::from("Distortion"),
+            ],
+            childs: vec![
+                vec![vec![
+                    UIInput::label("Distortion off", 14.0, UIPos::center(6, 6).middle()),
+                ]],
+                vec![vec![
+                    UIInput::container(UIPos::center(12, 12), 1.0,
+                        vec![
+                            vec![
+                                UIInput::knob(
+                                    id_d_start,
+                                    String::from("Start"),
+                                    UIPos::center(6, 12).middle()),
+                                UIInput::knob(
+                                    id_d_end,
+                                    String::from("End"),
+                                    UIPos::center(6, 12).middle()),
+                            ],
+                        ])
+                ]],
+            ],
+        });
+
     gui.define_layout(vec![
         UILayout::Container {
             label: String::from(""),
@@ -233,72 +357,16 @@ pub fn define_gui(gui: &mut dyn ui::protocol::UI) {
                             String::from("About"),
                         ],
                         childs: vec![
-                            vec![
+                            vec![vec![
+                            UIInput::container(UIPos::center(12, 12), 1.0, vec![
                                 vec![
-                                    UIInput::graph_huge(
-                                        0,
-                                        String::from("Amp Env"),
-                                        UIPos::center(3, 4).bottom(),
-                                        amp_env_fun.clone()),
-                                    UIInput::knob(
-                                        id_f_env_rel,
-                                        String::from("Length (ms)"),
-                                        UIPos::center(2, 4).bottom()),
-                                    UIInput::knob(
-                                        id_env_slope,
-                                        String::from("Env Slope"),
-                                        UIPos::center(2, 4).bottom()),
-                                    UIInput::knob(
-                                        id_env_rel,
-                                        String::from("Release (ms)"),
-                                        UIPos::center(2, 4).bottom()),
+                                    oscillator_params,
+                                    UIInput::container(UIPos::center(4, 12), 1.0, vec![
+                                        vec![ mixer_params ],
+                                        vec![ dist_params ],
+                                    ]),
                                 ],
-                                vec![
-                                    UIInput::graph_huge(
-                                        0,
-                                        String::from("Freq. Env"),
-                                        UIPos::center(3, 4).bottom(),
-                                        f_env_fun.clone()),
-                                    UIInput::knob(
-                                        id_s_freq,
-                                        String::from("Start (Hz)"),
-                                        UIPos::center(2, 4).bottom()),
-                                    UIInput::knob(
-                                        id_e_freq,
-                                        String::from("End (Hz)"),
-                                        UIPos::center(2, 4).bottom()),
-                                    UIInput::knob(
-                                        id_f_slope,
-                                        String::from("Slope"),
-                                        UIPos::center(2, 4).bottom()),
-                                ],
-                                vec![
-                                    UIInput::container_border(
-                                        UIPos::left(3, 4).bottom(),
-                                        0.8,
-                                        vec![
-                                            vec![
-                                                UIInput::knob_small(
-                                                    id_click,
-                                                    String::from("Click"),
-                                                    UIPos::center(6, 12).middle()),
-                                                UIInput::graph_small(
-                                                    0,
-                                                    String::from("Click"),
-                                                    UIPos::center(6, 12).middle(),
-                                                    phase_fun.clone()),
-                                            ],
-                                        ]),
-                                    UIInput::btn_toggle(
-                                        id_n_s_freq,
-                                        String::from("S. from Note"),
-                                        UIPos::center(2, 4).middle()),
-                                    UIInput::btn_toggle(
-                                        id_n_e_freq,
-                                        String::from("E. from Note"),
-                                        UIPos::center(2, 4).middle()),
-                                ],
-                            ],
+                            ])]],
                             vec![
                                 vec![
                                     UIInput::Tabs(UITabData {
