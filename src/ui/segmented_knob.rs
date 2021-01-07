@@ -338,10 +338,11 @@ impl SegmentedKnob {
         if with_dot {
             p.arc_stroke(
                 line_w * 0.5,
+                color,
                 line_w * 1.5,
                 0.0, 2.0 * std::f64::consts::PI,
-                x + prev.0 + partial.0,
-                y + prev.1 + partial.1);
+                prev.0 + partial.0,
+                prev.1 + partial.1);
         }
     }
 }

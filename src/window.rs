@@ -166,7 +166,12 @@ impl<'a> Painter for MyPainter<'a> {
         self.canvas.stroke_path(&mut p, paint);
     }
 
-    fn arc_stroke(&mut self, width: f64, radius: f64, from_rad: f64, to_rad: f64, x: f64, y: f64) {
+    fn arc_stroke(&mut self, width: f64, color: (f64, f64, f64), radius: f64, from_rad: f64, to_rad: f64, x: f64, y: f64) {
+        let mut p = femtovg::Path::new();
+        let mut paint = color_paint(color);
+        paint.set_line_width(width as f32);
+        p.arc(x as f32, y as f32, radius as f32, from_rad as f32, to_rad as f32, femtovg::Solidity::Hole);
+        self.canvas.stroke_path(&mut p, paint);
     }
 
     fn rect_fill(&mut self, color: (f64, f64, f64), x: f64, y: f64, w: f64, h: f64) {
