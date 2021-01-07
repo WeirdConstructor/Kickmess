@@ -71,3 +71,6 @@ pub const UI_MARGIN         : f64 =   4.0;
 pub const UI_PADDING        : f64 =   6.0;
 pub const UI_ELEM_TXT_H     : f64 =  20.0;
 pub const UI_SAFETY_PAD     : f64 =   1.0;
+
+pub const UI_INPUT_BOX_W         : f64 = 200.0;
+pub const UI_INPUT_BOX_FONT_SIZE : f64 = 16.0;

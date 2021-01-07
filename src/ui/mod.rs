@@ -69,7 +69,9 @@ enum InputMode {
     ToggleBtn  { zone: ActiveZone },
     SetDefault { zone: ActiveZone },
     SetValue   { zone: ActiveZone },
-    InputValue { zone: ActiveZone, value: String },
+    InputValue { zone: ActiveZone,
+                 value: String,
+                 input: std::rc::Rc<std::cell::RefCell<std::io::BufWriter<Vec<u8>>>> },
     GetHelp,
 }
 
@@ -90,8 +92,6 @@ impl InputMode {
 
 pub struct WValuePlugUI {
     controller:     Arc<dyn UIController>,
-
-//    font:           Option<cairo::FontFace>,
 
     layout:         Rc<RefCell<Vec<UILayout>>>,
 
@@ -342,6 +342,27 @@ impl WValuePlugUI {
                                     self.queue_redraw();
                                     return;
                                 },
+                                MouseButton::Right => {
+                                    if    self.hover_zone_submode() == painting::AZ_COARSE_DRAG
+                                       || self.hover_zone_submode() == painting::AZ_FINE_DRAG {
+                                        let mut buf = vec![];
+                                        let mut bw = std::io::BufWriter::new(buf);
+                                        self.get_formatted_value(hz.id, &mut bw);
+                                        let value = 
+                                            String::from_utf8(bw.into_inner().unwrap()).unwrap();
+                                        self.input_mode =
+                                            InputMode::InputValue {
+                                                zone: hz,
+                                                value: value.trim().to_string(),
+                                                input:
+                                                    std::rc::Rc::new(
+                                                        std::cell::RefCell::new(
+                                                            std::io::BufWriter::new(vec![]))),
+                                            };
+                                        self.queue_redraw();
+                                        return;
+                                    }
+                                },
                                 _ => {}
                             }
                         }
@@ -505,7 +526,18 @@ impl WValuePlugUI {
             UIEvent::KeyPressed(key_event) => {
                 match key_event.key {
                     Key::Shift => { self.fine_drag_key_held = true; },
-                    _ => { }
+                    Key::Character(c) => {
+                        use std::io::Write;
+                        if let InputMode::InputValue { input, .. } = &mut self.input_mode {
+                            write!(input.borrow_mut(), "{}", c);
+                            println!("WRITTEN!!! {}",
+                                std::str::from_utf8(input.borrow().get_ref()).unwrap());
+                            self.queue_redraw();
+                        }
+                    },
+                    _ => {
+//                        if 
+                    }
                 }
             },
             UIEvent::KeyReleased(key_event) => {
@@ -1145,6 +1177,70 @@ impl WValuePlugUI {
 //                    UI_ELEM_TXT_H,
 //                    "Press <Escape> or <F1> to exit help");
             }
+        }
+
+        if let InputMode::InputValue { zone, value, input } = &self.input_mode {
+            let height = p.font_height(16.0, true) as f64;
+
+            let zone_center =
+                (zone.x + zone.w / 2.0,
+                 zone.y + zone.h / 2.0);
+
+            let edit_area = Rect {
+                x: zone_center.0 - UI_INPUT_BOX_W / 2.0,
+                y: zone_center.1,
+                w: UI_INPUT_BOX_W,
+                h: height * 3.0,
+            };
+
+            p.rect_fill(UI_GUI_BG_CLR, edit_area.x, edit_area.y, edit_area.w, edit_area.h);
+            p.rect_stroke(
+                UI_BORDER_WIDTH,
+                UI_BORDER_CLR,
+                edit_area.x + UI_MARGIN,
+                edit_area.y + UI_MARGIN,
+                edit_area.w - 2.0 * UI_MARGIN,
+                edit_area.h - 2.0 * UI_MARGIN);
+
+            let old_val_area = Rect {
+                x: edit_area.x + UI_MARGIN * 2.0,
+                y: edit_area.y + UI_MARGIN * 2.0,
+                w: UI_INPUT_BOX_W - 4.0 * UI_MARGIN,
+                h: height,
+            };
+            p.label_mono(
+                UI_INPUT_BOX_FONT_SIZE * 0.9,
+                1,
+                UI_LBL_TXT_CLR,
+                old_val_area.x,
+                old_val_area.y,
+                UI_INPUT_BOX_W / 2.0 - UI_MARGIN * 2.0,
+                old_val_area.h,
+                "Old:");
+
+            p.label_mono(
+                UI_INPUT_BOX_FONT_SIZE * 0.9,
+                -1,
+                UI_LBL_TXT_CLR,
+                old_val_area.x + UI_INPUT_BOX_W / 2.0,
+                old_val_area.y,
+                old_val_area.w,
+                old_val_area.h,
+                value);
+
+            let input_area = Rect {
+                x: edit_area.x + UI_MARGIN * 2.0,
+                y: edit_area.y + edit_area.h - (height + UI_MARGIN * 2.0),
+                w: UI_INPUT_BOX_W - 4.0 * UI_MARGIN,
+                h: height,
+            };
+
+            p.rect_fill(
+                UI_LBL_BG_CLR,
+                input_area.x, input_area.y, input_area.w, input_area.h);
+            p.label_mono(UI_INPUT_BOX_FONT_SIZE, -1, UI_LBL_TXT_CLR,
+                input_area.x, input_area.y, input_area.w, input_area.h,
+                &std::str::from_utf8(input.borrow().get_ref()).unwrap());
         }
 
         self.needs_redraw_flag = false;
