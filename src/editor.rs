@@ -78,7 +78,7 @@ impl UIController for KickmessEditorController {
         if let Some(af) = self.params.params.get(id) {
             af.set(value);
             if single_change { self.host.begin_edit(id as i32); }
-            //d// println!("AUTOM {}: {}", id, value);
+            println!("AUTOM {}: {}", id, value);
             self.host.automate(id as i32, value);
             if single_change { self.host.end_edit(id as i32); }
         }
@@ -432,22 +432,6 @@ Glyphs imported from Arev fonts are (c) Tavmjong Bah
                         ]
                     })
                 ],
-//                    vec![
-//                        UIInput::container_border(UIPos::center(12, 4), vec![ vec![
-//                            UIInput::knob(      4, String::from("Dist S."), UIPos::center(3, 12)),
-//                            UIInput::knob_small(5, String::from("Dist E."), UIPos::center(2, 12)),
-//                            UIInput::knob_huge( 1, String::from("SFreq."),  UIPos::center(3, 12)),
-//                            UIInput::btn_toggle(10, String::from("Mod2"),   UIPos::center(4, 12)),
-//                        ], ]),
-//                    ],
-//                    vec![
-//                        UIInput::container_border(UIPos::center(12, 4), vec![ vec![
-//                            UIInput::knob(      1, String::from("SFreq."),   UIPos::left(3, 12).bottom()),
-//                            UIInput::knob_small(1, String::from("SFreq."),   UIPos::left(2, 12).bottom()),
-//                            UIInput::knob_huge( 1, String::from("SFreq."),   UIPos::left(3, 12).bottom()),
-//                            UIInput::btn_drag_value(7, String::from("Mod3"), UIPos::left(4, 12).bottom()),
-//                        ], ]),
-//                    ],
             ],
         },
     ]);
@@ -489,49 +473,9 @@ impl Editor for KickmessEditor {
     }
 
     fn idle(&mut self) {
-//        let mut closed = false;
-
-//        if let Some(gui_hdl) = self.gui_hdl.as_mut() {
-//            while let Ok(msg) = gui_hdl.rx.try_recv() {
-//                println!("MSG FROM UI: {:?}", msg);
-//                match msg {
-//                    UIMsg::ValueChangeStart { id, value } => {
-//                        if let Some(af) = self.params.params.get(id) {
-//                            af.set(value);
-//                            self.host.begin_edit(id as i32);
-//                            self.host.automate(id as i32, value);
-//                        }
-//                    },
-//                    UIMsg::ValueChanged { id, value, single_change } => {
-//                        if let Some(af) = self.params.params.get(id) {
-//                            af.set(value);
-//                            self.host.automate(id as i32, value);
-//                        }
-//                    },
-//                    UIMsg::ValueChangeEnd { id, value } => {
-//                        if let Some(af) = self.params.params.get(id) {
-//                            af.set(value);
-//                            self.host.automate(id as i32, value);
-//                            self.host.end_edit(id as i32);
-//                        }
-//                    },
-//                    UIMsg::WindowClosed => {
-//                        closed = true;
-//                        break;
-//                    },
-//                    _ => {},
-//                }
-//            }
-//        }
-//
-//        if closed {
-//            self.gui_hdl = None;
-//        }
-
     }
 
     fn close(&mut self) {
         self.controller.request_close();
-//        self.view.as_mut().unwrap().as_mut().handle().close_request()
     }
 }

@@ -17,12 +17,16 @@ impl<T> RingBuf<T> {
     }
 
     pub fn push(&self, item: T) {
-        let mut prod = self.prod.lock().expect("locking mutex works fine");
-        prod.push(item).is_ok();
+        if let Ok(ref mut prod) = self.prod.try_lock() {
+            prod.push(item).is_ok();
+        }
     }
 
     pub fn pop(&self) -> Option<T> {
-        let mut cons = self.cons.lock().expect("locking mutex works fine");
-        cons.pop()
+        if let Ok(ref mut cons) = self.cons.try_lock() {
+            cons.pop()
+        } else {
+            None
+        }
     }
 }

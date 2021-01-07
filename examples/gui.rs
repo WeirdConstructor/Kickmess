@@ -19,7 +19,7 @@ impl UIController for TestController {
         kickmessvst::editor::define_gui(&ps, ui);
     }
 
-    fn window_closed(&self, ui: &mut dyn UI) {
+    fn window_closed(&self, _ui: &mut dyn UI) {
 //        self.is_open.store(false, std::sync::atomic::Ordering::Relaxed);
     }
 }

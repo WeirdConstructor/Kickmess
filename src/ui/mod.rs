@@ -439,7 +439,7 @@ impl WValuePlugUI {
 
                                 self.set_element_value(zone.id, next);
                                 self.controller.clone().value_change(
-                                    self, zone.id, 0.0, true);
+                                    self, zone.id, next, true);
                             }
                         }
 
