@@ -122,6 +122,17 @@ struct Rect {
 }
 
 impl Rect {
+    fn move_inside(&self, w: f64, h: f64) -> Self {
+        let x = self.x.max(0.0);
+        let y = self.y.max(0.0);
+
+        let xm = x + self.w;
+        let ym = y + self.h;
+        let x = if xm > w { x - (xm - w) } else { x };
+        let y = if ym > h { y - (ym - h) } else { y };
+        Rect { x, y, w: self.w, h: self.h }
+    }
+
     fn mul_size(&self, factor: f64) -> Self {
         let w = self.w * factor;
         let h = self.h * factor;
@@ -526,14 +537,64 @@ impl WValuePlugUI {
             UIEvent::KeyPressed(key_event) => {
                 match key_event.key {
                     Key::Shift => { self.fine_drag_key_held = true; },
-                    Key::Character(c) => {
-                        use std::io::Write;
-                        if let InputMode::InputValue { input, .. } = &mut self.input_mode {
-                            write!(input.borrow_mut(), "{}", c);
-                            println!("WRITTEN!!! {}",
-                                std::str::from_utf8(input.borrow().get_ref()).unwrap());
-                            self.queue_redraw();
+                    Key::Enter => {
+                        let new_value : Option<(usize, f32)> =
+                            if let InputMode::InputValue { input, zone, .. } = &self.input_mode {
+                                let mut r = input.borrow_mut();
+                                let s = std::str::from_utf8(r.get_ref()).unwrap();
+
+                                match self.parse_element_value(zone.id, s) {
+                                    Some(v) => Some((zone.id, v as f32)),
+                                    None    => None,
+                                }
+                            } else {
+                                None
+                            };
+
+                        if let Some((id, val)) = new_value {
+                            self.set_element_value(id, val);
+                            self.controller.clone().value_change(
+                                self, id, val, true);
+                            self.input_mode = InputMode::None;
                         }
+
+                        self.queue_redraw();
+                    },
+                    Key::Backspace => {
+                        if let InputMode::InputValue { input, .. } = &self.input_mode {
+                            let mut r = input.borrow_mut();
+                            let s = std::str::from_utf8(r.get_ref()).unwrap();
+                            let len = s.chars().count();
+                            if len > 0 {
+                                let s : String = s.chars().take(len - 1).collect();
+                                *r = std::io::BufWriter::new(s.into_bytes());
+                            }
+                        }
+
+                        self.queue_redraw();
+                    },
+                    Key::Character(c) => {
+                        if let InputMode::InputValue { input, zone, .. } = &self.input_mode {
+                            use std::io::Write;
+
+                            let mut r = input.borrow_mut();
+                            let prev_value = String::from_utf8(r.get_ref().to_vec()).unwrap();
+
+                            let c = if c == "," { ".".to_string() } else { c };
+                            write!(r, "{}", c);
+                            r.flush();
+
+                            let s = std::str::from_utf8(r.get_ref()).unwrap();
+
+                            match self.parse_element_value(zone.id, s) {
+                                None => {
+                                    *r = std::io::BufWriter::new(prev_value.as_bytes().to_vec());
+                                },
+                                _ => {}
+                            }
+                        }
+
+                        self.queue_redraw();
                     },
                     _ => {
 //                        if 
@@ -624,6 +685,10 @@ impl WValuePlugUI {
 
     fn is_mod_target_value(&self, mod_id: usize, id: usize) -> bool {
         self.value_specs[mod_id].v2v(id as f64) > 0.5
+    }
+
+    fn parse_element_value(&self, id: usize, s: &str) -> Option<f64> {
+        self.value_specs[id].parse(s)
     }
 
     fn touch_element_value(&mut self, id: usize) {
@@ -1193,6 +1258,8 @@ impl WValuePlugUI {
                 h: height * 3.0,
             };
 
+            let edit_area = edit_area.move_inside(ww, wh);
+
             p.rect_fill(UI_GUI_BG_CLR, edit_area.x, edit_area.y, edit_area.w, edit_area.h);
             p.rect_stroke(
                 UI_BORDER_WIDTH,
@@ -1238,9 +1305,9 @@ impl WValuePlugUI {
             p.rect_fill(
                 UI_LBL_BG_CLR,
                 input_area.x, input_area.y, input_area.w, input_area.h);
-            p.label_mono(UI_INPUT_BOX_FONT_SIZE, -1, UI_LBL_TXT_CLR,
+            p.label_mono(UI_INPUT_BOX_FONT_SIZE, 0, UI_LBL_TXT_CLR,
                 input_area.x, input_area.y, input_area.w, input_area.h,
-                &std::str::from_utf8(input.borrow().get_ref()).unwrap());
+                &std::str::from_utf8(input.borrow().get_ref()).unwrap().trim());
         }
 
         self.needs_redraw_flag = false;

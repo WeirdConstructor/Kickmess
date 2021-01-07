@@ -394,6 +394,9 @@ r#"Keyboard / Mouse Controls
 
     F1                  - Enter Help mode for elements
     Middle Mouse Button - Set Default value
+    Right Mouse Button  - Enter value input mode
+    Enter               - Accept entered value in value input mode
+    Escape              - Exit help or value input mode
     Shift + Drag        - fine adjustment
 "#,
                                         14.0,

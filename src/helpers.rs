@@ -183,11 +183,11 @@ pub fn p2range_exp(x: f32, a: f32, b: f32) -> f32 {
 }
 
 pub fn range2p(v: f32, a: f32, b: f32) -> f32 {
-    (v - a) / (b - a).abs()
+    ((v - a) / (b - a)).abs()
 }
 
 pub fn range2p_exp(v: f32, a: f32, b: f32) -> f32 {
-    ((v - a) / (b - a).abs()).sqrt()
+    (((v - a) / (b - a)).abs()).sqrt()
 }
 
 // gain: 24.0 - -90.0   default = 0.0

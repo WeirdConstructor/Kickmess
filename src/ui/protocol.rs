@@ -15,6 +15,7 @@ pub struct UIInputValue {
 pub struct UIValueSpec {
     fun: Arc<dyn Fn(f64) -> f64 + Send + Sync>,
     fmt: Arc<dyn Fn(f64, f64, &mut std::io::Write) -> bool + Send + Sync>,
+    parse: Arc<dyn Fn(&str) -> Option<f64> + Send + Sync>,
     coarse_step:    f64,
     fine_step:      f64,
     default:        f64,
@@ -28,11 +29,23 @@ impl std::fmt::Debug for UIValueSpec {
     }
 }
 
+fn clamp01(x: f64) -> f64 {
+    if x < 0.0 { return 0.0; }
+    if x > 1.0 { return 1.0; }
+    x
+}
+
 impl UIValueSpec {
     pub fn new_id() -> Self {
         Self {
             fun: Arc::new(|x| x),
             fmt: Arc::new(|_, x, writer| write!(writer, "{:4.2}", x).is_ok()),
+            parse: Arc::new(|s| {
+                match s.parse::<f64>() {
+                    Ok(v) => Some(v),
+                    Err(_) => None,
+                }
+            }),
             coarse_step: 0.05,
             fine_step:   0.01,
             default:     0.0,
@@ -45,6 +58,12 @@ impl UIValueSpec {
         Self {
             fun,
             fmt: Arc::new(|_, x, writer| write!(writer, "{:4.2}", x).is_ok()),
+            parse: Arc::new(|s| {
+                match s.parse::<f64>() {
+                    Ok(v) => Some(v),
+                    Err(_) => None,
+                }
+            }),
             coarse_step: 0.05,
             fine_step:   0.01,
             default:     0.0,
@@ -93,6 +112,7 @@ impl UIValueSpec {
                     write!(writer, "{}", strings[idx]).is_ok()
                 }
             }),
+            parse: Arc::new(|_| None),
             coarse_step: 0.0,
             fine_step:   0.0,
             default:     increment,
@@ -145,6 +165,7 @@ impl UIValueSpec {
 
                 write!(writer, "{}", empty_label).is_ok()
             }),
+            parse: Arc::new(|_| None),
             coarse_step: 0.0,
             fine_step:   0.0,
             default:     0.0,
@@ -154,9 +175,21 @@ impl UIValueSpec {
     }
 
     pub fn new_min_max_exp(min: f64, max: f64, width: usize, prec: usize) -> Self {
+        let (min_p, max_p) = (min, max);
+
         Self {
             fun: Arc::new(move |x| min * (1.0 - (x * x)) + max * (x * x)),
             fmt: Arc::new(move |_, x, writer| write!(writer, "{2:0$.1$}", width, prec, x).is_ok()),
+            parse: Arc::new(move |s| {
+                match s.parse::<f64>() {
+                    Ok(v) => {
+                        let v = if v > max_p { max_p } else { v };
+                        let v = if v < min_p { min_p } else { v };
+                        Some(clamp01((((v - min_p) / (max_p - min_p)).abs()).sqrt()))
+                    },
+                    Err(_) => None,
+                }
+            }),
             coarse_step: 0.05,
             fine_step:   0.001,
             default:     0.0,
@@ -166,9 +199,17 @@ impl UIValueSpec {
     }
 
     pub fn new_min_max(min: f64, max: f64, width: usize, prec: usize) -> Self {
+        let (min_p, max_p) = (min, max);
+
         Self {
             fun: Arc::new(move |x| min * (1.0 - x) + max * x),
             fmt: Arc::new(move |_, x, writer| write!(writer, "{2:0$.1$}", width, prec, x).is_ok()),
+            parse: Arc::new(move |s| {
+                match s.parse::<f64>() {
+                    Ok(v) => Some(clamp01((v - min_p) / (max_p - min_p).abs())),
+                    Err(_) => None,
+                }
+            }),
             coarse_step: 0.05,
             fine_step:   0.001,
             default:     0.0,
@@ -193,6 +234,7 @@ impl UIValueSpec {
         Self {
             fun,
             fmt: Arc::new(|_, x, writer| write!(writer, "{:4.2}", x).is_ok()),
+            parse: Arc::new(|_| None),
             coarse_step: 0.05,
             fine_step:   0.001,
             default:     0.0,
@@ -204,6 +246,7 @@ impl UIValueSpec {
     pub fn fine(&self, steps: f64) -> f64   { self.fine_step   * steps }
     pub fn coarse(&self, steps: f64) -> f64 { self.coarse_step * steps }
     pub fn v2v(&self, x: f64) -> f64        { (self.fun)(x) }
+    pub fn parse(&self, s: &str) -> Option<f64> { (self.parse)(s) }
     pub fn get_default(&self) -> f64        { self.default }
     pub fn fmt(&self, x: f64, writer: &mut std::io::Write) -> bool { (self.fmt)(x, self.v2v(x), writer) }
 }
