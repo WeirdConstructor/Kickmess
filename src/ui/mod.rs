@@ -489,6 +489,7 @@ impl WValuePlugUI {
                     },
                     InputMode::GetHelp => {
                         if let Some(hover_zone) = self.hover_zone {
+                            println!("HOVERZOME: {:?}", hover_zone);
                             if let Some(_) = self.get_element_help(hover_zone.id) {
                                 self.help_id = Some(hover_zone.id);
                                 self.queue_redraw();
@@ -950,6 +951,22 @@ impl WValuePlugUI {
                 hover_border.x, hover_border.y,
                 hover_border.w, hover_border.h);
         }
+
+        if let InputMode::GetHelp = self.input_mode {
+            if let HLStyle::Hover(_) = self.hover_highligh_for_id(id) {
+                p.rect_stroke(
+                    UI_BORDER_WIDTH * 2.0,
+                    UI_TXT_KNOB_HLIGHT_CLR,
+                    tab_rect.x, tab_rect.y,
+                    tab_rect.w, tab_rect.h);
+            } else if let Some(_) = self.get_element_help(id) {
+                p.rect_stroke(
+                    UI_BORDER_WIDTH * 2.0,
+                    UI_TXT_KNOB_HLHOVR_CLR,
+                    tab_rect.x, tab_rect.y,
+                    tab_rect.w, tab_rect.h);
+            }
+        }
     }
 
     fn layout_container(&mut self, p: &mut dyn Painter, border: bool, label: &str, depth: u32, crect: Rect, rows: &Vec<Vec<UIInput>>) {
@@ -1213,34 +1230,6 @@ impl WValuePlugUI {
                 self.draw_text_lines(
                     p, txt, UI_HELP_FONT_SIZE, UI_HELP_TXT_CLR,
                     x, y, ww, wh, true, Some(name));
-//
-//
-//
-//                self.
-//
-//                p.label_mono(1.5 * UI_HELP_FONT_SIZE, 0, UI_HELP_TXT_CLR,
-//                        x, y,
-//                        ww - 2.0 * (UI_MARGIN + UI_BORDER_WIDTH + UI_PADDING),
-//                        UI_ELEM_TXT_H,
-//                        name);
-//
-//                y += 2.0 * y_increment;
-//
-//                for line in txt.split("\n") {
-//                    p.label_mono(UI_HELP_FONT_SIZE, -1, UI_HELP_TXT_CLR,
-//                            x, y,
-//                            ww - 2.0 * (UI_MARGIN + UI_BORDER_WIDTH + UI_PADDING),
-//                            UI_ELEM_TXT_H,
-//                            line);
-//                    y += y_increment;
-//                }
-//
-//                p.label_mono(UI_HELP_FONT_SIZE, 0, UI_HELP_TXT_CLR,
-//                    x,
-//                    wh - 2.0 * (UI_MARGIN + UI_BORDER_WIDTH + UI_PADDING),
-//                    ww - 2.0 * (UI_MARGIN + UI_BORDER_WIDTH + UI_PADDING),
-//                    UI_ELEM_TXT_H,
-//                    "Press <Escape> or <F1> to exit help");
             }
         }
 

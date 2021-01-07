@@ -127,8 +127,10 @@ pub fn define_gui(ps: &crate::ParamSet, gui: &mut dyn ui::protocol::UI) {
               .help(help_text.0, help_text.1);
     }
 
-    values[id_n_s_freq] = UIValueSpec::new_toggle(&[ "Off", "On" ]);
-    values[id_n_e_freq] = UIValueSpec::new_toggle(&[ "Off", "On" ]);
+    let ht = crate::op_kickmess::help_texts[id_n_s_freq];
+    values[id_n_s_freq] = UIValueSpec::new_toggle(&[ "Off", "On" ]).help(ht.0, ht.1);
+    let ht = crate::op_kickmess::help_texts[id_n_e_freq];
+    values[id_n_e_freq] = UIValueSpec::new_toggle(&[ "Off", "On" ]).help(ht.0, ht.1);
 
     gui.define_value_spec(values);
 
