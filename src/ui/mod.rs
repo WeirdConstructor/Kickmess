@@ -111,6 +111,8 @@ pub struct WValuePlugUI {
     help_id:        Option<usize>,
 
     needs_redraw_flag: bool,
+
+    version_label:  &'static str,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -183,6 +185,11 @@ impl UI for WValuePlugUI {
         }
         self.queue_redraw();
     }
+
+    fn set_version(&mut self, version_label: &'static str) {
+        self.version_label = version_label;
+        self.queue_redraw();
+    }
 }
 
 impl WValuePlugUI {
@@ -204,7 +211,7 @@ impl WValuePlugUI {
                 input_mode:         InputMode::None,
                 help_id:            None,
                 help_texts:         vec![],
-//                font:               None,
+                version_label:      "",
             };
         this.init_draw_cache();
         this.controller.clone().init(&mut this);
@@ -1297,6 +1304,13 @@ impl WValuePlugUI {
             p.label_mono(UI_INPUT_BOX_FONT_SIZE, 0, UI_LBL_TXT_CLR,
                 input_area.x, input_area.y, input_area.w, input_area.h,
                 &std::str::from_utf8(input.borrow().get_ref()).unwrap().trim());
+        }
+
+        if self.version_label.len() > 0 {
+            p.label_mono(
+                UI_VERSION_FONT_SIZE, 1, UI_LBL_TXT_CLR,
+                ww - 50.0, 0.0, 40.0, UI_ELEM_TXT_H,
+                self.version_label);
         }
 
         self.needs_redraw_flag = false;

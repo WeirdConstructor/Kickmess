@@ -40,6 +40,8 @@ impl UIController for KickmessEditorController {
         self.is_open.store(true, std::sync::atomic::Ordering::Relaxed);
         define_gui(&self.params.ps, ui);
 
+        ui.set_version(crate::VERSION);
+
         for (i, p) in self.params.params.iter().enumerate() {
             ui.set_values(
                 &[UIInputValue {

@@ -487,6 +487,7 @@ pub trait UI {
     fn define_layout(&mut self, layout: Vec<UILayout>);
     fn define_value_spec(&mut self, spec: Vec<UIValueSpec>);
     fn set_values(&mut self, vals: &[UIInputValue]);
+    fn set_version(&mut self, version_label: &'static str);
 }
 
 pub trait UIController : Send + Sync {

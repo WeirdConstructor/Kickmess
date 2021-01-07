@@ -33,6 +33,8 @@ use std::sync::Arc;
 const MAX_BLOCKSIZE: usize = 64;
 const MAX_POLY:      usize = 16;
 
+pub const VERSION: &str = env!("CARGO_PKG_VERSION");
+
 struct Kickmess {
     host:           HostCallback,
     params:         Arc<KickmessVSTParams>,
