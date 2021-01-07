@@ -34,6 +34,49 @@ use crate::env::*;
 use crate::MAX_BLOCKSIZE;
 const PI2 : f64 = std::f64::consts::PI * 2.0;
 
+pub const help_texts : [(&str, &str); 14] = [
+    ("Start Frequency",
+        "This is the starting frequency of the frequency envelope."),
+    ("End Frequency",
+        "This is the ending frequency of the frequency envelope."),
+    ("Length",
+        "The lengths of the frequency and amplitude envelope in milliseconds."),
+    ("Distortion start amount",
+        "Distortion has it's own linear envelope.\n\
+         You can have different start and ending amount of\n\
+         the distortion envelope."),
+    ("Distortion end amount",
+        "Distortion has it's own linear envelope.\n\
+         You can have different start and ending amount of\n\
+         the distortion envelope."),
+    ("Gain",
+        "Additional gain applied to the output of the synthesizer."),
+    ("Envelope Slope",
+        "The slope of the amplitude envelope.\n\
+         You can go from linear to exponential."),
+    ("Frequency Envelope Slope",
+        "The slope of the frequency envelope.\n\
+         You can go from linear to exponential."),
+    ("Noise Mix",
+        "How much of noise is mixed into the oscillator output."),
+    ("Start frequency from note pitch",
+        "If you enable this, the frequency will start with the\n\
+         frequency of the played MIDI note."),
+    ("End frequency from note pitch",
+        "If you enable this, the frequency will end with the\n\
+         frequency of the played MIDI note."),
+    ("Env Release",
+        "The release time of the note after the MIDI node off\n\
+         event was received. It's a second amplitude envelope\n\
+         for cutting long drum sounds short if the key is not held\n\
+         anymore."),
+    ("Click Amount",
+        "This value will cut the phase of the sine wave,\n\
+         causing an audible extra 'click' at the start of the note."),
+    ("Distortion On/Off",
+        "Enables/Disables the distortion"),
+];
+
 macro_rules! param_model {
     ($x: ident) => {
         //  scope  name         exp/lin smooth   idx  min    max     def    width  prec  name

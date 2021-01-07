@@ -117,37 +117,18 @@ pub fn define_gui(ps: &crate::ParamSet, gui: &mut dyn ui::protocol::UI) {
     let id_lic_tab   = 16;
 
     for i in 0..ps.param_count() {
-        values[i] = ps.definition(i).unwrap().to_ui_value_spec();
+        let help_text =
+            if i < crate::op_kickmess::help_texts.len() {
+                crate::op_kickmess::help_texts[i]
+            } else { ("", "") };
+        values[i] =
+            ps.definition(i).unwrap()
+              .to_ui_value_spec()
+              .help(help_text.0, help_text.1);
     }
+
     values[id_n_s_freq] = UIValueSpec::new_toggle(&[ "Off", "On" ]);
     values[id_n_e_freq] = UIValueSpec::new_toggle(&[ "Off", "On" ]);
-
-//        UIValueSpec::new_id().help("S Freq", "fie fwof ewiof ew\nfewfwiuofewoi fewoi fewoif \nfiewfoiew foiew jfewoij \nfwefiwfh weifuhi "),
-////        UIValueSpec::new_min_max_exp(5.0, 3000.0, 6, 1).steps(0.04, 0.01).help("S Freq", "fie fwof ewiof ew\nfewfwiuofewoi fewoi fewoif \nfiewfoiew foiew jfewoij \nfwefiwfh weifuhi "),
-////        UIValueSpec::new_min_max_exp(5.0, 2000.0, 6, 1).steps(0.04, 0.01).help("E Freq", "END fwof ewiof ew\nfewfwiuofewoi ENDoi fewoif \nfiewfoiew ENDew jfewoij \nfwefiwfh ENDfuhi "),
-//        UIValueSpec::new_min_max_exp(5.0, 3000.0, 6, 1).steps(0.04, 0.01),
-//        UIValueSpec::new_min_max_exp(5.0, 2000.0, 6, 1).steps(0.04, 0.01),
-//        UIValueSpec::new_min_max_exp(5.0, 5000.0, 6, 1).steps(0.04, 0.01).help("3", "fie fwof ewiof ew\nfewfwiuofewoi fewoi fewoif \nfiewfoiew foiew jfewoij \nfwefiwfh weifuhi "),
-//        UIValueSpec::new_min_max(0.0, 100.0, 5, 1).steps(0.04, 0.01).help("4", "fie fwof ewiof ew\nfewfwiuofewoi fewoi fewoif \nfiewfoiew foiew jfewoij \nfwefiwfh weifuhi "),
-//        UIValueSpec::new_min_max(0.0, 100.0, 5, 1).steps(0.04, 0.01),
-//        UIValueSpec::new_id(),
-//        UIValueSpec::new_id(),
-//        UIValueSpec::new_id(),
-//        UIValueSpec::new_mod_target_list(&[
-//            (1, "Start (Hz)"),
-//            (2, "End (Hz)"),
-//            (3, "Length (ms)"),
-//        ], "?"),
-//        UIValueSpec::new_toggle(&[ "Off", "On", "Left", "Right" ]),
-//        UIValueSpec::new_id(),
-//        UIValueSpec::new_id(),
-//        UIValueSpec::new_id(),
-//        UIValueSpec::new_id(),
-//        UIValueSpec::new_id(),
-//        UIValueSpec::new_id(),
-//        UIValueSpec::new_id(),
-//        UIValueSpec::new_id(),
-//        UIValueSpec::new_id(),
 
     gui.define_value_spec(values);
 
