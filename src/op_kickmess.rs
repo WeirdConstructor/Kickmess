@@ -157,6 +157,19 @@ pub struct OpKickmess {
     release:         REnv,
 }
 
+impl OpKickmess {
+    fn next_sine_sample(&mut self, params: &ParamModel) -> f64 {
+        let s =
+            fast_sin(
+                (self.cur_phase as f64
+                 + (params.phase_offs() as f64))
+                * PI2);
+        self.cur_phase +=
+            (self.note_freq / (self.srate as f64)) as f32;
+        s
+    }
+}
+
 impl MonoProcessor for OpKickmess {
     fn init_params(ps: &mut ParamSet, public_ps: &mut ParamSet) {
         ParamModel::init_public_set(public_ps);
@@ -203,8 +216,7 @@ impl MonoProcessor for OpKickmess {
                 let gain : f64 = 1.0 - env_value.powf(params.env_slope() as f64);
 
                 let mut s =
-                    fast_sin((self.cur_phase as f64 + (params.phase_offs() as f64))
-                             * PI2)
+                    self.next_sine_sample(&params)
                     * (1.0_f64 - params.noise() as f64);
 
                 s += self.rng.next_open01() * gain * gain * params.noise() as f64;
@@ -217,9 +229,6 @@ impl MonoProcessor for OpKickmess {
                 } else {
                     kick_sample *= params.gain() as f64;
                 }
-
-                self.cur_phase +=
-                    (self.note_freq / (self.srate as f64)) as f32;
 
                 let change : f64 =
                     if env_value <= 1.0 {
