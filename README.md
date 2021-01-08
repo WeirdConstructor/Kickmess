@@ -13,6 +13,10 @@ Support for other platforms (Windows or MacOS) is currently out of scope,
 but depending on the amount of code I might be okay to maintain
 contributions.
 
+<a href="http://m8geil.de/data/git/kickmess/res/screenshot1.png">
+<img align="left" width="811" height="556" src="http://m8geil.de/data/git/kickmess/res/screenshot1.png">
+</a>
+
 ## State of Development
 
 This project is still (2021-01-08) under development and considered
