@@ -1,9 +1,9 @@
 [package]
 name        = "kickmessvst"
-version     = "0.1.0"
+version     = "0.2.0"
 authors     = ["Weird Constructor <weirdconstructor@gmail.com>"]
 edition     = "2018"
-license     = "GPL-3.0-or-later"
+license     = "AGPL-3.0-or-later"
 description = "Kickmess - Port of LMMS Kicker Plugin"
 
 [lib]
@@ -11,16 +11,12 @@ name       = "kickmessvst"
 crate-type = ["cdylib", "lib"]
 
 [dependencies]
+vst                = { git = "https://github.com/WeirdConstructor/vst-rs", branch = "host_begin_end_edit" }
+femtovg            = { git = "https://github.com/femtovg/femtovg", rev = "9c5de268cd1f85d9e32d20c8a37341709c92bdb5" }
+raw-gl-context     = { git = "https://github.com/glowcoil/raw-gl-context" }
+baseview           = { git = "https://github.com/RustAudio/baseview.git", rev = "36e4474c8aeb88" }
 keyboard-types     = { version = "0.5.0", default-features = false }
 raw-window-handle  = "0.3"
 gl                 = "0.14.0"
 glutin             = "0.24.1"
-vst                = { git = "https://github.com/WeirdConstructor/vst-rs", branch = "host_begin_end_edit" }
-#vst                = { git = "https://github.com/rustaudio/vst-rs" }
-#vst                = { path = "/home/weictr/devel/other/vst-rs" }
-femtovg            = { git = "https://github.com/femtovg/femtovg", rev = "9c5de268cd1f85d9e32d20c8a37341709c92bdb5" }
-#femtovg            = { path = "/home/weictr/devel/other/femtovg" }
-raw-gl-context     = { git = "https://github.com/glowcoil/raw-gl-context" }
-baseview           = { git = "https://github.com/RustAudio/baseview.git", rev = "36e4474c8aeb88" }
-#baseview           = { path = "/home/weictr/devel/other/baseview" }
 ringbuf            = "0.2.2"
