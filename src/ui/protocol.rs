@@ -35,6 +35,9 @@ fn clamp01(x: f64) -> f64 {
     x
 }
 
+const DEFAULT_COARSE_STEP : f64 = 0.05;
+const DEFAULT_FINE_STEP   : f64 = 0.01;
+
 impl UIValueSpec {
     pub fn new_id() -> Self {
         Self {
@@ -46,8 +49,8 @@ impl UIValueSpec {
                     Err(_) => None,
                 }
             }),
-            coarse_step: 0.05,
-            fine_step:   0.01,
+            coarse_step: DEFAULT_COARSE_STEP,
+            fine_step:   DEFAULT_FINE_STEP,
             default:     0.0,
             help_name:   "".to_string(),
             help_text:   "".to_string(),
@@ -64,8 +67,8 @@ impl UIValueSpec {
                     Err(_) => None,
                 }
             }),
-            coarse_step: 0.05,
-            fine_step:   0.01,
+            coarse_step: DEFAULT_COARSE_STEP,
+            fine_step:   DEFAULT_FINE_STEP,
             default:     0.0,
             help_name:   "".to_string(),
             help_text:   "".to_string(),
@@ -190,8 +193,8 @@ impl UIValueSpec {
                     Err(_) => None,
                 }
             }),
-            coarse_step: 0.05,
-            fine_step:   0.001,
+            coarse_step: DEFAULT_COARSE_STEP,
+            fine_step:   DEFAULT_FINE_STEP,
             default:     0.0,
             help_name:   "".to_string(),
             help_text:   "".to_string(),
@@ -210,8 +213,8 @@ impl UIValueSpec {
                     Err(_) => None,
                 }
             }),
-            coarse_step: 0.05,
-            fine_step:   0.001,
+            coarse_step: DEFAULT_COARSE_STEP,
+            fine_step:   DEFAULT_FINE_STEP,
             default:     0.0,
             help_name:   "".to_string(),
             help_text:   "".to_string(),
@@ -235,8 +238,8 @@ impl UIValueSpec {
             fun,
             fmt: Arc::new(|_, x, writer| write!(writer, "{:4.2}", x).is_ok()),
             parse: Arc::new(|_| None),
-            coarse_step: 0.05,
-            fine_step:   0.001,
+            coarse_step: DEFAULT_COARSE_STEP,
+            fine_step:   DEFAULT_FINE_STEP,
             default:     0.0,
             help_name:   "".to_string(),
             help_text:   "".to_string(),

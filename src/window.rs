@@ -17,7 +17,7 @@ use raw_window_handle::{
 
 #[macro_use]
 use baseview::{
-    Size, Event, WindowEvent, WindowInfo, MouseEvent, MouseButton, Window,
+    Size, Event, WindowEvent, WindowInfo, MouseEvent, ScrollDelta, MouseButton, Window,
     WindowHandler, WindowOpenOptions, WindowScalePolicy,
 };
 
@@ -241,6 +241,16 @@ impl WindowHandler for GUIWindowHandler {
                         _                   => ui::MouseButton::Left,
                     };
                 self.ui.handle_ui_event(UIEvent::MouseButtonReleased(ev_btn));
+            },
+            Event::Mouse(MouseEvent::WheelScrolled(scroll)) => {
+                match scroll {
+                    ScrollDelta::Lines { y, .. } => {
+                        self.ui.handle_ui_event(UIEvent::MouseWheel(y as f64));
+                    },
+                    ScrollDelta::Pixels { y, .. } => {
+                        self.ui.handle_ui_event(UIEvent::MouseWheel((y / 50.0) as f64));
+                    },
+                }
             },
             Event::Keyboard(ev) => {
                 use keyboard_types::KeyState;

@@ -56,6 +56,7 @@ pub enum UIEvent {
     MousePosition(f64, f64),
     MouseButtonPressed(MouseButton),
     MouseButtonReleased(MouseButton),
+    MouseWheel(f64),
     KeyPressed(KeyboardEvent),
     KeyReleased(KeyboardEvent),
     WindowClose,
@@ -306,7 +307,7 @@ impl WValuePlugUI {
             let steps = if fine_key { distance / 25.0 } else { distance / 10.0 };
 
             let step_val =
-                if zone.subtype == 0 {
+                if zone.subtype == (painting::AZ_COARSE_DRAG as usize) {
                     self.calc_coarse_step(zone.id, steps)
                 } else {
                     self.calc_fine_step(zone.id, steps)
@@ -422,6 +423,32 @@ impl WValuePlugUI {
                         }
                     },
                     _ => {}
+                }
+            },
+            UIEvent::MouseWheel(y) => {
+                if let Some(zone) = self.hover_zone {
+                    match self.hover_zone_submode() {
+                        painting::AZ_COARSE_DRAG | painting::AZ_FINE_DRAG => {
+                            let id = self.hover_zone.unwrap().id;
+
+                            let adj =
+                                if zone.subtype == (painting::AZ_COARSE_DRAG as usize) {
+                                    self.calc_coarse_step(zone.id, y)
+                                } else {
+                                    self.calc_fine_step(zone.id, y)
+                                };
+
+                            let value = self.get_element_value(id);
+                            self.set_element_value(id, clamp01(value + (adj as f32)));
+                            let value = self.get_element_value(id);
+                            self.controller.clone().value_change(
+                                self, id, value, true);
+                            self.queue_redraw();
+
+                            //d// println!("drag start! {:?}", self.input_mode);
+                        },
+                        _ => {}
+                    }
                 }
             },
             UIEvent::MouseButtonReleased(btn) => {

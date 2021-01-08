@@ -383,6 +383,7 @@ r#"Keyboard / Mouse Controls
     Enter               - Accept entered value in value input mode
     Escape              - Exit help or value input mode
     Shift + Drag        - fine adjustment
+    Mouse Wheel Up/Down - Adjust knob value according to coarse/fine area
 "#,
                                         14.0,
                                         UIPos::left(12, 12).top())]],
