@@ -199,7 +199,10 @@ impl SegmentedKnob {
     }
 
     pub fn get_fine_adjustment_mark(&self) -> (f64, f64, f64, f64) {
-        let r = self.get_fine_adjustment_rect();
+        let mut r = self.get_fine_adjustment_rect();
+        r.1 = (r.1 - UI_ELEM_TXT_H * 0.5).round();
+        r.3 = (r.3 + UI_ELEM_TXT_H * 0.5).round();
+
         let mut size = (self.font_size_lbl * 0.25).round();
         if (size as i32) % 2 != 0 {
             size += 1.0;
@@ -213,13 +216,15 @@ impl SegmentedKnob {
     pub fn get_fine_adjustment_rect(&self) -> (f64, f64, f64, f64) {
         let width = self.radius * 2.0;
         ((self.sbottom.0 - self.radius).round(),
-         (self.sbottom.1 - self.radius).round(),
+         ((self.sbottom.1 - self.radius) + UI_ELEM_TXT_H * 0.5).round(),
          width.round(),
-         (self.radius).round())
+         (self.radius - UI_ELEM_TXT_H * 0.5).round())
     }
 
     pub fn get_coarse_adjustment_mark(&self) -> (f64, f64, f64, f64) {
-        let r = self.get_coarse_adjustment_rect();
+        let mut r = self.get_coarse_adjustment_rect();
+        r.3 = (r.3 - UI_ELEM_TXT_H * 0.5).round();
+
         let mut size = (self.font_size_lbl * 0.5).round();
         if (size as i32) % 2 != 0 {
             size += 1.0;
@@ -235,7 +240,7 @@ impl SegmentedKnob {
         ((self.sbottom.0 - self.radius).round(),
          -self.radius,
          width.round(),
-         (self.radius).round())
+         (self.radius + UI_ELEM_TXT_H * 0.5).round())
     }
 
     pub fn get_value_rect(&self) -> (f64, f64, f64, f64) {
