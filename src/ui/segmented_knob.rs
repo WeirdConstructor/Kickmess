@@ -67,12 +67,6 @@ impl UIElement for SegmentedKnob {
                     p.rect_fill(
                         UI_TXT_KNOB_HOVER_CLR,
                         x + xo + r.0, y + yo + r.1, r.2, r.3);
-
-                } else {
-                    let r = self.get_coarse_adjustment_mark();
-                    p.rect_fill(
-                        UI_TXT_KNOB_HOVER_CLR,
-                        x + xo + r.0, y + yo + r.1, r.2, r.3);
                 }
 
                 self.draw_oct_arc(
@@ -124,11 +118,6 @@ impl UIElement for SegmentedKnob {
         p.rect_fill(
             UI_BG_KNOB_STROKE_CLR,
             lblrect.0 + xo, lblrect.1 + yo, lblrect.2, lblrect.3);
-
-        let r = self.get_coarse_adjustment_mark();
-        p.rect_fill(
-            UI_BG_KNOB_STROKE_CLR,
-            xo + r.0, yo + r.1, r.2, r.3);
 
         let r = self.get_fine_adjustment_mark();
         p.rect_fill(
@@ -214,25 +203,7 @@ impl SegmentedKnob {
     }
 
     pub fn get_fine_adjustment_rect(&self) -> (f64, f64, f64, f64) {
-        let width = self.radius * 2.0;
-        ((self.sbottom.0 - self.radius).round(),
-         ((self.sbottom.1 - self.radius) + UI_ELEM_TXT_H * 0.5).round(),
-         width.round(),
-         (self.radius - UI_ELEM_TXT_H * 0.5).round())
-    }
-
-    pub fn get_coarse_adjustment_mark(&self) -> (f64, f64, f64, f64) {
-        let mut r = self.get_coarse_adjustment_rect();
-        r.3 = (r.3 - UI_ELEM_TXT_H * 0.5).round();
-
-        let mut size = (self.font_size_lbl * 0.5).round();
-        if (size as i32) % 2 != 0 {
-            size += 1.0;
-        }
-        (r.0 + (r.2 * 0.5 - size * 0.5).round(),
-         r.1 + (r.3 * 0.5 - size).round(),
-         size,
-         size)
+        self.get_label_rect()
     }
 
     pub fn get_coarse_adjustment_rect(&self) -> (f64, f64, f64, f64) {
@@ -240,7 +211,7 @@ impl SegmentedKnob {
         ((self.sbottom.0 - self.radius).round(),
          -self.radius,
          width.round(),
-         (self.radius + UI_ELEM_TXT_H * 0.5).round())
+         (self.radius * 2.0).round())
     }
 
     pub fn get_value_rect(&self) -> (f64, f64, f64, f64) {

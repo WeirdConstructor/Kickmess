@@ -254,7 +254,6 @@ impl WindowHandler for GUIWindowHandler {
             },
             Event::Keyboard(ev) => {
                 use keyboard_types::KeyState;
-                println!("KEYEV: {:?}", ev);
                 match ev.state {
                     KeyState::Up => {
                         self.ui.handle_ui_event(UIEvent::KeyReleased(ev));
@@ -265,7 +264,6 @@ impl WindowHandler for GUIWindowHandler {
                 }
             },
             Event::Window(WindowEvent::Resized(info)) => {
-                println!("RESIZE EVENT: {:?}", event);
                 let size = info.logical_size();
 
                 self.canvas.set_size(size.width as u32, size.height as u32, 1.0);
