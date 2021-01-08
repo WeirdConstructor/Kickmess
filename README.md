@@ -15,8 +15,9 @@ contributions.
 
 ## State of Development
 
-This project is currently (2021-01-05) under heavy development and considered
-absolutely unstable and alpha. So use or try to compile at your own risk :-)
+This project is still (2021-01-08) under development and considered
+useable for what it is. There are features missing, which might come
+in future.
 
 Make sure to follow [Weird Constructors Mastodon
 account](https://mastodon.online/web/accounts/150371) or the releases of this
@@ -34,6 +35,19 @@ For development the GUI can be executed without any DSP code running
 in the background:
 
     cargo run --release --example gui
+
+## TODO / Features
+
+* A few presets to document a few sweet spots
+* Less blurry text (needs improvements in femtovg library/crate)
+* Modulation (AHDSR envelope, LFO)
+* A second oscillator with sawtooth/square waveforms
+* A high/low/band pass filter with resonance
+
+## Known Bugs
+
+* On some (Linux) system is has been reported that the GUI has a Y axis shift.
+It's currently unknown what is the cause of this.
 
 ## Tested Hosts and Systems
 

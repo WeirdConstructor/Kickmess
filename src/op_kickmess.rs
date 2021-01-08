@@ -85,7 +85,7 @@ macro_rules! param_model {
         $x!{public f_env_release   exp no_smooth 2,   5.0,   5000.0, 440.0,     6,    1, "Length"}
         $x!{public dist_start      lin smooth    3,   0.0,   100.0,    0.8,     4,    2, "Dist. Start"}
         $x!{public dist_end        lin smooth    4,   0.0,   100.0,    0.8,     4,    2, "Dist. End"}
-        $x!{public gain            lin smooth    5,   0.1,   5.0,      1.0,     4,    2, "Gain"}
+        $x!{public gain            lin smooth    5,   0.1,   2.0,      1.0,     4,    2, "Gain"}
         $x!{public env_slope       lin smooth    6,   0.01,  1.0,    0.163,     5,    3, "Env. slope"}
         $x!{public freq_slope      lin smooth    7,   0.001, 1.0,     0.06,     5,    3, "Freq. slope"}
         $x!{public noise           exp smooth    8,   0.0,   1.0,      0.0,     4,    2, "Noise"}
