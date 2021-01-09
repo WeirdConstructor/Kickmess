@@ -364,7 +364,7 @@ pub fn open_window(title: &str, window_width: i32, window_height: i32, parent: O
         WindowOpenOptions {
             title:  title.to_string(),
             size:   Size::new(window_width as f64, window_height as f64),
-            scale:  WindowScalePolicy::SystemScaleFactor,
+            scale:  WindowScalePolicy::ScaleFactor(1.0),
         };
 
     let window_create_fun = move |win: &mut Window| {
