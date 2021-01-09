@@ -50,8 +50,7 @@ in the background:
 
 ## Known Bugs
 
-* On some (Linux) system is has been reported that the GUI has a Y axis shift.
-It's currently unknown what is the cause of this.
+* The ones you encounter and create as issues on GitHub.
 
 ## Tested Hosts and Systems
 

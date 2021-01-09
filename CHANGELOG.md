@@ -8,6 +8,7 @@
 less easy to destroy your speakers.
 * Bugfix: Default fine step was too small to feel nice.
 * Bugfix: Removed some debug prints.
+* Bugfix: A bug in baseview caused the resizing / UI offset issues.
 
 0.1.0 (2021-01-08)
 ==================
