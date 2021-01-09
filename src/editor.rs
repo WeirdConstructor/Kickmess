@@ -369,24 +369,30 @@ pub fn define_gui(ps: &crate::ParamSet, gui: &mut dyn ui::protocol::UI) {
                                         pos: UIPos::center(12, 12),
                                         id: id_lic_tab,
                                         labels: vec![
-                                            String::from("Input"),
+                                            String::from("Usage"),
                                             String::from("Copying"),
                                             String::from("Fonts"),
                                         ],
                                         childs: vec![
                                     vec![vec![UIInput::label_mono(
-r#"Keyboard / Mouse Controls
+r#"
+About the knobs and adjustment areas:
 
-    F1                  - Enter Help mode for elements
+    Coarse adjustment: Center of the knob (value label) dragging.
+    Fine adjustment:   Label/Name of the knob dragging.
+
+Mouse controls:
+
     Middle Mouse Button - Set Default value
     Right Mouse Button  - Enter value input mode
+    Mouse Wheel Up/Down - Adjust knob value according to coarse/fine area
+
+Keyboard controls:
+
+    F1                  - Enter Help mode for elements
     Enter               - Accept entered value in value input mode
     Escape              - Exit help or value input mode
     Shift + Drag        - fine adjustment
-    Mouse Wheel Up/Down - Adjust knob value according to coarse/fine area
-
-Hint: You can fine adjust knobs (without pressing the Shift key)
-      by Click + Drag the knob label.
 "#,
                                         14.0,
                                         UIPos::left(12, 12).top())]],
