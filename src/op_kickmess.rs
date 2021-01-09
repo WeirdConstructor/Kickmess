@@ -162,7 +162,7 @@ impl OpKickmess {
         let s =
             fast_sin(
                 (self.cur_phase as f64
-                 + (params.phase_offs() as f64))
+                 + (0.25 * (params.phase_offs() as f64)))
                 * PI2);
         self.cur_phase +=
             (self.note_freq / (self.srate as f64)) as f32;

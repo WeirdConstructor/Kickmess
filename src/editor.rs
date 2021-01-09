@@ -172,7 +172,10 @@ pub fn define_gui(ps: &crate::ParamSet, gui: &mut dyn ui::protocol::UI) {
     let id_ae_s_freq    = id_s_freq;
     let id_ae_e_freq    = id_e_freq;
     let amp_env_fun =
-        Arc::new(move |_id: usize, src: &mut dyn UIGraphValueSource, out: &mut Vec<(f64, f64)>| {
+        Arc::new(move |_id: usize,
+                       src: &mut dyn UIGraphValueSource,
+                       out: &mut Vec<(f64, f64)>| {
+
             let slope = src.param_value(id_ae_env_slope).max(0.01);
             let min_x = 0.2;
             let max_x =
@@ -189,14 +192,17 @@ pub fn define_gui(ps: &crate::ParamSet, gui: &mut dyn ui::protocol::UI) {
 
     let id_ph_click = id_click;
     let phase_fun =
-        Arc::new(move |_id: usize, src: &mut dyn UIGraphValueSource, out: &mut Vec<(f64, f64)>| {
+        Arc::new(move |_id: usize,
+                       src: &mut dyn UIGraphValueSource,
+                       out: &mut Vec<(f64, f64)>| {
+
             let samples = 80;
 
             for x in 0..(samples + 1) {
                 let x = x as f64 / (samples as f64);
                 out.push((
                     x,
-                    (((x + src.param_value(id_ph_click))
+                    (((x + 0.25 * src.param_value(id_ph_click))
                        * 2.0 * std::f64::consts::PI).sin() + 1.0) / 2.0));
             }
         });

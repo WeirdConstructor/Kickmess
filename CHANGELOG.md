@@ -1,3 +1,10 @@
+0.2.2 (unreleased)
+==================
+
+* Incompatible Change: Click value is limited to the first 1/4th of the
+sine phase. This makes a Click value of 1.0 more meaningful, as "full click".
+
+
 0.2.1 (2021-01-09)
 ==================
 
