@@ -1,4 +1,4 @@
-0.2.0 (unreleased)
+0.2.1 (2021-01-09)
 ==================
 
 * Feature: Added mouse wheel scrolling.
@@ -7,7 +7,7 @@
 * Change: Gain only goes up to 2.0 now, to make it
 less easy to destroy your speakers.
 * Change: Set a fixed scale factor for now until I know
-how to deal with system scale factors.
+how to deal with system scale factors. Which lead to a differnt UI offset issue.
 * Bugfix: Default fine step was too small to feel nice.
 * Bugfix: Removed some debug prints.
 * Bugfix: A bug in baseview caused the resizing / UI offset issues.
