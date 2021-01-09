@@ -46,7 +46,7 @@ in the background:
 * Less blurry text (needs improvements in femtovg library/crate)
 * Modulation (AHDSR envelope, LFO)
 * A second oscillator with sawtooth/square waveforms
-* A high/low/band pass filter with resonance
+* A high/low/band pass filter(s) with resonance
 
 ## Known Bugs
 
@@ -56,11 +56,18 @@ in the background:
 
 | OS | CPU | GPU | WM | Host | State | Date Tested |
 |----|-----|-----|----|------|-------|-------------|
+| Ubuntu 18.04 GNU/Linux | AMD Ryzen | NVidia (propr. drivers) | Gnome/Default  | Carla 2.2.0        | ok                    | 2021-01-06 |
+| Ubuntu 18.04 GNU/Linux | AMD Ryzen | NVidia (propr. drivers) | Gnome/Default  | Ardour 6.3         | ok                    |            |
 | Win 10                 | Intel     | NVidia                  | Win 10         | Renoise 3.3        | ok                    | 2021-01-06 |
 | Win 10                 | Intel     | NVidia                  | Win 10         | Zrythm Alpha 7.1.1 | ok, clicks on looping | 2021-01-06 |
 | Win 10                 | Intel     | NVidia                  | Win 10         | Ardour 6.5         | ok                    | 2021-01-06 |
-| Ubuntu 18.04 GNU/Linux | AMD Ryzen | NVidia (propr. drivers) | Gnome/Default  | Carla 2.2.0        | ok                    | 2021-01-06 |
-| Ubuntu 18.04 GNU/Linux | AMD Ryzen | NVidia (propr. drivers) | Gnome/Default  | Ardour 6.3         | ok                    |            |
+
+## Support Development
+
+You can support me (and the development of this project) via Liberapay:
+
+<script src="https://liberapay.com/WeirdConstructor/widgets/button.js"></script>
+<noscript><a href="https://liberapay.com/WeirdConstructor/donate"><img alt="Donate using Liberapay" src="https://liberapay.com/assets/widgets/donate.svg"></a></noscript>
 
 ## License
 

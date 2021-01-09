@@ -98,7 +98,7 @@ impl UIController for KickmessEditorController {
 
 pub fn define_gui(ps: &crate::ParamSet, gui: &mut dyn ui::protocol::UI) {
     let mut values = vec![];
-    values.resize(17, UIValueSpec::new_id());
+    values.resize(18, UIValueSpec::new_id());
 
     let id_s_freq    = 0;
     let id_e_freq    = 1;
@@ -133,6 +133,8 @@ pub fn define_gui(ps: &crate::ParamSet, gui: &mut dyn ui::protocol::UI) {
     values[id_n_s_freq] = UIValueSpec::new_toggle(&[ "Off", "On" ]).help(ht.0, ht.1);
     let ht = crate::op_kickmess::help_texts[id_n_e_freq];
     values[id_n_e_freq] = UIValueSpec::new_toggle(&[ "Off", "On" ]).help(ht.0, ht.1);
+    let ht = crate::op_kickmess::help_texts[id_dist_on];
+    values[id_dist_on]  = UIValueSpec::new_toggle(&[ "Off", "On" ]).help(ht.0, ht.1);
 
     gui.define_value_spec(values);
 
@@ -243,11 +245,11 @@ pub fn define_gui(ps: &crate::ParamSet, gui: &mut dyn ui::protocol::UI) {
                             UIPos::center(4, 12).bottom()),
                         UIInput::knob(
                             id_env_slope,
-                            String::from("Env Slope"),
+                            String::from("Amp Slope"),
                             UIPos::center(4, 12).bottom()),
                         UIInput::knob(
                             id_env_rel,
-                            String::from("Release (ms)"),
+                            String::from("Rel (ms)"),
                             UIPos::center(4, 12).bottom()),
                     ]]),
                 ],
@@ -268,7 +270,7 @@ pub fn define_gui(ps: &crate::ParamSet, gui: &mut dyn ui::protocol::UI) {
                             UIPos::center(4, 12).bottom()),
                         UIInput::knob(
                             id_f_slope,
-                            String::from("Slope"),
+                            String::from("Freq Slope"),
                             UIPos::center(4, 12).bottom()),
                     ]]),
                 ],
@@ -291,11 +293,11 @@ pub fn define_gui(ps: &crate::ParamSet, gui: &mut dyn ui::protocol::UI) {
                         ]),
                     UIInput::btn_toggle(
                         id_n_s_freq,
-                        String::from("S. from Note"),
+                        String::from("Note>Start F"),
                         UIPos::center(3, 4).middle()),
                     UIInput::btn_toggle(
                         id_n_e_freq,
-                        String::from("E. from Note"),
+                        String::from("Note>End F"),
                         UIPos::center(3, 4).middle()),
                 ],
             ]);
@@ -307,43 +309,37 @@ pub fn define_gui(ps: &crate::ParamSet, gui: &mut dyn ui::protocol::UI) {
                     UIInput::knob(
                         id_gain,
                         String::from("Gain"),
-                        UIPos::center(6, 12).bottom()),
+                        UIPos::center(6, 12).middle()),
                     UIInput::knob(
                         id_noise,
-                        String::from("Noise"),
-                        UIPos::center(6, 12).bottom()),
+                        String::from("Tone/Noise"),
+                        UIPos::center(6, 12).middle()),
                 ],
             ]);
 
     let dist_params =
-        UIInput::Tabs(UITabData {
-            pos: UIPos::center(12, 6),
-            id: id_dist_on,
-            labels: vec![
-                String::from("Off"),
-                String::from("Distortion"),
-            ],
-            childs: vec![
-                vec![vec![
-                    UIInput::label("Distortion off", 14.0, UIPos::center(6, 6).middle()),
-                ]],
-                vec![vec![
-                    UIInput::container(UIPos::center(12, 12), 1.0,
+        UIInput::container_border(UIPos::center(12, 6), 1.0,
+            vec![vec![
+                UIInput::container(UIPos::center(12, 12), 1.0,
+                    vec![
                         vec![
-                            vec![
-                                UIInput::knob(
-                                    id_d_start,
-                                    String::from("Start"),
-                                    UIPos::center(6, 12).middle()),
-                                UIInput::knob(
-                                    id_d_end,
-                                    String::from("End"),
-                                    UIPos::center(6, 12).middle()),
-                            ],
-                        ])
-                ]],
-            ],
-        });
+                            UIInput::btn_toggle(
+                                id_dist_on,
+                                String::from("Distortion"),
+                                UIPos::left(12, 4).top()),
+                        ],
+                        vec![
+                            UIInput::knob(
+                                id_d_start,
+                                String::from("Start Amt"),
+                                UIPos::center(6, 8).middle()),
+                            UIInput::knob(
+                                id_d_end,
+                                String::from("End Amt"),
+                                UIPos::center(6, 8).middle()),
+                        ],
+                    ])
+            ]]);
 
     gui.define_layout(vec![
         UILayout::Container {
@@ -395,7 +391,9 @@ Mouse controls:
 
 Keyboard controls:
 
-    F1                  - Enter Help mode for elements
+    F1                  - Enter Help mode for elements.
+                          The input elements (eg. Knobs) with extra
+                          help text are highlighted in the UI.
     Enter               - Accept entered value in value input mode
     Escape              - Exit help or value input mode
     Shift + Drag        - fine adjustment

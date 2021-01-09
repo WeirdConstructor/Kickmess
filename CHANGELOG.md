@@ -3,6 +3,8 @@
 
 * Incompatible Change: Click value is limited to the first 1/4th of the
 sine phase. This makes a Click value of 1.0 more meaningful, as "full click".
+* Change: Improved knob labels and help texts.
+* Change: Improved explanation of F1 help mode.
 
 
 0.2.1 (2021-01-09)

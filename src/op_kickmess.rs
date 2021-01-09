@@ -57,24 +57,25 @@ pub const help_texts : [(&str, &str); 14] = [
     ("Frequency Envelope Slope",
         "The slope of the frequency envelope.\n\
          You can go from linear to exponential."),
-    ("Noise Mix",
-        "How much of noise is mixed into the oscillator output."),
-    ("Start frequency from note pitch",
+    ("Noise/Tone Balance",
+        "The balance between tone (0.0) and noise (1.0)."),
+    ("Note pitch is Start frequency",
         "If you enable this, the frequency will start with the\n\
-         frequency of the played MIDI note."),
-    ("End frequency from note pitch",
+         pitch of the played MIDI note."),
+    ("Note pitch is End frequency",
         "If you enable this, the frequency will end with the\n\
-         frequency of the played MIDI note."),
+         pitch of the played MIDI note."),
     ("Env Release",
-        "The release time of the note after the MIDI node off\n\
-         event was received. It's a second amplitude envelope\n\
-         for cutting long drum sounds short if the key is not held\n\
-         anymore."),
+        "There is a second release envelope that affects the amplifier.\n\
+         It is started when the MIDI note off event is received.\n\
+         This parameter defines the length of that release."),
     ("Click Amount",
         "This value will cut the phase of the sine wave,\n\
          causing an audible extra 'click' at the start of the note."),
-    ("Distortion On/Off",
-        "Enables/Disables the distortion"),
+    ("Distortion",
+        "If the distortion is enabled, the 'Start' and 'End' amounts will\n\
+         define the amount of distortion at the beginning and end of the\n\
+         envelope."),
 ];
 
 macro_rules! param_model {
@@ -88,9 +89,9 @@ macro_rules! param_model {
         $x!{public gain            lin smooth    5,   0.1,   2.0,      1.0,     4,    2, "Gain"}
         $x!{public env_slope       lin smooth    6,   0.01,  1.0,    0.163,     5,    3, "Env. slope"}
         $x!{public freq_slope      lin smooth    7,   0.001, 1.0,     0.06,     5,    3, "Freq. slope"}
-        $x!{public noise           exp smooth    8,   0.0,   1.0,      0.0,     4,    2, "Noise"}
-        $x!{public freq_note_start lin no_smooth 9,   0.0,   1.0,      1.0,     3,    1, "Start from note"}
-        $x!{public freq_note_end   lin no_smooth 10,  0.0,   1.0,      1.0,     3,    1, "End from note"}
+        $x!{public noise           exp smooth    8,   0.0,   1.0,      0.0,     4,    2, "Tone/Noise"}
+        $x!{public freq_note_start lin no_smooth 9,   0.0,   1.0,      1.0,     3,    1, "Note > Start Freq"}
+        $x!{public freq_note_end   lin no_smooth 10,  0.0,   1.0,      1.0,     3,    1, "Note > End Freq"}
         $x!{public env_release     lin no_smooth 11,  1.0,1000.0,      5.0,     4,    2, "Env Release"}
         $x!{public phase_offs      lin smooth    12,  0.0,   1.0,      0.0,     4,    2, "Click"}
         $x!{public dist_on         lin no_smooth 13,  0.0,   1.0,      0.0,     3,    1, "Dist. On"}
