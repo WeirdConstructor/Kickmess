@@ -173,8 +173,16 @@ pub fn f_fold_distort(gain: f32, threshold: f32, i: f32) -> f32 {
     }
 }
 
-pub fn p2range(x: f32, a: f32, b: f32) -> f32 {
+pub fn lerp(x: f32, a: f32, b: f32) -> f32 {
     (a * (1.0 - x)) + (b * x)
+}
+
+pub fn lerp64(x: f64, a: f64, b: f64) -> f64 {
+    (a * (1.0 - x)) + (b * x)
+}
+
+pub fn p2range(x: f32, a: f32, b: f32) -> f32 {
+    lerp(x, a, b)
 }
 
 pub fn p2range_exp(x: f32, a: f32, b: f32) -> f32 {

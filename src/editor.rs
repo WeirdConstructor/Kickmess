@@ -13,7 +13,7 @@ use crate::ui::constants::*;
 use crate::ui;
 
 pub const WINDOW_WIDTH:  i32 = 700;
-pub const WINDOW_HEIGHT: i32 = 440;
+pub const WINDOW_HEIGHT: i32 = 500;
 
 pub(crate) struct KickmessEditorController {
     host:    HostCallback,
@@ -98,7 +98,7 @@ impl UIController for KickmessEditorController {
 
 pub fn define_gui(ps: &crate::ParamSet, gui: &mut dyn ui::protocol::UI) {
     let mut values = vec![];
-    values.resize(18, UIValueSpec::new_id());
+    values.resize(20, UIValueSpec::new_id());
 
     let id_s_freq    = 0;
     let id_e_freq    = 1;
@@ -114,14 +114,17 @@ pub fn define_gui(ps: &crate::ParamSet, gui: &mut dyn ui::protocol::UI) {
     let id_env_rel   = 11;
     let id_click     = 12;
     let id_dist_on   = 13;
+    let id_f1_cutoff = 14;
+    let id_f1_q      = 15;
+    let id_f1_type   = 16;
 
-    let id_main_tab  = 15;
-    let id_lic_tab   = 16;
+    let id_main_tab  = 17;
+    let id_lic_tab   = 18;
 
     for i in 0..ps.param_count() {
         let help_text =
-            if i < crate::op_kickmess::help_texts.len() {
-                crate::op_kickmess::help_texts[i]
+            if i < crate::param_model::help_texts.len() {
+                crate::param_model::help_texts[i]
             } else { ("", "") };
         values[i] =
             ps.definition(i).unwrap()
@@ -129,11 +132,11 @@ pub fn define_gui(ps: &crate::ParamSet, gui: &mut dyn ui::protocol::UI) {
               .help(help_text.0, help_text.1);
     }
 
-    let ht = crate::op_kickmess::help_texts[id_n_s_freq];
+    let ht = crate::param_model::help_texts[id_n_s_freq];
     values[id_n_s_freq] = UIValueSpec::new_toggle(&[ "Off", "On" ]).help(ht.0, ht.1);
-    let ht = crate::op_kickmess::help_texts[id_n_e_freq];
+    let ht = crate::param_model::help_texts[id_n_e_freq];
     values[id_n_e_freq] = UIValueSpec::new_toggle(&[ "Off", "On" ]).help(ht.0, ht.1);
-    let ht = crate::op_kickmess::help_texts[id_dist_on];
+    let ht = crate::param_model::help_texts[id_dist_on];
     values[id_dist_on]  = UIValueSpec::new_toggle(&[ "Off", "On" ]).help(ht.0, ht.1);
 
     gui.define_value_spec(values);
@@ -236,9 +239,9 @@ pub fn define_gui(ps: &crate::ParamSet, gui: &mut dyn ui::protocol::UI) {
                     UIInput::graph_huge(
                         0,
                         String::from("Amp Env"),
-                        UIPos::center(5, 4).bottom(),
+                        UIPos::center(5, 3).bottom(),
                         amp_env_fun.clone()),
-                    UIInput::container(UIPos::center(7, 4), 1.0, vec![vec![
+                    UIInput::container(UIPos::center(7, 3), 1.0, vec![vec![
                         UIInput::knob(
                             id_f_env_rel,
                             String::from("Length (ms)"),
@@ -257,9 +260,9 @@ pub fn define_gui(ps: &crate::ParamSet, gui: &mut dyn ui::protocol::UI) {
                     UIInput::graph_huge(
                         0,
                         String::from("Freq. Env"),
-                        UIPos::center(5, 4).bottom(),
+                        UIPos::center(5, 3).bottom(),
                         f_env_fun.clone()),
-                    UIInput::container(UIPos::center(7, 4), 1.0, vec![vec![
+                    UIInput::container(UIPos::center(7, 3), 1.0, vec![vec![
                         UIInput::knob(
                             id_s_freq,
                             String::from("Start (Hz)"),
@@ -276,7 +279,7 @@ pub fn define_gui(ps: &crate::ParamSet, gui: &mut dyn ui::protocol::UI) {
                 ],
                 vec![
                     UIInput::container_border(
-                        UIPos::left(5, 4).bottom(),
+                        UIPos::left(5, 3).bottom(),
                         0.8,
                         vec![
                             vec![
@@ -294,12 +297,26 @@ pub fn define_gui(ps: &crate::ParamSet, gui: &mut dyn ui::protocol::UI) {
                     UIInput::btn_toggle(
                         id_n_s_freq,
                         String::from("Note>Start F"),
-                        UIPos::center(3, 4).middle()),
+                        UIPos::center(3, 3).middle()),
                     UIInput::btn_toggle(
                         id_n_e_freq,
                         String::from("Note>End F"),
-                        UIPos::center(3, 4).middle()),
+                        UIPos::center(3, 3).middle()),
                 ],
+                vec![
+                    UIInput::knob(
+                        id_f1_cutoff,
+                        String::from("F1 Cut"),
+                        UIPos::center(4, 3).middle()),
+                    UIInput::knob(
+                        id_f1_q,
+                        String::from("F1 Q"),
+                        UIPos::center(4, 3).middle()),
+                    UIInput::knob(
+                        id_f1_type,
+                        String::from("F1 Type"),
+                        UIPos::center(4, 3).middle()),
+                ]
             ]);
 
     let mixer_params =

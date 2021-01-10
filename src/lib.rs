@@ -7,6 +7,8 @@ pub mod helpers;
 mod op_kickmess;
 mod env;
 mod ringbuf_shared;
+mod param_model;
+mod filter;
 pub mod editor;
 pub mod ui;
 pub mod window;

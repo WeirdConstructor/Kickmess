@@ -30,117 +30,19 @@
 use crate::proc::*;
 use crate::helpers::*;
 use crate::env::*;
+use crate::param_model::*;
+use crate::filter::{SvfFilterOversampled, FilterInputParams};
 
 use crate::MAX_BLOCKSIZE;
 const PI2 : f64 = std::f64::consts::PI * 2.0;
 
-pub const help_texts : [(&str, &str); 14] = [
-    ("Start Frequency",
-        "This is the starting frequency of the frequency envelope."),
-    ("End Frequency",
-        "This is the ending frequency of the frequency envelope."),
-    ("Length",
-        "The lengths of the frequency and amplitude envelope in milliseconds."),
-    ("Distortion start amount",
-        "Distortion has it's own linear envelope.\n\
-         You can have different start and ending amount of\n\
-         the distortion envelope."),
-    ("Distortion end amount",
-        "Distortion has it's own linear envelope.\n\
-         You can have different start and ending amount of\n\
-         the distortion envelope."),
-    ("Gain",
-        "Additional gain applied to the output of the synthesizer."),
-    ("Envelope Slope",
-        "The slope of the amplitude envelope.\n\
-         You can go from linear to exponential."),
-    ("Frequency Envelope Slope",
-        "The slope of the frequency envelope.\n\
-         You can go from linear to exponential."),
-    ("Noise/Tone Balance",
-        "The balance between tone (0.0) and noise (1.0)."),
-    ("Note pitch is Start frequency",
-        "If you enable this, the frequency will start with the\n\
-         pitch of the played MIDI note."),
-    ("Note pitch is End frequency",
-        "If you enable this, the frequency will end with the\n\
-         pitch of the played MIDI note."),
-    ("Env Release",
-        "There is a second release envelope that affects the amplifier.\n\
-         It is started when the MIDI note off event is received.\n\
-         This parameter defines the length of that release."),
-    ("Click Amount",
-        "This value will cut the phase of the sine wave,\n\
-         causing an audible extra 'click' at the start of the note."),
-    ("Distortion",
-        "If the distortion is enabled, the 'Start' and 'End' amounts will\n\
-         define the amount of distortion at the beginning and end of the\n\
-         envelope."),
-];
+struct F1Params<'a>(&'a ParamModel<'a>);
 
-macro_rules! param_model {
-    ($x: ident) => {
-        //  scope  name         exp/lin smooth   idx  min    max     def    width  prec  name
-        $x!{public freq_start      exp no_smooth 0,   5.0,   3000.0, 150.0,     7,    2, "Start Freq."}
-        $x!{public freq_end        exp no_smooth 1,   5.0,   2000.0,  40.0,     7,    2, "End Freq."}
-        $x!{public f_env_release   exp no_smooth 2,   5.0,   5000.0, 440.0,     6,    1, "Length"}
-        $x!{public dist_start      lin smooth    3,   0.0,   100.0,    0.8,     4,    2, "Dist. Start"}
-        $x!{public dist_end        lin smooth    4,   0.0,   100.0,    0.8,     4,    2, "Dist. End"}
-        $x!{public gain            lin smooth    5,   0.1,   2.0,      1.0,     4,    2, "Gain"}
-        $x!{public env_slope       lin smooth    6,   0.01,  1.0,    0.163,     5,    3, "Env. slope"}
-        $x!{public freq_slope      lin smooth    7,   0.001, 1.0,     0.06,     5,    3, "Freq. slope"}
-        $x!{public noise           exp smooth    8,   0.0,   1.0,      0.0,     4,    2, "Tone/Noise"}
-        $x!{public freq_note_start lin no_smooth 9,   0.0,   1.0,      1.0,     3,    1, "Note > Start Freq"}
-        $x!{public freq_note_end   lin no_smooth 10,  0.0,   1.0,      1.0,     3,    1, "Note > End Freq"}
-        $x!{public env_release     lin no_smooth 11,  1.0,1000.0,      5.0,     4,    2, "Env Release"}
-        $x!{public phase_offs      lin smooth    12,  0.0,   1.0,      0.0,     4,    2, "Click"}
-        $x!{public dist_on         lin no_smooth 13,  0.0,   1.0,      0.0,     3,    1, "Dist. On"}
-        $x!{private phase_test     lin smooth    14,  0.0,   1.0,      0.0,     5,    2, "Click2"}
-    }
+impl<'a> FilterInputParams for F1Params<'a> {
+    fn freq(&self) -> f32 { self.0.f1_cutoff() }
+    fn q(&self)    -> f32 { self.0.f1_q() }
+    fn typ(&self) -> f32 { self.0.f1_type() }
 }
-
-struct ParamModel<'a> {
-    v: &'a [f32],
-}
-
-macro_rules! param_impl_accessors {
-    ($_:ident $name:ident $e:ident $s:ident $idx:expr, $($tt:tt)*) => {
-        impl ParamModel<'_> {
-            fn $name(&self) -> f32 { self.v[$idx] }
-        }
-    }
-}
-
-impl<'a> ParamModel<'a> {
-    fn new(v: &'a [f32]) -> Self {
-        Self { v }
-    }
-
-    fn init_public_set(ps: &mut ParamSet) {
-        macro_rules! param_add_ps {
-            (public $name:ident $e:ident $s:ident $idx:expr, $min:expr, $max:expr, $def:expr, $width:expr, $prec:expr, $lbl:expr) => {
-                ps.add(ParamDefinition::from($idx, $min, $max, $def, $width, $prec, $lbl).$e().$s());
-            };
-            (private $($tt:tt)*) => {
-            }
-        }
-
-        param_model!{param_add_ps}
-    }
-
-    fn init_private_set(ps: &mut ParamSet) {
-        macro_rules! param_add_ps_priv {
-            ($_:ident $name:ident $e:ident $s:ident $idx:expr, $min:expr, $max:expr, $def:expr, $width:expr, $prec:expr, $lbl:expr) => {
-                ps.add(ParamDefinition::from($idx, $min, $max, $def, $width, $prec, $lbl).$e().$s());
-            }
-        }
-
-        param_model!{param_add_ps_priv}
-    }
-}
-
-param_model!{param_impl_accessors}
-
 
 pub struct OpKickmess {
     id:              usize,
@@ -156,6 +58,7 @@ pub struct OpKickmess {
     rng:             RandGen,
     f_env:           REnv,
     release:         REnv,
+    filter1:         SvfFilterOversampled,
 }
 
 impl OpKickmess {
@@ -181,6 +84,7 @@ impl MonoProcessor for OpKickmess {
         self.srate = sr;
         self.release.set_sample_rate(sr);
         self.f_env.set_sample_rate(sr);
+        self.filter1.set_sample_rate(sr);
     }
 
     fn process(&mut self, params: &SmoothParameters, proc_offs: usize, out: &mut [f32]) {
@@ -214,30 +118,38 @@ impl MonoProcessor for OpKickmess {
                     self.note_freq = self.cur_f_start as f64;
                 }
 
-                let gain : f64 = 1.0 - env_value.powf(params.env_slope() as f64);
+                let amp_gain : f64 = 1.0 - env_value.powf(params.env_slope() as f64);
+
+                let sine = self.next_sine_sample(&params);
 
                 let mut s =
-                    self.next_sine_sample(&params)
-                    * (1.0_f64 - params.noise() as f64);
+                    lerp64(
+                        params.noise() as f64,
+                        sine,
+                        self.rng.next_open01() * amp_gain * amp_gain);
 
-                s += self.rng.next_open01() * gain * gain * params.noise() as f64;
-
-                kick_sample = s * gain;
+                kick_sample = s * amp_gain;
 
                 if params.dist_on() > 0.5 {
-                    let thres = p2range(env_value as f32, params.dist_start(), params.dist_end());
-                    kick_sample = f_distort(params.gain(), thres, kick_sample as f32) as f64;
+                    let thres =
+                        lerp(
+                            env_value as f32,
+                            params.dist_start(),
+                            params.dist_end());
+
+                    kick_sample =
+                        f_distort(params.gain(), thres, kick_sample as f32) as f64;
                 } else {
                     kick_sample *= params.gain() as f64;
                 }
 
+                kick_sample =
+                    self.filter1.next(kick_sample as f32, &F1Params(&params))
+                    as f64;
+
                 let change : f64 =
-                    if env_value <= 1.0 {
-                        (self.cur_f_start - self.cur_f_end) as f64
-                        * (1.0 - env_value.powf(params.freq_slope() as f64))
-                    } else {
-                        0.0
-                    };
+                    (self.cur_f_start - self.cur_f_end) as f64
+                    * (1.0 - env_value.powf(params.freq_slope() as f64));
 
                 self.note_freq = self.cur_f_end as f64 + change;
             }
@@ -277,19 +189,17 @@ impl MonoVoice for OpKickmess {
             rng:             RandGen::new(),
             f_env:           REnv::new(),
             release:         REnv::new(),
-
+            filter1:         SvfFilterOversampled::new(),
         }
     }
 
     fn start_note(&mut self, id: usize, offs: usize, freq: f32, _vel: f32) {
-        self.id = id;
+        self.id             = id;
         self.init_note_freq = freq as f64;
         self.f_env.trigger(offs);
 
-        println!("{} freq: {:5.3}, offs: {}",
-                 self.id, self.init_note_freq, offs);
-//                 self.cur_f_start,
-//                 self.cur_f_end);
+        // println!("{} freq: {:5.3}, offs: {}",
+        //          self.id, self.init_note_freq, offs);
     }
 
     fn id(&self) -> usize { self.id }
