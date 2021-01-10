@@ -43,12 +43,11 @@ pub const help_texts : [(&str, &str); 17] = [
          define the amount of distortion at the beginning and end of the\n\
          envelope."),
     ("Filter 1 Cutoff Frequency", ""),
-    ("Filter 1 Q", ""),
+    ("Filter 1 Resonance", ""),
     ("Filter 1 Type",
-        "low pass:  0.0  - 0.25\n\
-         high pass: 0.25 - 0.50\n\
-         band pass: 0.50 - 0.75\n\
-         notch:     0.75 - 1.00\n\
+        "low pass:  0.0  - 0.33\n\
+         high pass: 0.33 - 0.66\n\
+         band pass: 0.66 - 1.0 \n\
         "),
 ];
 
@@ -69,8 +68,8 @@ macro_rules! param_model {
         $x!{public env_release     lin no_smooth 11,  1.0,1000.0,      5.0,     4,    2, "Env Release"}
         $x!{public phase_offs      lin smooth    12,  0.0,   1.0,      0.0,     4,    2, "Click"}
         $x!{public dist_on         lin no_smooth 13,  0.0,   1.0,      0.0,     3,    1, "Dist. On"}
-        $x!{public f1_cutoff       exp smooth    14,  0.0,   22050.0,  0.0,     7,    1, "F1 Cutoff"}
-        $x!{public f1_q            exp smooth    15,  0.0,   0.9999,   0.0,     4,    2, "F1 Q"}
+        $x!{public f1_cutoff       exp smooth    14, 20.0,   22050.0,  0.0,     7,    1, "F1 Cutoff"}
+        $x!{public f1_res          lin smooth    15,  0.0,   1.0,      0.0,     4,    2, "F1 Res"}
         $x!{public f1_type         lin no_smooth 16,  0.0,   1.0,      0.0,     3,    1, "F1 Type"}
         $x!{private phase_test     lin smooth    17,  0.0,   1.0,      0.0,     5,    2, "Click2"}
     }

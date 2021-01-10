@@ -115,7 +115,7 @@ pub fn define_gui(ps: &crate::ParamSet, gui: &mut dyn ui::protocol::UI) {
     let id_click     = 12;
     let id_dist_on   = 13;
     let id_f1_cutoff = 14;
-    let id_f1_q      = 15;
+    let id_f1_res    = 15;
     let id_f1_type   = 16;
 
     let id_main_tab  = 17;
@@ -309,8 +309,8 @@ pub fn define_gui(ps: &crate::ParamSet, gui: &mut dyn ui::protocol::UI) {
                         String::from("F1 Cut"),
                         UIPos::center(4, 3).middle()),
                     UIInput::knob(
-                        id_f1_q,
-                        String::from("F1 Q"),
+                        id_f1_res,
+                        String::from("F1 Res"),
                         UIPos::center(4, 3).middle()),
                     UIInput::knob(
                         id_f1_type,

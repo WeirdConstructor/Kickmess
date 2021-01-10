@@ -60,8 +60,9 @@ impl SvfFilterOversampled {
     }
 
     fn run<P: FilterInputParams>(&mut self, input: f32, params: &P) -> f32 {
+        let q = 1.0 - params.q();
         self.low += self.f * self.band;
-        let high = params.q() * (input - self.band) - self.low;
+        let high = q * (input - self.band) - self.low;
         self.band += self.f * high;
 
         let ftype = params.typ();
@@ -72,3 +73,67 @@ impl SvfFilterOversampled {
         else                 { self.low + high } // notch
     }
 }
+
+#[derive(Debug, Clone, Copy)]
+pub struct MoogFilter {
+    srate:       f32,
+    b0:          f32,
+    b1:          f32,
+    b2:          f32,
+    b3:          f32,
+    b4:          f32,
+}
+
+// From https://www.musicdsp.org/en/latest/Filters/25-moog-vcf-variation-1.html
+// Author or source: CSound source code, Stilson/Smith CCRMA paper.,
+//                   Paul Kellett version
+// Type: 24db resonant lowpass
+impl MoogFilter {
+    pub fn new() -> Self {
+        MoogFilter {
+            srate:       44100.0, // is overwritten by set_sample_rate() anyways!
+            b0:          0.0,
+            b1:          0.0,
+            b2:          0.0,
+            b3:          0.0,
+            b4:          0.0,
+        }
+    }
+
+    pub fn reset(&mut self) {
+        self.b0 = 0.0;
+        self.b1 = 0.0;
+        self.b2 = 0.0;
+        self.b3 = 0.0;
+        self.b4 = 0.0;
+    }
+
+    pub fn set_sample_rate(&mut self, srate: f32) {
+        self.srate = srate;
+    }
+
+    pub fn next<P: FilterInputParams>(&mut self, mut input: f32, params: &P) -> f32 {
+        let freq = (params.freq()) / (self.srate * 0.5);
+
+        let q = 1.0 - freq;
+        let p = freq + 0.8 * freq * q;
+        let f = p + p - 1.0;
+        let q = params.q() * (1.0 + 0.5 * q * (1.0 - q + 5.6 * q * q));
+
+        input -= q * self.b4;    // feedback
+        let t1 = self.b1; self.b1 = (input   + self.b0) * p - self.b1 * f;
+        let t2 = self.b2; self.b2 = (self.b1 +      t1) * p - self.b2 * f;
+        let t1 = self.b3; self.b3 = (self.b2 +      t2) * p - self.b3 * f;
+                          self.b4 = (self.b3 +      t1) * p - self.b4 * f;
+
+        self.b4 = self.b4 - self.b4 * self.b4 * self.b4 * 0.166667; // clipping
+        self.b0 = input;
+
+        let ftype = params.typ();
+        if      ftype < 0.33 { self.b4 }                   // lowpass
+        else if ftype < 0.66 { input - self.b4 }           // highpass
+        else                 { 3.0 * (self.b3 - self.b4) } // bandpass
+    }
+}
+
+

@@ -31,7 +31,7 @@ use crate::proc::*;
 use crate::helpers::*;
 use crate::env::*;
 use crate::param_model::*;
-use crate::filter::{SvfFilterOversampled, FilterInputParams};
+use crate::filter::{MoogFilter, FilterInputParams};
 
 use crate::MAX_BLOCKSIZE;
 const PI2 : f64 = std::f64::consts::PI * 2.0;
@@ -40,7 +40,7 @@ struct F1Params<'a>(&'a ParamModel<'a>);
 
 impl<'a> FilterInputParams for F1Params<'a> {
     fn freq(&self) -> f32 { self.0.f1_cutoff() }
-    fn q(&self)    -> f32 { self.0.f1_q() }
+    fn q(&self)    -> f32 { self.0.f1_res() }
     fn typ(&self) -> f32 { self.0.f1_type() }
 }
 
@@ -58,7 +58,7 @@ pub struct OpKickmess {
     rng:             RandGen,
     f_env:           REnv,
     release:         REnv,
-    filter1:         SvfFilterOversampled,
+    filter1:         MoogFilter,
 }
 
 impl OpKickmess {
@@ -101,6 +101,8 @@ impl MonoProcessor for OpKickmess {
             if let EnvPos::Release(pos, env_value) = self.f_env.next(block_offs) {
                 if pos == 0 {
                     self.release.reset();
+                    self.filter1.reset();
+
                     self.cur_phase = 0.0;
 
                     if params.freq_note_start() >= 0.5 {
@@ -189,7 +191,7 @@ impl MonoVoice for OpKickmess {
             rng:             RandGen::new(),
             f_env:           REnv::new(),
             release:         REnv::new(),
-            filter1:         SvfFilterOversampled::new(),
+            filter1:         MoogFilter::new(),
         }
     }
 
