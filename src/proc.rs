@@ -27,9 +27,11 @@ impl ParamDefinition {
 
     pub fn to_ui_value_spec(&self) -> UIValueSpec {
         if self.5 {
-            UIValueSpec::new_min_max_exp(self.1 as f64, self.2 as f64, self.7, self.8)
+            let def = crate::helpers::range2p_exp(self.3, self.1, self.2) as f64;
+            UIValueSpec::new_min_max_exp(self.1 as f64, self.2 as f64, self.7, self.8).default(def)
         } else {
-            UIValueSpec::new_min_max(self.1 as f64, self.2 as f64, self.7, self.8)
+            let def = crate::helpers::range2p(self.3, self.1, self.2) as f64;
+            UIValueSpec::new_min_max(self.1 as f64, self.2 as f64, self.7, self.8).default(def)
         }
     }
 

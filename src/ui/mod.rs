@@ -482,9 +482,11 @@ impl WValuePlugUI {
                     InputMode::SetDefault { zone } => {
                         if let Some(hover_zone) = self.hover_zone {
                             if hover_zone.id == zone.id {
-                                self.set_element_value(
-                                    zone.id,
-                                    self.get_element_default_value(zone.id));
+                                let new_val =
+                                    self.get_element_default_value(zone.id);
+                                self.set_element_value(zone.id, new_val);
+                                self.controller.clone().value_change(
+                                    self, zone.id, new_val, true);
                             }
                         }
 

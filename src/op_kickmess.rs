@@ -129,7 +129,8 @@ impl MonoProcessor for OpKickmess {
                     lerp64(
                         params.noise() as f64,
                         sine,
-                        self.rng.next_open01() * amp_gain * amp_gain);
+                        ((self.rng.next_open01() * 2.0) - 1.0)
+                        * amp_gain * amp_gain);
 
                 kick_sample = s * amp_gain;
 
