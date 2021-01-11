@@ -31,7 +31,7 @@ use crate::proc::*;
 use crate::helpers::*;
 use crate::env::*;
 use crate::param_model::*;
-use crate::filter::{MoogFilter, FilterInputParams};
+use crate::filter::{SvfSimperFilter, FilterInputParams};
 
 use crate::MAX_BLOCKSIZE;
 const PI2 : f64 = std::f64::consts::PI * 2.0;
@@ -58,7 +58,7 @@ pub struct OpKickmess {
     rng:             RandGen,
     f_env:           REnv,
     release:         REnv,
-    filter1:         MoogFilter,
+    filter1:         SvfSimperFilter,
 }
 
 impl OpKickmess {
@@ -191,7 +191,7 @@ impl MonoVoice for OpKickmess {
             rng:             RandGen::new(),
             f_env:           REnv::new(),
             release:         REnv::new(),
-            filter1:         MoogFilter::new(),
+            filter1:         SvfSimperFilter::new(),
         }
     }
 

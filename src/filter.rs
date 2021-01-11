@@ -136,4 +136,49 @@ impl MoogFilter {
     }
 }
 
+pub struct SvfSimperFilter {
+    srate: f32,
+    ic1eq: f32,
+    ic2eq: f32
+}
 
+// Example taken from baseplug (Rust crate) example svf_simper.rs:
+// implemented from https://cytomic.com/files/dsp/SvfLinearTrapOptimised2.pdf
+// thanks, andy!
+impl SvfSimperFilter {
+    pub fn new() -> Self {
+        SvfSimperFilter {
+            srate: 44100.0,
+            ic1eq: 0.0,
+            ic2eq: 0.0,
+        }
+    }
+
+    pub fn set_sample_rate(&mut self, srate: f32) {
+        self.srate = srate;
+    }
+
+    pub fn reset(&mut self) {
+        self.ic1eq = 0.0;
+        self.ic2eq = 0.0;
+    }
+
+    #[inline]
+    pub fn next<P: FilterInputParams>(&mut self, mut input: f32, params: &P) -> f32 {
+        let g = (std::f32::consts::PI * (params.freq() / self.srate)).tan();
+        let k = 2f32 - (1.9f32 * params.q().min(1f32).max(0f32));
+
+        let a1 = 1.0 / (1.0 + (g * (g + k)));
+        let a2 = g * a1;
+        let a3 = g * a2;
+
+        let v3 = input - self.ic2eq;
+        let v1 = (a1 * self.ic1eq) + (a2 * v3);
+        let v2 = self.ic2eq + (a2 * self.ic1eq) + (a3 * v3);
+
+        self.ic1eq = (2.0 * v1) - self.ic1eq;
+        self.ic2eq = (2.0 * v2) - self.ic2eq;
+
+        v2
+    }
+}
