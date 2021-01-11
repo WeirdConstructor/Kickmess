@@ -16,9 +16,10 @@ pub struct SvfFilterOversampled {
 }
 
 pub trait FilterInputParams {
-    fn freq(&self) -> f32;
-    fn q(&self)    -> f32;
-    fn typ(&self) -> f32;
+    fn freq(&self)  -> f32;
+    fn q(&self)     -> f32;
+    fn typ(&self)   -> f32;
+    fn drive(&self) -> f32;
 }
 
 impl SvfFilterOversampled {
@@ -82,6 +83,7 @@ pub struct MoogFilter {
     b2:          f32,
     b3:          f32,
     b4:          f32,
+    cnt:         usize,
 }
 
 // From https://www.musicdsp.org/en/latest/Filters/25-moog-vcf-variation-1.html
@@ -97,6 +99,7 @@ impl MoogFilter {
             b2:          0.0,
             b3:          0.0,
             b4:          0.0,
+            cnt:         0,
         }
     }
 
@@ -112,13 +115,19 @@ impl MoogFilter {
         self.srate = srate;
     }
 
-    pub fn next<P: FilterInputParams>(&mut self, mut input: f32, params: &P) -> f32 {
+    pub fn next<P: FilterInputParams>(&mut self, input: f32, params: &P) -> f32 {
+        if self.cnt % 10 == 0 {
+            println!("F: {}", params.freq());
+        }
+        self.cnt += 1;
         let freq = (params.freq()) / (self.srate * 0.5);
 
         let q = 1.0 - freq;
         let p = freq + 0.8 * freq * q;
         let f = p + p - 1.0;
         let q = params.q() * (1.0 + 0.5 * q * (1.0 - q + 5.6 * q * q));
+
+        let mut input = quickTanh(params.drive() * input);
 
         input -= q * self.b4;    // feedback
         let t1 = self.b1; self.b1 = (input   + self.b0) * p - self.b1 * f;
@@ -171,6 +180,8 @@ impl SvfSimperFilter {
         let a1 = 1.0 / (1.0 + (g * (g + k)));
         let a2 = g * a1;
         let a3 = g * a2;
+
+        let input = quickTanh(params.drive() * input);
 
         let v3 = input - self.ic2eq;
         let v1 = (a1 * self.ic1eq) + (a2 * v3);

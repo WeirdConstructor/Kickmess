@@ -98,7 +98,7 @@ impl UIController for KickmessEditorController {
 
 pub fn define_gui(ps: &crate::ParamSet, gui: &mut dyn ui::protocol::UI) {
     let mut values = vec![];
-    values.resize(20, UIValueSpec::new_id());
+    values.resize(30, UIValueSpec::new_id());
 
     let id_s_freq    = 0;
     let id_e_freq    = 1;
@@ -117,9 +117,10 @@ pub fn define_gui(ps: &crate::ParamSet, gui: &mut dyn ui::protocol::UI) {
     let id_f1_cutoff = 14;
     let id_f1_res    = 15;
     let id_f1_type   = 16;
+    let id_f1_drive  = 17;
 
-    let id_main_tab  = 17;
-    let id_lic_tab   = 18;
+    let id_main_tab  = 18;
+    let id_lic_tab   = 19;
 
     for i in 0..ps.param_count() {
         let help_text =
@@ -307,15 +308,19 @@ pub fn define_gui(ps: &crate::ParamSet, gui: &mut dyn ui::protocol::UI) {
                     UIInput::knob(
                         id_f1_cutoff,
                         String::from("F1 Cut"),
-                        UIPos::center(4, 3).middle()),
+                        UIPos::center(3, 3).middle()),
                     UIInput::knob(
                         id_f1_res,
                         String::from("F1 Res"),
-                        UIPos::center(4, 3).middle()),
+                        UIPos::center(3, 3).middle()),
                     UIInput::knob(
                         id_f1_type,
                         String::from("F1 Type"),
-                        UIPos::center(4, 3).middle()),
+                        UIPos::center(3, 3).middle()),
+                    UIInput::knob(
+                        id_f1_drive,
+                        String::from("F1 Drive"),
+                        UIPos::center(3, 3).middle()),
                 ]
             ]);
 
