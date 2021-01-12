@@ -243,9 +243,9 @@ pub fn define_gui(ps: &crate::ParamSet, gui: &mut dyn ui::protocol::UI) {
                     UIInput::graph_huge(
                         0,
                         String::from("Amp Env"),
-                        UIPos::center(5, 3).bottom(),
+                        UIPos::center(4, 3).bottom(),
                         amp_env_fun.clone()),
-                    UIInput::container(UIPos::center(7, 3), 1.0, vec![vec![
+                    UIInput::container(UIPos::center(8, 3), 1.0, vec![vec![
                         UIInput::knob(
                             id_f_env_rel,
                             String::from("Length (ms)"),
@@ -264,9 +264,9 @@ pub fn define_gui(ps: &crate::ParamSet, gui: &mut dyn ui::protocol::UI) {
                     UIInput::graph_huge(
                         0,
                         String::from("Freq. Env"),
-                        UIPos::center(5, 3).bottom(),
+                        UIPos::center(4, 3).bottom(),
                         f_env_fun.clone()),
-                    UIInput::container(UIPos::center(7, 3), 1.0, vec![vec![
+                    UIInput::container(UIPos::center(8, 3), 1.0, vec![vec![
                         UIInput::knob(
                             id_s_freq,
                             String::from("Start (Hz)"),
@@ -283,8 +283,8 @@ pub fn define_gui(ps: &crate::ParamSet, gui: &mut dyn ui::protocol::UI) {
                 ],
                 vec![
                     UIInput::container_border(
-                        UIPos::left(5, 3).bottom(),
-                        0.8,
+                        UIPos::left(6, 3).middle(),
+                        0.9,
                         vec![
                             vec![
                                 UIInput::knob_small(
@@ -308,26 +308,30 @@ pub fn define_gui(ps: &crate::ParamSet, gui: &mut dyn ui::protocol::UI) {
                         UIPos::center(3, 3).middle()),
                 ],
                 vec![
-                    UIInput::btn_toggle(
-                        id_f1_on,
-                        String::from("Distortion"),
-                        UIPos::left(3, 4).top()),
-                    UIInput::knob(
-                        id_f1_cutoff,
-                        String::from("F1 Cut"),
-                        UIPos::center(2, 3).middle()),
-                    UIInput::knob(
-                        id_f1_res,
-                        String::from("F1 Res"),
-                        UIPos::center(2, 3).middle()),
-                    UIInput::knob(
-                        id_f1_type,
-                        String::from("F1 Type"),
-                        UIPos::center(2, 3).middle()),
-                    UIInput::knob(
-                        id_f1_drive,
-                        String::from("F1 Drive"),
-                        UIPos::center(2, 3).middle()),
+                    UIInput::container_border(UIPos::center(12, 3), 1.0, vec![vec![
+                        UIInput::btn_toggle_small(
+                            id_f1_on,
+                            String::from("Filter 1"),
+                            UIPos::center(2, 12).middle()),
+                        UIInput::container(UIPos::center(10, 12), 1.0, vec![vec![
+                            UIInput::knob(
+                                id_f1_cutoff,
+                                String::from("F1 Cut"),
+                                UIPos::center(3, 12).middle()),
+                            UIInput::knob(
+                                id_f1_res,
+                                String::from("F1 Res"),
+                                UIPos::center(3, 12).middle()),
+                            UIInput::knob(
+                                id_f1_type,
+                                String::from("F1 Type"),
+                                UIPos::center(3, 12).middle()),
+                            UIInput::knob(
+                                id_f1_drive,
+                                String::from("F1 Drive"),
+                                UIPos::center(3, 12).middle()),
+                        ]])
+                    ]]),
                 ]
             ]);
 

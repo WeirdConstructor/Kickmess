@@ -261,8 +261,6 @@ pub struct UIPos {
     pub row_size: u8,
     pub align:    i8,
     pub valign:   i8,
-    // TODO:
-    //      - vertical align
 }
 
 impl UIPos {
@@ -364,6 +362,7 @@ pub enum UIInput {
     Knob(UIKnobData),
     KnobHuge(UIKnobData),
     Button(UIBtnData),
+    ButtonSmall(UIBtnData),
     Graph(UIGraphData),
     GraphHuge(UIGraphData),
     GraphSmall(UIGraphData),
@@ -383,6 +382,7 @@ impl UIInput {
             UIInput::Knob(UIKnobData { pos, .. })        => *pos,
             UIInput::KnobHuge(UIKnobData { pos, .. })    => *pos,
             UIInput::Button(UIBtnData { pos, .. })       => *pos,
+            UIInput::ButtonSmall(UIBtnData { pos, .. })  => *pos,
             UIInput::Graph(UIGraphData { pos, .. })      => *pos,
             UIInput::GraphHuge(UIGraphData { pos, .. })  => *pos,
             UIInput::GraphSmall(UIGraphData { pos, .. }) => *pos,
@@ -435,6 +435,10 @@ impl UIInput {
 
     pub fn btn_toggle(id: usize, label: String, pos: UIPos) -> Self {
         UIInput::Button(UIBtnData { id, pos, label, mode: UIBtnMode::Toggle })
+    }
+
+    pub fn btn_toggle_small(id: usize, label: String, pos: UIPos) -> Self {
+        UIInput::ButtonSmall(UIBtnData { id, pos, label, mode: UIBtnMode::Toggle })
     }
 
     pub fn btn_mod_target(id: usize, label: String, pos: UIPos) -> Self {

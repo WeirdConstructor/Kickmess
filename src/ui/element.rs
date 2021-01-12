@@ -6,6 +6,13 @@ use crate::ui::protocol::UIKnobData;
 use crate::ui::protocol::UIBtnData;
 use crate::ui::protocol::UIGraphData;
 
+//#[derive(Debug, Clone, Copy)]
+//pub enum UIElementSize {
+//    Normal,
+//    Small,
+//    Huge
+//}
+
 pub trait UIElement {
     fn size(&self) -> (f64, f64);
     fn draw_value(&self, p: &mut dyn Painter, x: f64, y: f64, highlight: HLStyle, data: &dyn UIElementData, value: f64, val_s: &str);
@@ -18,4 +25,5 @@ pub trait UIElementData {
     fn as_graph_data(&self) -> Option<&UIGraphData> { None }
     fn as_btn_data(&self) -> Option<&UIBtnData> { None }
     fn value_id(&self) -> usize;
+//    fn size(&self) -> UIElementSize { UIElementSize::Normal };
 }

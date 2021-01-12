@@ -6,14 +6,12 @@ use crate::ui::constants::*;
 use crate::ui::element::{UIElement, UIElementData};
 
 pub struct DrawCache {
-//    surf:       Vec<Option<cairo::Surface>>,
-    elements:   Vec<Box<dyn UIElement>>,
+    elements: Vec<Box<dyn UIElement>>,
 }
 
 impl DrawCache {
     pub fn new() -> Self {
         Self {
-//            surf:       vec![],
             elements:   vec![],
         }
     }

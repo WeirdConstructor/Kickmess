@@ -39,6 +39,7 @@ pub enum ElementType {
     KnobSmall,
     KnobHuge,
     Button,
+    ButtonSmall,
     Graph,
     GraphHuge,
     GraphSmall,
@@ -130,18 +131,37 @@ impl Rect {
         Rect { x, y, w: self.w, h: self.h }
     }
 
-    fn mul_size(&self, factor: f64) -> Self {
+    fn mul_size(&self, factor: f64, align: i8, valign: i8) -> Self {
         let w = self.w * factor;
         let h = self.h * factor;
-        let wd = (self.w - w) / 2.0;
-        let hd = (self.h - h) / 2.0;
 
-        Self {
-            x: self.x + wd,
-            y: self.y + hd,
-            w: self.w - wd,
-            h: self.h - hd,
-        }
+        let x =
+            match align {
+                1 => {
+                    let wd = (self.w - w);
+                    self.x + wd
+                },
+                0 => {
+                    let wd = (self.w - w) / 2.0;
+                    self.x + wd
+                },
+                _ => { self.x },
+            };
+
+        let y =
+            match valign {
+                1 => {
+                    let h = (self.h - h);
+                    self.y + h
+                },
+                0 => {
+                    let hd = (self.h - h) / 2.0;
+                    self.y + hd
+                },
+                _ => { self.y },
+            };
+
+        Self { x, y, w, h, }
     }
 
     fn calc_element_box(&self, row_offs: u8, col_offs: u8, pos: UIPos) -> (Rect, u8, u8) {
@@ -240,7 +260,14 @@ impl WValuePlugUI {
                 UI_KNOB_FONT_SIZE + 1.0)));
 
         // ElementType::Button
-        self.cache.push_element(Box::new(Button::new()));
+        self.cache.push_element(
+            Box::new(Button::new(UI_BTN_WIDTH, UI_KNOB_FONT_SIZE)));
+
+        // ElementType::ButtonSmall
+        self.cache.push_element(
+            Box::new(
+                Button::new(UI_BTN_WIDTH * 0.5,
+                (UI_KNOB_FONT_SIZE * 0.8).round())));
 
         // ElementType::Graph
         self.cache.push_element(
@@ -787,7 +814,7 @@ impl WValuePlugUI {
         match align.1 {
             1 => { ye += rect.h - size.1; },
             0 => { ye += ((rect.h - size.1) / 2.0).round(); },
-            _ => { /* left align is a nop */ },
+            _ => { /* top align is a nop */ },
         }
 
         let id = element_data.value_id();
@@ -1068,6 +1095,12 @@ impl WValuePlugUI {
                             btn_data,
                             ElementType::Button);
                     },
+                    UIInput::ButtonSmall(btn_data) => {
+                        self.draw_element(
+                            p, &el_rect, pos.alignment(),
+                            btn_data,
+                            ElementType::ButtonSmall);
+                    },
                     UIInput::Knob(knob_data) => {
                         self.draw_element(
                             p, &el_rect, pos.alignment(),
@@ -1115,7 +1148,9 @@ impl WValuePlugUI {
                             crect.x, crect.y, crect.w, crect.h, true, None);
                     },
                     UIInput::Container(_, childs, next_border, size_factor) => {
-                        let crect = el_rect.mul_size(*size_factor as f64);
+                        let (align, valign) = pos.alignment();
+                        let crect =
+                            el_rect.mul_size(*size_factor as f64, align, valign);
                         self.layout_container(
                             p, *next_border, "",
                             if border { depth + 1 } else { depth },

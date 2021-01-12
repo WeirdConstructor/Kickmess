@@ -7,11 +7,15 @@ use crate::ui::element::{UIElement, UIElementData};
 use crate::ui::constants::*;
 
 pub struct Button {
+    width:      f64,
+    font_size:  f64,
 }
 
 impl Button {
-    pub fn new() -> Self {
+    pub fn new(width: f64, font_size: f64) -> Self {
         Self {
+            width,
+            font_size,
         }
     }
 }
@@ -39,7 +43,7 @@ impl Button {
 
 impl UIElement for Button {
     fn size(&self) -> (f64, f64) {
-        (UI_BTN_WIDTH
+        (self.width
          + UI_BTN_BORDER_WIDTH + UI_SAFETY_PAD,
          UI_ELEM_TXT_H + UI_BTN_BORDER_WIDTH + UI_ELEM_TXT_H
          + UI_BTN_BORDER_WIDTH + UI_SAFETY_PAD)
@@ -68,10 +72,10 @@ impl UIElement for Button {
             (UI_BTN_BORDER_WIDTH / 2.0).round(),
         );
 
-        let w = UI_BTN_WIDTH;
+        let w = self.width;
         let h = UI_ELEM_TXT_H * 2.0 + UI_BTN_BORDER_WIDTH;
 
-        p.label(UI_KNOB_FONT_SIZE, 0, UI_BTN_TXT_CLR,
+        p.label(self.font_size, 0, UI_BTN_TXT_CLR,
             x + xo,
             y + yo + UI_ELEM_TXT_H + UI_BTN_BORDER2_WIDTH,
             w, (h / 2.0).round(), name);
@@ -102,7 +106,7 @@ impl UIElement for Button {
                 _ => UI_BTN_TXT_CLR,
             };
 
-        p.label(UI_KNOB_FONT_SIZE, 0, color,
+        p.label(self.font_size, 0, color,
             x + xo, y + yo, w, (h / 2.0).round(), val_s);
     }
 
@@ -117,7 +121,7 @@ impl UIElement for Button {
         let x = xo;
         let y = yo;
 
-        let w = UI_BTN_WIDTH;
+        let w = self.width;
         let h = UI_ELEM_TXT_H * 2.0 + UI_BTN_BORDER_WIDTH;
 
         // border
