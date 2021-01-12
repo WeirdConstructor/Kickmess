@@ -67,9 +67,6 @@ enum InputMode {
     None,
     ValueDrag  { zone: ActiveZone, orig_pos: (f64, f64), fine_key: bool },
     SelectMod  { zone: ActiveZone },
-    ToggleBtn  { zone: ActiveZone },
-    SetDefault { zone: ActiveZone },
-    SetValue   { zone: ActiveZone },
     InputValue { zone: ActiveZone,
                  value: String,
                  input: std::rc::Rc<std::cell::RefCell<std::io::BufWriter<Vec<u8>>>> },
@@ -83,9 +80,6 @@ impl InputMode {
             InputMode::GetHelp                 => IMAGINARY_MAX_ID,
             InputMode::ValueDrag  { zone, .. } => zone.id,
             InputMode::SelectMod  { zone, .. } => zone.id,
-            InputMode::ToggleBtn  { zone, .. } => zone.id,
-            InputMode::SetDefault { zone, .. } => zone.id,
-            InputMode::SetValue   { zone, .. } => zone.id,
             InputMode::InputValue { zone, .. } => zone.id,
         }
     }
@@ -352,74 +346,43 @@ impl WValuePlugUI {
             UIEvent::MouseButtonPressed(btn) => {
                 use crate::ui::painting;
 
+                // check for any input modes to exit from
+                match self.input_mode {
+                    InputMode::InputValue { .. } => {
+                        self.input_mode = InputMode::None;
+                        self.queue_redraw();
+                    },
+                    _ => {},
+                }
+
+                // handle button presses that enter new modes
                 match self.input_mode {
                     InputMode::None => {
-                        if let Some(hz) = self.hover_zone {
-                            match btn {
-                                MouseButton::Middle => {
-                                    self.input_mode = InputMode::SetDefault { zone: hz };
-                                    self.queue_redraw();
-                                    return;
-                                },
-                                MouseButton::Right => {
-                                    if    self.hover_zone_submode() == painting::AZ_COARSE_DRAG
-                                       || self.hover_zone_submode() == painting::AZ_FINE_DRAG {
-                                        let mut buf = vec![];
-                                        let mut bw = std::io::BufWriter::new(buf);
-                                        self.get_formatted_value(hz.id, &mut bw);
-                                        let value = 
-                                            String::from_utf8(bw.into_inner().unwrap()).unwrap();
-                                        self.input_mode =
-                                            InputMode::InputValue {
-                                                zone: hz,
-                                                value: value.trim().to_string(),
-                                                input:
-                                                    std::rc::Rc::new(
-                                                        std::cell::RefCell::new(
-                                                            std::io::BufWriter::new(vec![]))),
-                                            };
-                                        self.queue_redraw();
-                                        return;
-                                    }
-                                },
-                                _ => {}
-                            }
-                        }
-
                         match self.hover_zone_submode() {
                             painting::AZ_COARSE_DRAG | painting::AZ_FINE_DRAG => {
-                                let id = self.hover_zone.unwrap().id;
+                                match btn {
+                                    MouseButton::Left => {
+                                        let id = self.hover_zone.unwrap().id;
 
-                                self.input_mode =
-                                    InputMode::ValueDrag {
-                                        orig_pos: self.last_mouse_pos,
-                                        zone:     self.hover_zone.unwrap(),
-                                        fine_key: self.fine_drag_key_held,
-                                    };
-                                self.recalc_drag_value();
+                                        self.input_mode =
+                                            InputMode::ValueDrag {
+                                                orig_pos: self.last_mouse_pos,
+                                                zone:     self.hover_zone.unwrap(),
+                                                fine_key: self.fine_drag_key_held,
+                                            };
+                                        self.recalc_drag_value();
 
-                                let value = self.get_element_value(id);
-                                self.controller.clone().value_change_start(
-                                    self, id, value);
-                                self.queue_redraw();
+                                        let value = self.get_element_value(id);
+                                        self.controller.clone().value_change_start(
+                                            self, id, value);
+                                        self.queue_redraw();
 
-                                //d// println!("drag start! {:?}", self.input_mode);
+                                        //d// println!("drag start! {:?}", self.input_mode);
+                                    },
+                                    _ => {}
+                                }
                             },
-                            painting::AZ_TOGGLE => {
-                                self.input_mode =
-                                    InputMode::ToggleBtn {
-                                        zone: self.hover_zone.unwrap(),
-                                    };
-                            },
-                            painting::AZ_SET_VALUE => {
-                                self.input_mode =
-                                    InputMode::SetValue {
-                                        zone: self.hover_zone.unwrap(),
-                                    };
-                            },
-                            _ => {
-                                println!("BUTTON PRESS: {:?} @{:?}", btn, self.last_mouse_pos);
-                            }
+                            _ => {}
                         }
                     },
                     _ => {}
@@ -454,7 +417,71 @@ impl WValuePlugUI {
             UIEvent::MouseButtonReleased(btn) => {
                 match self.input_mode {
                     InputMode::None => {
+                        if let Some(hz) = self.hover_zone {
+                            match btn {
+                                MouseButton::Middle => {
+                                    let new_val =
+                                        self.get_element_default_value(hz.id);
+                                    self.set_element_value(hz.id, new_val);
+                                    self.controller.clone().value_change(
+                                        self, hz.id, new_val, true);
+
+                                    self.queue_redraw();
+                                    return;
+                                },
+                                MouseButton::Right => {
+                                    if    self.hover_zone_submode() == painting::AZ_COARSE_DRAG
+                                       || self.hover_zone_submode() == painting::AZ_FINE_DRAG {
+                                        let mut buf = vec![];
+                                        let mut bw = std::io::BufWriter::new(buf);
+                                        self.get_formatted_value(hz.id, &mut bw);
+                                        let value = 
+                                            String::from_utf8(bw.into_inner().unwrap()).unwrap();
+                                        self.input_mode =
+                                            InputMode::InputValue {
+                                                zone: hz,
+                                                value: value.trim().to_string(),
+                                                input:
+                                                    std::rc::Rc::new(
+                                                        std::cell::RefCell::new(
+                                                            std::io::BufWriter::new(vec![]))),
+                                            };
+                                        self.queue_redraw();
+                                        return;
+                                    }
+                                },
+                                _ => {}
+                            }
+                        }
+
                         match self.hover_zone_submode() {
+                            painting::AZ_TOGGLE => {
+                                if let Some(hover_zone) = self.hover_zone {
+                                    let next =
+                                        match btn {
+                                            MouseButton::Left =>
+                                                self.get_next_toggle_value(hover_zone.id),
+                                            MouseButton::Right =>
+                                                self.get_prev_toggle_value(hover_zone.id),
+                                            _ =>
+                                                self.get_element_default_value(hover_zone.id),
+                                        };
+
+                                    self.set_element_value(hover_zone.id, next);
+                                    self.controller.clone().value_change(
+                                        self, hover_zone.id, next, true);
+                                }
+
+                                self.queue_redraw();
+                            },
+                            painting::AZ_SET_VALUE => {
+                                if let Some(hover_zone) = self.hover_zone {
+                                    self.set_element_value(hover_zone.id, hover_zone.set_val as f32);
+                                    self.controller.clone().value_change(
+                                        self, hover_zone.id, hover_zone.set_val as f32, true);
+                                    self.queue_redraw();
+                                }
+                            },
                             painting::AZ_MOD_SELECT => {
                                 //d// println!("MOD SELECT BUTTON PRESS: {:?} @{:?}", btn, self.last_mouse_pos);
                                 self.input_mode =
@@ -465,7 +492,9 @@ impl WValuePlugUI {
 
                                 return;
                             },
-                            _ => { }
+                            _ => {
+                                println!("BUTTON PRESS: {:?} @{:?}", btn, self.last_mouse_pos);
+                            }
                         }
                     },
                     InputMode::ValueDrag { .. } => {
@@ -478,50 +507,6 @@ impl WValuePlugUI {
 
                         self.controller.clone().value_change_stop(self, id, v);
                         self.queue_redraw();
-                    },
-                    InputMode::SetDefault { zone } => {
-                        if let Some(hover_zone) = self.hover_zone {
-                            if hover_zone.id == zone.id {
-                                let new_val =
-                                    self.get_element_default_value(zone.id);
-                                self.set_element_value(zone.id, new_val);
-                                self.controller.clone().value_change(
-                                    self, zone.id, new_val, true);
-                            }
-                        }
-
-                        self.queue_redraw();
-                    },
-                    InputMode::ToggleBtn { zone, .. } => {
-                        if let Some(hover_zone) = self.hover_zone {
-                            if hover_zone.id == zone.id {
-                                let next =
-                                    match btn {
-                                        MouseButton::Left =>
-                                            self.get_next_toggle_value(zone.id),
-                                        MouseButton::Right =>
-                                            self.get_prev_toggle_value(zone.id),
-                                        _ =>
-                                            self.get_element_default_value(zone.id),
-                                    };
-
-                                self.set_element_value(zone.id, next);
-                                self.controller.clone().value_change(
-                                    self, zone.id, next, true);
-                            }
-                        }
-
-                        self.queue_redraw();
-                    },
-                    InputMode::SetValue { zone, .. } => {
-                        if let Some(hover_zone) = self.hover_zone {
-                            if hover_zone.id == zone.id {
-                                self.set_element_value(zone.id, zone.set_val as f32);
-                                self.controller.clone().value_change(
-                                    self, zone.id, zone.set_val as f32, true);
-                                self.queue_redraw();
-                            }
-                        }
                     },
                     InputMode::GetHelp => {
                         if let Some(hover_zone) = self.hover_zone {
@@ -560,15 +545,8 @@ impl WValuePlugUI {
                         }
                     },
                     InputMode::InputValue { .. } => {
-                        match btn {
-                            MouseButton::Right => {
-                                // delete input mode
-                            },
-                            _ => {
-                                // stay in input value mode
-                                return;
-                            }
-                        }
+                        // nop
+                        return;
                     },
                 }
 

@@ -5,6 +5,8 @@
 sine phase. This makes a Click value of 1.0 more meaningful, as "full click".
 * Change: Improved knob labels and help texts.
 * Change: Improved explanation of F1 help mode.
+* Change: Mouse button release now does some UI actions directly, instead on
+mouse button down.
 * Feature: Added a filter implementation for filtering the output.
 * Bugfix: Middle click to restore default value did not restore the default
 value, and it did not update the DSP parameter values properly.
