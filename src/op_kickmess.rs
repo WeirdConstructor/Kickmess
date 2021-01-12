@@ -99,7 +99,7 @@ impl MonoProcessor for OpKickmess {
 
             let mut kick_sample : f64 = 0.0;
 
-            if let EnvPos::Release(pos, env_value) = self.f_env.next(block_offs) {
+            if let EnvPos::Running(pos, env_value) = self.f_env.next(block_offs) {
                 if pos == 0 {
                     self.release.reset();
                     self.filter1.reset();
@@ -147,9 +147,11 @@ impl MonoProcessor for OpKickmess {
                     kick_sample *= params.gain() as f64;
                 }
 
-                kick_sample =
-                    self.filter1.next(kick_sample as f32, &F1Params(&params))
-                    as f64;
+                if params.f1_on() > 0.5 {
+                    kick_sample =
+                        self.filter1.next(kick_sample as f32, &F1Params(&params))
+                        as f64;
+                }
 
                 let change : f64 =
                     (self.cur_f_start - self.cur_f_end) as f64
@@ -161,7 +163,7 @@ impl MonoProcessor for OpKickmess {
             let release_env_gain =
                 match self.release.next(block_offs) {
                     EnvPos::Off => 1.0,
-                    EnvPos::Release(_, value) => {
+                    EnvPos::Running(_, value) => {
                         let gain : f64 = 1.0 - value.powf(0.5);
                         gain
                     },

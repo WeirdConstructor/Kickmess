@@ -12,7 +12,7 @@ enum EnvPosState {
 #[derive(Debug, Clone, Copy)]
 pub enum EnvPos {
     Off,
-    Release(usize, f64),
+    Running(usize, f64),
     End,
 }
 
@@ -85,7 +85,7 @@ impl REnv {
                     1.0
                 };
 
-            EnvPos::Release(pos, value)
+            EnvPos::Running(pos, value)
         }
     }
 

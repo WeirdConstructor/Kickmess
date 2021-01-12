@@ -118,9 +118,10 @@ pub fn define_gui(ps: &crate::ParamSet, gui: &mut dyn ui::protocol::UI) {
     let id_f1_res    = 15;
     let id_f1_type   = 16;
     let id_f1_drive  = 17;
+    let id_f1_on     = 18;
 
-    let id_main_tab  = 18;
-    let id_lic_tab   = 19;
+    let id_main_tab  = 19;
+    let id_lic_tab   = 20;
 
     for i in 0..ps.param_count() {
         let help_text =
@@ -139,6 +140,8 @@ pub fn define_gui(ps: &crate::ParamSet, gui: &mut dyn ui::protocol::UI) {
     values[id_n_e_freq] = UIValueSpec::new_toggle(&[ "Off", "On" ]).help(ht.0, ht.1);
     let ht = crate::param_model::help_texts[id_dist_on];
     values[id_dist_on]  = UIValueSpec::new_toggle(&[ "Off", "On" ]).help(ht.0, ht.1);
+    let ht = crate::param_model::help_texts[id_f1_on];
+    values[id_f1_on]    = UIValueSpec::new_toggle(&[ "Off", "On" ]).help(ht.0, ht.1);
 
     gui.define_value_spec(values);
 
@@ -305,22 +308,26 @@ pub fn define_gui(ps: &crate::ParamSet, gui: &mut dyn ui::protocol::UI) {
                         UIPos::center(3, 3).middle()),
                 ],
                 vec![
+                    UIInput::btn_toggle(
+                        id_f1_on,
+                        String::from("Distortion"),
+                        UIPos::left(3, 4).top()),
                     UIInput::knob(
                         id_f1_cutoff,
                         String::from("F1 Cut"),
-                        UIPos::center(3, 3).middle()),
+                        UIPos::center(2, 3).middle()),
                     UIInput::knob(
                         id_f1_res,
                         String::from("F1 Res"),
-                        UIPos::center(3, 3).middle()),
+                        UIPos::center(2, 3).middle()),
                     UIInput::knob(
                         id_f1_type,
                         String::from("F1 Type"),
-                        UIPos::center(3, 3).middle()),
+                        UIPos::center(2, 3).middle()),
                     UIInput::knob(
                         id_f1_drive,
                         String::from("F1 Drive"),
-                        UIPos::center(3, 3).middle()),
+                        UIPos::center(2, 3).middle()),
                 ]
             ]);
 

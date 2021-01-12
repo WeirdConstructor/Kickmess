@@ -9,6 +9,9 @@ sine phase. This makes a Click value of 1.0 more meaningful, as "full click".
 * Bugfix: Middle click to restore default value did not restore the default
 value, and it did not update the DSP parameter values properly.
 * Bugfix: Fixed output range of noise oscillator.
+* Bugfix: Escape is a bad keybinding, because in some (most?) hosts
+it also closes the window. So right mouse button also exits the input
+value mode.
 
 0.2.1 (2021-01-09)
 ==================

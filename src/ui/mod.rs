@@ -560,8 +560,15 @@ impl WValuePlugUI {
                         }
                     },
                     InputMode::InputValue { .. } => {
-                        // stay in input value mode
-                        return;
+                        match btn {
+                            MouseButton::Right => {
+                                // delete input mode
+                            },
+                            _ => {
+                                // stay in input value mode
+                                return;
+                            }
+                        }
                     },
                 }
 

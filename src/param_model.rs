@@ -1,6 +1,6 @@
 use crate::proc::*;
 
-pub const help_texts : [(&str, &str); 18] = [
+pub const help_texts : [(&str, &str); 19] = [
     ("Start Frequency",
         "This is the starting frequency of the frequency envelope."),
     ("End Frequency",
@@ -50,6 +50,7 @@ pub const help_texts : [(&str, &str); 18] = [
          band pass: 0.66 - 1.0 \n\
         "),
     ("Filter 1 Overdrive", ""),
+    ("Filter 1 On/Off", ""),
 ];
 
 macro_rules! param_model {
@@ -73,7 +74,8 @@ macro_rules! param_model {
         $x!{public f1_res          lin smooth    15,  0.0,   1.0,      0.0,     4,    2, "F1 Res"}
         $x!{public f1_type         lin no_smooth 16,  0.0,   1.0,      0.0,     3,    1, "F1 Type"}
         $x!{public f1_drive        lin smooth    17,  0.0,   5.0,      1.0,     4,    2, "F1 Type"}
-        $x!{private phase_test     lin smooth    18,  0.0,   1.0,      0.0,     5,    2, "Click2"}
+        $x!{public f1_on           lin no_smooth 18,  0.0,   1.0,      0.0,     3,    1, "F1 On"}
+        $x!{private phase_test     lin smooth    19,  0.0,   1.0,      0.0,     5,    2, "Click2"}
     }
 }
 
