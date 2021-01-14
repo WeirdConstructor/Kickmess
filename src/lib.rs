@@ -9,6 +9,7 @@ mod env;
 mod ringbuf_shared;
 mod param_model;
 mod filter;
+mod oscillator;
 pub mod editor;
 pub mod ui;
 pub mod window;

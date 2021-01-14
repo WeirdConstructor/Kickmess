@@ -13,7 +13,7 @@ use crate::ui::constants::*;
 use crate::ui;
 
 pub const WINDOW_WIDTH:  i32 = 700;
-pub const WINDOW_HEIGHT: i32 = 500;
+pub const WINDOW_HEIGHT: i32 = 700;
 
 pub(crate) struct KickmessEditorController {
     host:    HostCallback,
@@ -119,9 +119,12 @@ pub fn define_gui(ps: &crate::ParamSet, gui: &mut dyn ui::protocol::UI) {
     let id_f1_type   = 16;
     let id_f1_drive  = 17;
     let id_f1_on     = 18;
+    let id_o1_gain   = 19;
+    let id_o1_wave   = 20;
+    let id_o1_pw     = 21;
 
-    let id_main_tab  = 19;
-    let id_lic_tab   = 20;
+    let id_main_tab  = 22;
+    let id_lic_tab   = 23;
 
     for i in 0..ps.param_count() {
         let help_text =
@@ -243,9 +246,9 @@ pub fn define_gui(ps: &crate::ParamSet, gui: &mut dyn ui::protocol::UI) {
                     UIInput::graph_huge(
                         0,
                         String::from("Amp Env"),
-                        UIPos::center(4, 3).bottom(),
+                        UIPos::center(4, 2).bottom(),
                         amp_env_fun.clone()),
-                    UIInput::container(UIPos::center(8, 3), 1.0, vec![vec![
+                    UIInput::container(UIPos::center(8, 2), 1.0, vec![vec![
                         UIInput::knob(
                             id_f_env_rel,
                             String::from("Length (ms)"),
@@ -264,9 +267,9 @@ pub fn define_gui(ps: &crate::ParamSet, gui: &mut dyn ui::protocol::UI) {
                     UIInput::graph_huge(
                         0,
                         String::from("Freq. Env"),
-                        UIPos::center(4, 3).bottom(),
+                        UIPos::center(4, 2).bottom(),
                         f_env_fun.clone()),
-                    UIInput::container(UIPos::center(8, 3), 1.0, vec![vec![
+                    UIInput::container(UIPos::center(8, 2), 1.0, vec![vec![
                         UIInput::knob(
                             id_s_freq,
                             String::from("Start (Hz)"),
@@ -283,7 +286,7 @@ pub fn define_gui(ps: &crate::ParamSet, gui: &mut dyn ui::protocol::UI) {
                 ],
                 vec![
                     UIInput::container_border(
-                        UIPos::left(6, 3).middle(),
+                        UIPos::left(6, 2).middle(),
                         0.9,
                         vec![
                             vec![
@@ -301,14 +304,14 @@ pub fn define_gui(ps: &crate::ParamSet, gui: &mut dyn ui::protocol::UI) {
                     UIInput::btn_toggle(
                         id_n_s_freq,
                         String::from("Note>Start F"),
-                        UIPos::center(3, 3).middle()),
+                        UIPos::center(3, 2).middle()),
                     UIInput::btn_toggle(
                         id_n_e_freq,
                         String::from("Note>End F"),
-                        UIPos::center(3, 3).middle()),
+                        UIPos::center(3, 2).middle()),
                 ],
                 vec![
-                    UIInput::container_border(UIPos::center(12, 3), 1.0, vec![vec![
+                    UIInput::container_border(UIPos::center(12, 2), 1.0, vec![vec![
                         UIInput::btn_toggle_small(
                             id_f1_on,
                             String::from("Filter 1"),
@@ -331,6 +334,22 @@ pub fn define_gui(ps: &crate::ParamSet, gui: &mut dyn ui::protocol::UI) {
                                 String::from("F1 Drive"),
                                 UIPos::center(3, 12).middle()),
                         ]])
+                    ]]),
+                ],
+                vec![
+                    UIInput::container_border(UIPos::center(12, 2), 1.0, vec![vec![
+                        UIInput::knob(
+                            id_o1_gain,
+                            String::from("Osc1 Gain"),
+                            UIPos::center(4, 12).middle()),
+                        UIInput::knob(
+                            id_o1_wave,
+                            String::from("Osc1 Wave"),
+                            UIPos::center(3, 12).middle()),
+                        UIInput::knob(
+                            id_o1_pw,
+                            String::from("Osc1 PW"),
+                            UIPos::center(3, 12).middle()),
                     ]]),
                 ]
             ]);

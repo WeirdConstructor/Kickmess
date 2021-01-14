@@ -32,17 +32,25 @@ use crate::helpers::*;
 use crate::env::*;
 use crate::param_model::*;
 use crate::filter::{MoogFilter, FilterInputParams};
+use crate::oscillator::{BlitOsc, OscillatorInputParams};
 
 use crate::MAX_BLOCKSIZE;
 const PI2 : f64 = std::f64::consts::PI * 2.0;
 
 struct F1Params<'a>(&'a ParamModel<'a>);
+struct O1Params<'a, 'b>(&'a ParamModel<'a>, &'b f64);
 
 impl<'a> FilterInputParams for F1Params<'a> {
     fn freq(&self)  -> f32 { self.0.f1_cutoff() }
     fn q(&self)     -> f32 { self.0.f1_res() }
     fn typ(&self)   -> f32 { self.0.f1_type() }
     fn drive(&self) -> f32 { self.0.f1_drive() }
+}
+
+impl<'a, 'b> OscillatorInputParams for O1Params<'a, 'b> {
+    fn freq(&self)          -> f32 { *self.1 as f32 }
+    fn waveform(&self)      -> f32 { self.0.o1_waveform() }
+    fn pulse_width(&self)   -> f32 { self.0.o1_pw() }
 }
 
 pub struct OpKickmess {
@@ -60,6 +68,7 @@ pub struct OpKickmess {
     f_env:           REnv,
     release:         REnv,
     filter1:         MoogFilter,
+    oscillator1:     BlitOsc,
 }
 
 impl OpKickmess {
@@ -86,6 +95,7 @@ impl MonoProcessor for OpKickmess {
         self.release.set_sample_rate(sr);
         self.f_env.set_sample_rate(sr);
         self.filter1.set_sample_rate(sr);
+        self.oscillator1.set_sample_rate(sr);
     }
 
     fn process(&mut self, params: &SmoothParameters, proc_offs: usize, out: &mut [f32]) {
@@ -103,6 +113,7 @@ impl MonoProcessor for OpKickmess {
                 if pos == 0 {
                     self.release.reset();
                     self.filter1.reset();
+                    self.oscillator1.reset();
 
                     self.cur_phase = 0.0;
 
@@ -146,6 +157,9 @@ impl MonoProcessor for OpKickmess {
                 } else {
                     kick_sample *= params.gain() as f64;
                 }
+
+                kick_sample +=
+                    (params.o1_gain() * self.oscillator1.next(&O1Params(&params, &self.note_freq))) as f64;
 
                 if params.f1_on() > 0.5 {
                     kick_sample =
@@ -196,6 +210,7 @@ impl MonoVoice for OpKickmess {
             f_env:           REnv::new(),
             release:         REnv::new(),
             filter1:         MoogFilter::new(),
+            oscillator1:     BlitOsc::new(),
         }
     }
 
