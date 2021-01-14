@@ -54,13 +54,14 @@ in the background:
 
 ## Tested Hosts and Systems
 
-| OS | CPU | GPU | WM | Host | State | Date Tested |
+| Host | OS | CPU | GPU | WM | State | Date Tested |
 |----|-----|-----|----|------|-------|-------------|
-| Ubuntu 18.04 GNU/Linux | AMD Ryzen | NVidia (propr. drivers) | Gnome/Default  | Carla 2.2.0        | ok                    | 2021-01-06 |
-| Ubuntu 18.04 GNU/Linux | AMD Ryzen | NVidia (propr. drivers) | Gnome/Default  | Ardour 6.3         | ok                    |            |
-| Win 10                 | Intel     | NVidia                  | Win 10         | Renoise 3.3        | ok                    | 2021-01-06 |
-| Win 10                 | Intel     | NVidia                  | Win 10         | Zrythm Alpha 7.1.1 | ok, clicks on looping | 2021-01-06 |
-| Win 10                 | Intel     | NVidia                  | Win 10         | Ardour 6.5         | ok                    | 2021-01-06 |
+| Carla 2.2.0        | Ubuntu 18.04 GNU/Linux | AMD Ryzen | NVidia (propr. drivers) | Gnome/Default  | ok                    | 2021-01-06 |
+| Ardour 6.3         | Ubuntu 18.04 GNU/Linux | AMD Ryzen | NVidia (propr. drivers) | Gnome/Default  | ok                    |            |
+| Renoise 3.3        | Win 10                 | Intel     | NVidia                  | Win 10         | ok                    | 2021-01-06 |
+| Zrythm Alpha 7.1.1 | Win 10                 | Intel     | NVidia                  | Win 10         | ok, clicks on looping | 2021-01-06 |
+| Ardour 6.5         | Win 10                 | Intel     | NVidia                  | Win 10         | ok                    | 2021-01-06 |
+| FL Studio 20       | Win 10                 | ?         | NVidia                  | Win 10         | ok                    | 2021-01-14 |
 
 ## Support Development
 
