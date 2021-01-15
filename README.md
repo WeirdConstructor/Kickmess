@@ -1,17 +1,20 @@
 # Kickmess - A Kick Drum Synthesizer
 
-This project ports the easy to use and good sounding _Kicker_ plugin from LMMS
-to a reusable audio plugin format on Linux. The DSP code has been ported and
-also slightly changed, that means an accurate reimplementation of _Kicker_
-is out of scope.
+Kickmess is a port of the easy to use and good sounding _Kicker_ plugin from
+LMMS to a reusable audio plugin format on Linux (VST currently). The DSP code
+has been ported and also changed, that means an accurate
+reimplementation of _Kicker_ is out of scope.
+
+More features and changes might be added and before Version 1.0 is released I
+will not guarantee that your presets will sound the same. After Version 1.0
+significant changes will come with a change in the major version number.
 
 Currently this crate generates a VST (Version 2.4) plugin. Eventually this will
 be changed to LV2, once rust-lv2 does not require the _inPlaceBroken_ feature
 anymore.
 
-Support for other platforms (Windows or MacOS) is currently out of scope,
-but depending on the amount of code I might be okay to maintain
-contributions.
+Support for more platforms (MacOS) is currently out of scope, but depending on
+the amount of code I might maintain contributions.
 
 <a href="http://m8geil.de/data/git/kickmess/res/screenshot1.png">
 <img align="left" width="811" height="556" src="http://m8geil.de/data/git/kickmess/res/screenshot1.png">
