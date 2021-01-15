@@ -74,3 +74,98 @@ impl BlitOsc {
         self.integral as f32
     }
 }
+
+
+pub struct PolyBlep {
+    srate:      f64,
+    phase:      f64,
+    t:          f64,
+}
+
+fn sqr(x: f64) -> f64 { x * x }
+
+fn blep(t: f64, dt: f64) -> f64 {
+    if t < dt {
+        let t = t / dt;
+        2. * t - sqr(t) - 1.
+
+    } else if t > (1. - dt) {
+        let t = (t - 1.) / dt;
+        sqr(t) + 2. * t + 1.
+
+    } else {
+        0.
+    }
+}
+
+// https://dsp.stackexchange.com/questions/54790/polyblamp-anti-aliasing-in-c
+// ?
+// Derived from blep().
+fn blamp(mut t: f64, dt: f64) -> f64 {
+    if t < dt {
+        t = t / dt - 1.0;
+        -1.0 / 3.0 * sqr(t) * t
+
+    } else if t > 1.0 - dt {
+        t = (t - 1.0) / dt + 1.0;
+        1.0 / 3.0 * sqr(t) * t
+
+    } else {
+        0.0
+    }
+}
+
+impl PolyBlep {
+    pub fn new() -> Self {
+        Self {
+            srate:      0.0,
+            phase:      0.0,
+            t:          0.0,
+        }
+    }
+
+    pub fn set_sample_rate(&mut self, srate: f32) {
+        self.srate = srate as f64;
+    }
+
+    pub fn reset(&mut self) {
+        self.phase = 0.0;
+    }
+
+    pub fn next_tri(&mut self, freq: f64) -> f64 {
+        let t1 = (self.t + 0.25).fract();
+        let t2 = (self.t + 0.75).fract();
+
+        let mut y = self.t * 4.0;
+
+        if y >= 3.0 {
+            y -= 4.0;
+        } else if y > 1.0 {
+            y = 2.0 - y;
+        }
+
+        y += 4.0 * self.t * (blamp(t1, freq) - blamp(t2, freq));
+
+        y
+    }
+
+    pub fn next<P: OscillatorInputParams>(&mut self, params: &P) -> f32 {
+        let freq = (params.freq() / self.srate as f32) as f64;
+
+        let wave = params.waveform();
+
+        let s =
+            if wave < 0.5 {
+                // tri => square
+                self.next_tri(freq)
+            } else {
+                // square => saw
+                self.next_tri(freq)
+            };
+
+        self.t += freq;
+        self.t = self.t.fract();
+
+        s as f32
+    }
+}
