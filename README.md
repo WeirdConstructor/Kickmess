@@ -1,27 +1,38 @@
 # Kickmess - A Kick Drum Synthesizer
 
-This project ports the easy to use and good sounding _Kicker_ plugin from LMMS
-to a reusable audio plugin format on Linux. The DSP code has been ported and
-also slightly changed, that means an accurate reimplementation of _Kicker_
-is out of scope.
-
-Currently this crate generates a VST (Version 2.4) plugin. Eventually this will
-be changed to LV2, once rust-lv2 does not require the _inPlaceBroken_ feature
-anymore.
-
-Support for other platforms (Windows or MacOS) is currently out of scope,
-but depending on the amount of code I might be okay to maintain
-contributions.
+Kickmess is a port of the easy to use and good sounding _Kicker_ plugin from
+LMMS to a reusable audio plugin format on Linux (VST currently). The DSP code
+has been ported and also changed, that means an accurate
+reimplementation of _Kicker_ is out of scope.
 
 <a href="http://m8geil.de/data/git/kickmess/res/screenshot1.png">
 <img align="left" width="811" height="556" src="http://m8geil.de/data/git/kickmess/res/screenshot1.png">
 </a>
 
+## Features
+
+- Sine oscillator
+- Noise oscillator
+- Pitch and amplitude envelopes with configurable exponential slope
+- Pitch from MIDI note
+- Simple Distortion effect
+
+More features and changes might be added and before Version 1.0 is released.  I
+can't guarantee that your presets will sound the same. After Version 1.0
+significant changes will come with a change in the major version number.
+
+Currently only VST 2 plugins are provided. Eventually this will be changed to
+LV2, once rust-lv2 does not require the _inPlaceBroken_ feature anymore and
+the plugins work in Ardour.
+
+Support for more platforms (MacOS) is currently out of scope.
+
 ## State of Development
 
 This project is still (2021-01-08) under development and considered
 useable for what it is. There are features missing, which might come
-in future.
+in future. And until version 1.0 is released I can't guarantee that your
+presets will all sound the same.
 
 Make sure to follow [Weird Constructors Mastodon
 account](https://mastodon.online/web/accounts/150371) or the releases of this
@@ -54,14 +65,13 @@ in the background:
 
 ## Tested Hosts and Systems
 
-| Host | OS | CPU | GPU | WM | State | Date Tested |
+| OS | CPU | GPU | WM | Host | State | Date Tested |
 |----|-----|-----|----|------|-------|-------------|
-| Carla 2.2.0        | Ubuntu 18.04 GNU/Linux | AMD Ryzen | NVidia (propr. drivers) | Gnome/Default  | ok                    | 2021-01-06 |
-| Ardour 6.3         | Ubuntu 18.04 GNU/Linux | AMD Ryzen | NVidia (propr. drivers) | Gnome/Default  | ok                    |            |
-| Renoise 3.3        | Win 10                 | Intel     | NVidia                  | Win 10         | ok                    | 2021-01-06 |
-| Zrythm Alpha 7.1.1 | Win 10                 | Intel     | NVidia                  | Win 10         | ok, clicks on looping | 2021-01-06 |
-| Ardour 6.5         | Win 10                 | Intel     | NVidia                  | Win 10         | ok                    | 2021-01-06 |
-| FL Studio 20       | Win 10                 | ?         | NVidia                  | Win 10         | ok                    | 2021-01-14 |
+| Ubuntu 18.04 GNU/Linux | AMD Ryzen | NVidia (propr. drivers) | Gnome/Default  | Carla 2.2.0        | ok                    | 2021-01-06 |
+| Ubuntu 18.04 GNU/Linux | AMD Ryzen | NVidia (propr. drivers) | Gnome/Default  | Ardour 6.3         | ok                    |            |
+| Win 10                 | Intel     | NVidia                  | Win 10         | Renoise 3.3        | ok                    | 2021-01-06 |
+| Win 10                 | Intel     | NVidia                  | Win 10         | Zrythm Alpha 7.1.1 | ok, clicks on looping | 2021-01-06 |
+| Win 10                 | Intel     | NVidia                  | Win 10         | Ardour 6.5         | ok                    | 2021-01-06 |
 
 ## Support Development
 
