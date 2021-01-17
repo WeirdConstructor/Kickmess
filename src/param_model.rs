@@ -78,7 +78,9 @@ macro_rules! param_model {
         $x!{public o1_gain         lin smooth    19,  0.0,   2.0,      0.0,     4,    2, "O1 Gain"}
         $x!{public o1_waveform     lin smooth    20,  0.0,   1.0,      0.0,     4,    2, "O1 Wave"}
         $x!{public o1_pw           lin smooth    21,  0.0,   1.0,      1.0,     4,    2, "O1 PW"}
-        $x!{private phase_test     lin smooth    22,  0.0,   1.0,      0.0,     5,    2, "Click2"}
+        $x!{public o1_unison       lin no_smooth 22,  0.0,  10.5,      0.0,     1,    0, "O1 Unison"}
+        $x!{public o1_detune       lin smooth    23,  0.0,   1.0,      0.01,    5,    3, "O1 Detune"}
+        $x!{private phase_test     lin smooth    24,  0.0,   1.0,      0.0,     5,    2, "Click2"}
     }
 }
 

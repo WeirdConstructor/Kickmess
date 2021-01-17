@@ -32,7 +32,7 @@ use crate::helpers::*;
 use crate::env::*;
 use crate::param_model::*;
 use crate::filter::{MoogFilter, FilterInputParams};
-use crate::oscillator::{PolyBlepOscillator, OscillatorInputParams};
+use crate::oscillator::{UnisonBlep, OscillatorInputParams};
 
 use crate::MAX_BLOCKSIZE;
 const PI2 : f64 = std::f64::consts::PI * 2.0;
@@ -51,6 +51,8 @@ impl<'a, 'b> OscillatorInputParams for O1Params<'a, 'b> {
     fn freq(&self)          -> f32 { *self.1 as f32 }
     fn waveform(&self)      -> f32 { self.0.o1_waveform() }
     fn pulse_width(&self)   -> f32 { self.0.o1_pw() }
+    fn unison(&self)        -> f32 { self.0.o1_unison() }
+    fn detune(&self)        -> f32 { self.0.o1_detune() }
 }
 
 pub struct OpKickmess {
@@ -68,7 +70,7 @@ pub struct OpKickmess {
     f_env:           REnv,
     release:         REnv,
     filter1:         MoogFilter,
-    oscillator1:     PolyBlepOscillator,
+    oscillator1:     UnisonBlep,
 }
 
 impl OpKickmess {
@@ -213,7 +215,7 @@ impl MonoVoice for OpKickmess {
             f_env:           REnv::new(),
             release:         REnv::new(),
             filter1:         MoogFilter::new(),
-            oscillator1:     PolyBlepOscillator::new(),
+            oscillator1:     UnisonBlep::new(10),
         }
     }
 

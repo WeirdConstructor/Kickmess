@@ -4,11 +4,14 @@ pub trait OscillatorInputParams{
     fn freq(&self)          -> f32;
     fn waveform(&self)      -> f32;
     fn pulse_width(&self)   -> f32;
+    fn detune(&self)        -> f32;
+    fn unison(&self)        -> f32;
 }
 
 pub struct PolyBlepOscillator {
     srate:       f64,
     phase:       f64,
+    init_phase:  f64,
     last_output: f64,
 }
 
@@ -43,11 +46,12 @@ fn poly_blep(t: f64, dt: f64) -> f64 {
 }
 
 impl PolyBlepOscillator {
-    pub fn new() -> Self {
+    pub fn new(init_phase: f64) -> Self {
         Self {
             srate:       0.0,
             phase:       0.0,
             last_output: 0.0,
+            init_phase,
         }
     }
 
@@ -56,7 +60,7 @@ impl PolyBlepOscillator {
     }
 
     pub fn reset(&mut self) {
-        self.phase       = 0.0;
+        self.phase       = self.init_phase;
         self.last_output = 0.0;
     }
 
@@ -78,8 +82,9 @@ impl PolyBlepOscillator {
         else { -1.0 }
     }
 
-    pub fn next<P: OscillatorInputParams>(&mut self, params: &P) -> f32 {
-        let phase_inc = params.freq() as f64 / self.srate;
+    pub fn next<P: OscillatorInputParams>(&mut self, params: &P, detune: f64) -> f32 {
+        let freq = params.freq() as f64;
+        let phase_inc = (freq + detune * freq) / self.srate;
 
         let wave = params.waveform();
 
@@ -123,5 +128,62 @@ impl PolyBlepOscillator {
         self.phase = self.phase.fract();
 
         sample as f32
+    }
+}
+
+pub struct UnisonBlep {
+    oscs: Vec<PolyBlepOscillator>,
+    dc_block: crate::filter::DCBlockFilter,
+}
+
+impl UnisonBlep {
+    pub fn new(max_unison: usize) -> Self {
+        let mut oscs = vec![];
+        let mut rng = crate::helpers::RandGen::new();
+
+        let dis_init_phase = 0.05;
+        for _ in 0..(max_unison + 1) {
+            let init_phase = rng.next_open01();
+            oscs.push(PolyBlepOscillator::new(init_phase));
+        }
+
+        Self {
+            oscs,
+            dc_block: crate::filter::DCBlockFilter::new(),
+        }
+    }
+
+    pub fn set_sample_rate(&mut self, srate: f32) {
+        self.dc_block.set_sample_rate(srate);
+        for o in self.oscs.iter_mut() {
+            o.set_sample_rate(srate);
+        }
+    }
+
+    pub fn reset(&mut self) {
+        self.dc_block.reset();
+        for o in self.oscs.iter_mut() {
+            o.reset();
+        }
+    }
+
+    pub fn next<P: OscillatorInputParams>(&mut self, params: &P) -> f32 {
+        let unison =
+            (params.unison().floor() as usize)
+            .min(self.oscs.len() - 1);
+        let detune = params.detune() as f64;
+
+        let mix = 1.0 / ((unison + 1) as f32);
+
+        let mut s = mix * self.oscs[0].next(params, 0.0);
+
+        for u in 0..unison {
+            let detune_factor =
+                detune * (((u / 2) + 1) as f64
+                          * if (u % 2) == 0 { 1.0 } else { -1.0 });
+            s += mix * self.oscs[u + 1].next(params, detune_factor * 0.01);
+        }
+
+        self.dc_block.next(s)
     }
 }

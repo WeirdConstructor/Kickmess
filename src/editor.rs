@@ -122,9 +122,11 @@ pub fn define_gui(ps: &crate::ParamSet, gui: &mut dyn ui::protocol::UI) {
     let id_o1_gain   = 19;
     let id_o1_wave   = 20;
     let id_o1_pw     = 21;
+    let id_o1_unison = 22;
+    let id_o1_detune = 23;
 
-    let id_main_tab  = 22;
-    let id_lic_tab   = 23;
+    let id_main_tab  = 24;
+    let id_lic_tab   = 25;
 
     for i in 0..ps.param_count() {
         let help_text =
@@ -341,15 +343,23 @@ pub fn define_gui(ps: &crate::ParamSet, gui: &mut dyn ui::protocol::UI) {
                         UIInput::knob(
                             id_o1_gain,
                             String::from("Osc1 Gain"),
-                            UIPos::center(4, 12).middle()),
+                            UIPos::center(2, 12).middle()),
                         UIInput::knob(
                             id_o1_wave,
                             String::from("Osc1 Wave"),
-                            UIPos::center(3, 12).middle()),
+                            UIPos::center(2, 12).middle()),
                         UIInput::knob(
                             id_o1_pw,
                             String::from("Osc1 PW"),
-                            UIPos::center(3, 12).middle()),
+                            UIPos::center(2, 12).middle()),
+                        UIInput::knob(
+                            id_o1_unison,
+                            String::from("Osc1 Unison"),
+                            UIPos::center(2, 12).middle()),
+                        UIInput::knob(
+                            id_o1_detune,
+                            String::from("Osc1 Detune"),
+                            UIPos::center(2, 12).middle()),
                     ]]),
                 ]
             ]);
