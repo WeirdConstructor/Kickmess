@@ -165,7 +165,6 @@ impl MonoProcessor for OpKickmess {
                      * amp_gain as f32
                      * self.oscillator1.next(&O1Params(&params, &self.note_freq))) as f64;
 
-
                 if params.f1_on() > 0.5 {
                     kick_sample =
                         self.filter1.next(kick_sample as f32, &F1Params(&params))

@@ -107,7 +107,11 @@ impl PolyBlepOscillator {
                         phase_inc * sample
                         + (1.0 - phase_inc) * self.last_output;
                     self.last_output = sample;
-                    sample
+
+                    // the signal is a bit too weak, we need to amplify it
+                    // or else the volume diff between the different waveforms
+                    // is too big:
+                    sample * 4.0
                 },
                 Waveform::Saw => {
                     let mut sample = self.next_saw();
@@ -142,8 +146,13 @@ impl UnisonBlep {
         let mut rng = crate::helpers::RandGen::new();
 
         let dis_init_phase = 0.05;
-        for _ in 0..(max_unison + 1) {
-            let init_phase = rng.next_open01();
+        for i in 0..(max_unison + 1) {
+            // randomize phases so we fatten the unison, get
+            // less DC and not an amplified signal until the
+            // detune desyncs the waves.
+            // But no random phase for first, so we reduce the click
+            let init_phase =
+                if i == 0 { 0.0 } else { rng.next_open01() };
             oscs.push(PolyBlepOscillator::new(init_phase));
         }
 
