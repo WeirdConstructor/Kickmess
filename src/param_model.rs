@@ -61,12 +61,12 @@ macro_rules! param_model {
         $x!{public f_env_release   exp no_smooth 2,   5.0,   5000.0, 440.0,     6,    1, "Length"}
         $x!{public dist_start      lin smooth    3,   0.0,   100.0,    0.8,     4,    2, "Dist. Start"}
         $x!{public dist_end        lin smooth    4,   0.0,   100.0,    0.8,     4,    2, "Dist. End"}
-        $x!{public gain            lin smooth    5,   0.1,   2.0,      1.0,     4,    2, "Gain"}
+        $x!{public gain            lin smooth    5,   0.0,   2.0,      1.0,     4,    2, "Gain"}
         $x!{public env_slope       lin smooth    6,   0.01,  1.0,    0.163,     5,    3, "Env. slope"}
         $x!{public freq_slope      lin smooth    7,   0.001, 1.0,     0.06,     5,    3, "Freq. slope"}
         $x!{public noise           exp smooth    8,   0.0,   1.0,      0.0,     4,    2, "Tone/Noise"}
-        $x!{public freq_note_start lin no_smooth 9,   0.0,   1.0,      1.0,     3,    1, "Note > Start Freq"}
-        $x!{public freq_note_end   lin no_smooth 10,  0.0,   1.0,      1.0,     3,    1, "Note > End Freq"}
+        $x!{public freq_note_start lin no_smooth 9,   0.0,   1.0,      0.0,     3,    1, "Note > Start Freq"}
+        $x!{public freq_note_end   lin no_smooth 10,  0.0,   1.0,      0.0,     3,    1, "Note > End Freq"}
         $x!{public env_release     lin no_smooth 11,  1.0,1000.0,      5.0,     4,    2, "Env Release"}
         $x!{public phase_offs      lin smooth    12,  0.0,   1.0,      0.0,     4,    2, "Click"}
         $x!{public dist_on         lin no_smooth 13,  0.0,   1.0,      0.0,     3,    1, "Dist. On"}
@@ -75,9 +75,9 @@ macro_rules! param_model {
         $x!{public f1_type         lin no_smooth 16,  0.0,   1.0,      0.0,     3,    1, "F1 Type"}
         $x!{public f1_drive        lin smooth    17,  0.0,   5.0,      1.0,     4,    2, "F1 Type"}
         $x!{public f1_on           lin no_smooth 18,  0.0,   1.0,      0.0,     3,    1, "F1 On"}
-        $x!{public o1_gain         lin smooth    19,  0.0,   1.0,      0.0,     4,    2, "O1 Gain"}
+        $x!{public o1_gain         lin smooth    19,  0.0,   2.0,      0.0,     4,    2, "O1 Gain"}
         $x!{public o1_waveform     lin smooth    20,  0.0,   1.0,      0.0,     4,    2, "O1 Wave"}
-        $x!{public o1_pw           lin smooth    21,  0.0,   1.0,      0.0,     4,    2, "O1 PW"}
+        $x!{public o1_pw           lin smooth    21,  0.0,   10.0,      0.5,     4,    2, "O1 PW"}
         $x!{private phase_test     lin smooth    22,  0.0,   1.0,      0.0,     5,    2, "Click2"}
     }
 }

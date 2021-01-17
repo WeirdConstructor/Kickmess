@@ -32,7 +32,7 @@ use crate::helpers::*;
 use crate::env::*;
 use crate::param_model::*;
 use crate::filter::{MoogFilter, FilterInputParams};
-use crate::oscillator::{PolyBlep, OscillatorInputParams};
+use crate::oscillator::{PolyBlepOscillator, OscillatorInputParams};
 
 use crate::MAX_BLOCKSIZE;
 const PI2 : f64 = std::f64::consts::PI * 2.0;
@@ -68,7 +68,7 @@ pub struct OpKickmess {
     f_env:           REnv,
     release:         REnv,
     filter1:         MoogFilter,
-    oscillator1:     PolyBlep,
+    oscillator1:     PolyBlepOscillator,
 }
 
 impl OpKickmess {
@@ -159,7 +159,10 @@ impl MonoProcessor for OpKickmess {
                 }
 
                 kick_sample +=
-                    (params.o1_gain() * self.oscillator1.next(&O1Params(&params, &self.note_freq))) as f64;
+                    (params.o1_gain()
+                     * amp_gain as f32
+                     * self.oscillator1.next(&O1Params(&params, &self.note_freq))) as f64;
+
 
                 if params.f1_on() > 0.5 {
                     kick_sample =
@@ -210,7 +213,7 @@ impl MonoVoice for OpKickmess {
             f_env:           REnv::new(),
             release:         REnv::new(),
             filter1:         MoogFilter::new(),
-            oscillator1:     PolyBlep::new(),
+            oscillator1:     PolyBlepOscillator::new(),
         }
     }
 
