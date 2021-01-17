@@ -10,7 +10,6 @@ pub struct PolyBlepOscillator {
     srate:       f64,
     phase:       f64,
     last_output: f64,
-    i:              usize,
 }
 
 enum Waveform {
@@ -43,30 +42,12 @@ fn poly_blep(t: f64, dt: f64) -> f64 {
     }
 }
 
-fn poly_blep_pw(t: f64, dt: f64, pw: f64) -> f64 {
-    let t1 = (t + pw).fract();
-    let t2 = (t + (1.0 - pw)).fract();
-
-    if t2 < dt {
-        let t2 = t2 / dt;
-        2. * t2 - sqr(t2) - 1.
-
-    } else if t1 > (1.0 - dt) {
-        let t1 = (t1 - 1.0) / dt;
-        sqr(t1) + 2. * t1 + 1.
-
-    } else {
-        0.
-    }
-}
-
 impl PolyBlepOscillator {
     pub fn new() -> Self {
         Self {
             srate:       0.0,
             phase:       0.0,
             last_output: 0.0,
-            i: 0,
         }
     }
 
@@ -102,23 +83,19 @@ impl PolyBlepOscillator {
 
         let wave = params.waveform();
 
-        self.i += 1;
-
         let waveform =
                  if wave < 0.25 { Waveform::Sin }
             else if wave < 0.5  { Waveform::Tri }
             else if wave < 0.75 { Waveform::Saw }
             else                { Waveform::Sqr };
 
-        let dt = phase_inc * params.pulse_width() as f64;
-
         let sample =
             match waveform {
                 Waveform::Sin => self.next_sin(),
                 Waveform::Tri => {
                     let mut sample = self.next_sqr(0.5);
-                    sample += poly_blep(self.phase, dt);
-                    sample -= poly_blep((self.phase + 0.5).fract(), dt);
+                    sample += poly_blep(self.phase, phase_inc);
+                    sample -= poly_blep((self.phase + 0.5).fract(), phase_inc);
 
                     // leaky integrator: y[n] = A * x[n] + (1 - A) * y[n-1]
                     sample =
@@ -129,20 +106,15 @@ impl PolyBlepOscillator {
                 },
                 Waveform::Saw => {
                     let mut sample = self.next_saw();
-                    sample -= poly_blep(self.phase, dt);
+                    sample -= poly_blep(self.phase, phase_inc);
                     sample
                 },
                 Waveform::Sqr => {
                     let pw = params.pulse_width() as f64;
                     let pw = (0.1 * pw) + ((1.0 - pw) * 0.5);
-                    let pw = 0.5;
                     let mut sample = self.next_sqr(pw);
-                    if self.i % 40 == 0 {
-                        println!("PP phase={:8.6}, dt={:8.6} pw={:8.6} res={:8.6}", self.phase, phase_inc, pw, sample);
-                    }
-                    sample += poly_blep(self.phase, dt);
-                    sample -= poly_blep((self.phase + pw).fract(), dt);
-//                    sample -= poly_blep_pw(self.phase, phase_inc, pw);
+                    sample += poly_blep(self.phase, phase_inc);
+                    sample -= poly_blep((self.phase + (1.0 - pw)).fract(), phase_inc);
                     sample
                 },
             };
