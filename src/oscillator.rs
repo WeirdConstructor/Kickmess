@@ -77,20 +77,31 @@ impl BlitOsc {
 
 
 pub struct PolyBlep {
-    srate:      f64,
-    phase:      f64,
-    t:          f64,
+    srate:       f64,
+    phase:       f64,
+    last_output: f64,
+}
+
+enum Waveform {
+    Sin,
+    Tri,
+    Saw,
+    Sqr,
 }
 
 fn sqr(x: f64) -> f64 { x * x }
 
-fn blep(t: f64, dt: f64) -> f64 {
+// PolyBLEP by Tale
+// (slightly modified)
+// http://www.kvraudio.com/forum/viewtopic.php?t=375517
+// from http://www.martin-finke.de/blog/articles/audio-plugins-018-polyblep-oscillator/
+fn poly_blep(t: f64, dt: f64) -> f64 {
     if t < dt {
         let t = t / dt;
         2. * t - sqr(t) - 1.
 
-    } else if t > (1. - dt) {
-        let t = (t - 1.) / dt;
+    } else if t > (1.0 - dt) {
+        let t = (t - 1.0) / dt;
         sqr(t) + 2. * t + 1.
 
     } else {
@@ -98,29 +109,29 @@ fn blep(t: f64, dt: f64) -> f64 {
     }
 }
 
-// https://dsp.stackexchange.com/questions/54790/polyblamp-anti-aliasing-in-c
-// ?
-// Derived from blep().
-fn blamp(mut t: f64, dt: f64) -> f64 {
-    if t < dt {
-        t = t / dt - 1.0;
-        -1.0 / 3.0 * sqr(t) * t
-
-    } else if t > 1.0 - dt {
-        t = (t - 1.0) / dt + 1.0;
-        1.0 / 3.0 * sqr(t) * t
-
-    } else {
-        0.0
-    }
-}
+//// https://dsp.stackexchange.com/questions/54790/polyblamp-anti-aliasing-in-c
+//// ?
+//// Derived from blep().
+//fn blamp(mut t: f64, dt: f64) -> f64 {
+//    if t < dt {
+//        t = t / dt - 1.0;
+//        -1.0 / 3.0 * sqr(t) * t
+//
+//    } else if t > 1.0 - dt {
+//        t = (t - 1.0) / dt + 1.0;
+//        1.0 / 3.0 * sqr(t) * t
+//
+//    } else {
+//        0.0
+//    }
+//}
 
 impl PolyBlep {
     pub fn new() -> Self {
         Self {
-            srate:      0.0,
-            phase:      0.0,
-            t:          0.0,
+            srate:       0.0,
+            phase:       0.0,
+            last_output: 0.0,
         }
     }
 
@@ -129,43 +140,69 @@ impl PolyBlep {
     }
 
     pub fn reset(&mut self) {
-        self.phase = 0.0;
+        self.phase       = 0.0;
+        self.last_output = 0.0;
     }
 
-    pub fn next_tri(&mut self, freq: f64) -> f64 {
-        let t1 = (self.t + 0.25).fract();
-        let t2 = (self.t + 0.75).fract();
+    pub fn next_sin(&mut self) {
+        crate::helpers::fast_sin(self.phase * 2.0 * std::f64::consts::PI)
+    }
 
-        let mut y = self.t * 4.0;
+    pub fn next_tri(&mut self) {
+        let value = -1.0 + (2.0 * self.phase);
+        2.0 * (value.abs() - 0.5)
+    }
 
-        if y >= 3.0 {
-            y -= 4.0;
-        } else if y > 1.0 {
-            y = 2.0 - y;
-        }
+    pub fn next_saw(&mut self) {
+        (2.0 * self.phase) - 1.0
+    }
 
-        y += 4.0 * self.t * (blamp(t1, freq) - blamp(t2, freq));
-
-        y
+    pub fn next_sqr(&mut self) {
+        if self.phase < 0.5 { 1.0 }
+        else { -1.0 }
     }
 
     pub fn next<P: OscillatorInputParams>(&mut self, params: &P) -> f32 {
-        let freq = (params.freq() / self.srate as f32) as f64;
+        let phase_inc = params.freq() / self.srate as f64;
 
         let wave = params.waveform();
 
-        let s =
-            if wave < 0.5 {
-                // tri => square
-                self.next_tri(freq)
-            } else {
-                // square => saw
-                self.next_tri(freq)
+        let waveform =
+            if wave < 0.25      { Waveform::Sin }
+            else if wave < 0.5  { Waveform::Tri }
+            else if wave < 0.75 { Waveform::Saw }
+            else                { Waveform::Sqr };
+
+        let sample =
+            match waveform {
+                Waveform::Sin => self.next_sin(),
+                Waveform::Tri => {
+                    let mut sample = self.next_sqr();
+                    sample += poly_blep(self.phase);
+                    sample -= poly_blep((self.phase + 0.5).fract());
+
+                    // leaky integrator: y[n] = A * x[n] + (1 - A) * y[n-1]
+                    sample =
+                        phase_inc * sample
+                        + (1.0 - phase_inc) * self.last_output;
+                    self.last_output = sample;
+                },
+                Waveform::Saw => {
+                    let mut sample = self.next_saw();
+                    sample -= poly_blep(self.phase);
+                    sample
+                },
+                Waveform::Sqr => {
+                    let mut sample = self.next_sqr();
+                    sample += poly_blep(self.phase);
+                    sample -= poly_blep((self.phase + 0.5).fract());
+                    sample
+                },
             };
 
-        self.t += freq;
-        self.t = self.t.fract();
+        self.phase += phase_inc;
+        self.phase = self.phase.fract();
 
-        s as f32
+        sample
     }
 }
