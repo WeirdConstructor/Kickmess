@@ -282,11 +282,11 @@ pub fn define_gui(ps: &crate::ParamSet, gui: &mut dyn ui::protocol::UI) {
                     UIInput::container(UIPos::center(8, 2), 1.0, vec![vec![
                         UIInput::knob(
                             id_s_freq,
-                            String::from("Start (Hz)"),
+                            String::from("Start Hz"),
                             UIPos::center(4, 12).bottom()),
                         UIInput::knob(
                             id_e_freq,
-                            String::from("End (Hz)"),
+                            String::from("End Hz"),
                             UIPos::center(4, 12).bottom()),
                         UIInput::knob(
                             id_f_slope,
@@ -362,11 +362,11 @@ pub fn define_gui(ps: &crate::ParamSet, gui: &mut dyn ui::protocol::UI) {
                             UIPos::center(2, 12).middle()),
                         UIInput::knob(
                             id_o1_unison,
-                            String::from("Osc1 Unison"),
+                            String::from("Osc1 Uni."),
                             UIPos::center(2, 12).middle()),
                         UIInput::knob(
                             id_o1_detune,
-                            String::from("Osc1 Detune"),
+                            String::from("Osc1 Det."),
                             UIPos::center(2, 12).middle()),
                     ]]),
                 ]
@@ -379,11 +379,11 @@ pub fn define_gui(ps: &crate::ParamSet, gui: &mut dyn ui::protocol::UI) {
                 vec![
                     UIInput::knob(
                         id_of1_freq,
-                        String::from("Op1 Freq"),
+                        String::from("Op1 Hz"),
                         UIPos::center(4, 2).middle()),
                     UIInput::knob(
                         id_of2_freq,
-                        String::from("Op2 Freq"),
+                        String::from("Op2 Hz"),
                         UIPos::center(4, 2).middle()),
                     UIInput::knob(
                         id_of2_gain,
@@ -393,19 +393,19 @@ pub fn define_gui(ps: &crate::ParamSet, gui: &mut dyn ui::protocol::UI) {
                 vec![
                     UIInput::knob(
                         id_of1_self,
-                        String::from("Op1 Self"),
+                        String::from("Op1<o Hz"),
                         UIPos::center(3, 2).middle()),
                     UIInput::knob(
                         id_of2_self,
-                        String::from("Op2 Self"),
+                        String::from("Op2<o Hz"),
                         UIPos::center(3, 2).middle()),
                     UIInput::knob(
                         id_of1_o2,
-                        String::from("Op2>Op1"),
+                        String::from("Op2>1 Hz"),
                         UIPos::center(3, 2).middle()),
                     UIInput::knob(
                         id_of2_o1,
-                        String::from("Op2>Op1"),
+                        String::from("Op2>1 Hz"),
                         UIPos::center(3, 2).middle()),
                 ],
             ]);

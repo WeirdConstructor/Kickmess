@@ -239,8 +239,8 @@ impl FMOscillator {
         let freq2      = params.op2_freq() as f64;
         let phase1_inc =
             (freq1
-             + freq1 * params.op1_self() as f64 * self.op1_fb * self.op1_fb
-             + freq1 * params.op2_op1()  as f64 * self.op2_fb * self.op2_fb) / self.srate;
+             + params.op1_self() as f64 * self.op1_fb
+             + params.op2_op1()  as f64 * self.op2_fb) / self.srate;
 //            println!("F1 {:8.3} {:8.3} {:8.3} => {:8.3},{:8.3},{:8.3},{:8.3}",
 //                self.phase1,
 //                self.phase2,
@@ -251,8 +251,8 @@ impl FMOscillator {
 //                self.op2_fb);
         let phase2_inc =
             (freq2
-             + freq2 * params.op2_self() as f64 * self.op2_fb * self.op2_fb
-             + freq2 * params.op1_op2()  as f64 * self.op1_fb * self.op1_fb) / self.srate;
+             + params.op2_self() as f64 * self.op2_fb
+             + params.op1_op2()  as f64 * self.op1_fb) / self.srate;
 
         let s_op1 =
             crate::helpers::fast_sin(self.phase1 * 2.0 * std::f64::consts::PI);

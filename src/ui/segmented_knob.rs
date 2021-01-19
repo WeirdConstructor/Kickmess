@@ -247,22 +247,22 @@ impl SegmentedKnob {
     pub fn draw_value_label(&self, p: &mut dyn Painter, x: f64, y: f64, highlight: HLStyle, s: &str) {
         let r = self.get_value_rect();
 
-        let (font_size, color) =
+        let color =
             match highlight {
-                HLStyle::Hover(_subtype) => {
-                    (self.font_size_data + 1.0, UI_TXT_KNOB_HOVER_CLR)
-                },
-                HLStyle::ModTarget => {
-                    (self.font_size_data + 1.0, UI_TXT_KNOB_HLIGHT_CLR)
-                },
-                _ => {
-                    (self.font_size_data, UI_TXT_KNOB_CLR)
-                },
+                HLStyle::Hover(_subtype) => { UI_TXT_KNOB_HOVER_CLR },
+                HLStyle::ModTarget       => { UI_TXT_KNOB_HLIGHT_CLR },
+                _                        => { UI_TXT_KNOB_CLR },
             };
 
         let some_right_padding = 6.0;
+        let light_font_offs    = 1.0;
 
-        p.label(font_size, 1, color, x + r.0, y + r.1, r.2 - some_right_padding, r.3, s);
+        p.label(
+            self.font_size_data, 1, color,
+            x + r.0 + light_font_offs,
+            y + r.1,
+            r.2 - some_right_padding,
+            r.3, s);
     }
 
     pub fn draw_oct_arc(&self, p: &mut dyn Painter, x: f64, y: f64, line_w: f64, color: (f64, f64, f64), with_dot: bool, value: f64) {
