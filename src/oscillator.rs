@@ -7,7 +7,7 @@ pub trait OscillatorInputParams{
     fn detune(&self)        -> f32;
     fn unison(&self)        -> f32;
 
-    fn op1_freq(&self)      -> f32;
+    fn op1_ratio(&self)     -> f32;
     fn op2_freq(&self)      -> f32;
     fn op1_self(&self)      -> f32;
     fn op2_self(&self)      -> f32;
