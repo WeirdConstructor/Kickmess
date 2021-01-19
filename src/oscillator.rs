@@ -235,8 +235,8 @@ impl FMOscillator {
     }
 
     pub fn next<P: OscillatorInputParams>(&mut self, params: &P) -> f32 {
-        let freq1      = params.op1_freq() as f64;
         let freq2      = params.op2_freq() as f64;
+        let freq1      = freq2 * (params.op1_ratio() as f64);
         let phase1_inc =
             (freq1
              + params.op1_self() as f64 * self.op1_fb

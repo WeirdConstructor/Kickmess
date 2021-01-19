@@ -54,7 +54,7 @@ impl<'a, 'b> OscillatorInputParams for O1Params<'a, 'b> {
     fn unison(&self)        -> f32 { self.0.o1_unison() }
     fn detune(&self)        -> f32 { self.0.o1_detune() }
 
-    fn op1_freq(&self)      -> f32 { self.0.o1fm_freq() }
+    fn op1_ratio(&self)     -> f32 { self.0.o1fm_ratio() }
     fn op2_freq(&self)      -> f32 { self.0.o2fm_freq() }
     fn op1_self(&self)      -> f32 { self.0.o1fm_self() }
     fn op2_self(&self)      -> f32 { self.0.o2fm_self() }

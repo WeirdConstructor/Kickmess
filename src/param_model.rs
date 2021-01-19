@@ -81,12 +81,12 @@ macro_rules! param_model {
         $x!{public o1_unison       lin no_smooth 22,  0.0,  10.5,      0.0,     1,    0, "O1 Unison"}
         $x!{public o1_detune       lin smooth    23,  0.0,   1.0,      0.01,    5,    3, "O1 Detune"}
 
-        $x!{public o1fm_freq       exp smooth    24,  0.0,5000.0,     300.0,    7,    2, "OP1 Freq (Hz)"}
-        $x!{public o1fm_self       exp smooth    25,  0.0,5000.0,       0.0,    7,    2, "OP1 Self (Hz)"}
-        $x!{public o1fm_o2_mod     exp smooth    26,  0.0,5000.0,     100.0,    7,    2, "OP1>OP2 (Hz)"}
-        $x!{public o2fm_o1_mod     exp smooth    27,  0.0,5000.0,       0.0,    7,    2, "OP2>OP1 (Hz)"}
-        $x!{public o2fm_freq       exp smooth    28,  0.0,5000.0,     500.0,    7,    2, "OP2 Freq (Hz)"}
-        $x!{public o2fm_self       exp smooth    29,  0.0,5000.0,       0.0,    7,    2, "OP2 Self (Hz)"}
+        $x!{public o1fm_ratio      exp smooth    24,  0.0,  20.0,       2.0,    6,    3, "OP1 Ratio"}
+        $x!{public o1fm_self       exp smooth    25,  0.0,5000.0,       0.0,    7,    2, "OP1 Self Hz"}
+        $x!{public o1fm_o2_mod     exp smooth    26,  0.0,5000.0,     100.0,    7,    2, "OP1>OP2 Hz"}
+        $x!{public o2fm_o1_mod     exp smooth    27,  0.0,5000.0,       0.0,    7,    2, "OP2>OP1 Hz"}
+        $x!{public o2fm_freq       exp smooth    28,  0.0,5000.0,     500.0,    7,    2, "OP2 Freq Hz"}
+        $x!{public o2fm_self       exp smooth    29,  0.0,5000.0,       0.0,    7,    2, "OP2 Self Hz"}
         $x!{public o2fm_gain       lin smooth    30,  0.0,  10.0,       0.0,    5,    3, "OP2 Gain"}
 
         $x!{private phase_test     lin smooth    31,  0.0,   1.0,      0.0,     5,    2, "Click2"}
