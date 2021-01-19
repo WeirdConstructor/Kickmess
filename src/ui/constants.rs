@@ -76,3 +76,6 @@ pub const UI_SAFETY_PAD     : f64 =   1.0;
 
 pub const UI_INPUT_BOX_W         : f64 = 200.0;
 pub const UI_INPUT_BOX_FONT_SIZE : f64 = 16.0;
+
+pub const UI_DRAG_INFO_W         : f64 = 70.0;
+pub const UI_DRAG_INFO_FONT_SIZE : f64 = 10.0;

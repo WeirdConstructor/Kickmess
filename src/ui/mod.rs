@@ -1353,6 +1353,25 @@ impl WValuePlugUI {
             p.label_mono(UI_INPUT_BOX_FONT_SIZE, 0, UI_LBL_TXT_CLR,
                 input_area.x, input_area.y, input_area.w, input_area.h,
                 &std::str::from_utf8(input.borrow().get_ref()).unwrap().trim());
+        } else {
+            let hover_lbl =
+                if self.hover_zone_submode() == painting::AZ_COARSE_DRAG {
+                    Some("coarse zone")
+                } else if self.hover_zone_submode() == painting::AZ_FINE_DRAG {
+                    Some("fine zone")
+                } else {
+                    None
+                };
+
+            if let Some(lbl) = hover_lbl {
+                let (x, y) = self.last_mouse_pos;
+                let y = y - UI_ELEM_TXT_H;
+                p.rect_fill(
+                    UI_LBL_BG_CLR,
+                    x, y, UI_DRAG_INFO_W, UI_ELEM_TXT_H);
+                p.label(UI_DRAG_INFO_FONT_SIZE, 0, UI_LBL_TXT_CLR,
+                        x, y, UI_DRAG_INFO_W, UI_ELEM_TXT_H, lbl);
+            }
         }
 
         if self.version_label.len() > 0 {
