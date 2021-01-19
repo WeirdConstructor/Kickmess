@@ -87,7 +87,7 @@ macro_rules! param_model {
         $x!{public o2fm_o1_mod     exp smooth    27,  0.0,5000.0,       0.0,    7,    2, "OP2>OP1 Hz"}
         $x!{public o2fm_freq       exp smooth    28,  0.0,5000.0,     500.0,    7,    2, "OP2 Freq Hz"}
         $x!{public o2fm_self       exp smooth    29,  0.0,5000.0,       0.0,    7,    2, "OP2 Self Hz"}
-        $x!{public o2fm_gain       lin smooth    30,  0.0,  10.0,       0.0,    5,    3, "OP2 Gain"}
+        $x!{public o2fm_gain       lin smooth    30,  0.0,   2.0,       0.0,    5,    3, "OP2 Gain"}
 
         $x!{private phase_test     lin smooth    31,  0.0,   1.0,      0.0,     5,    2, "Click2"}
     }
