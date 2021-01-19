@@ -6,6 +6,13 @@ pub trait OscillatorInputParams{
     fn pulse_width(&self)   -> f32;
     fn detune(&self)        -> f32;
     fn unison(&self)        -> f32;
+
+    fn op1_freq(&self)      -> f32;
+    fn op2_freq(&self)      -> f32;
+    fn op1_self(&self)      -> f32;
+    fn op2_self(&self)      -> f32;
+    fn op1_op2(&self)       -> f32;
+    fn op2_op1(&self)       -> f32;
 }
 
 pub struct PolyBlepOscillator {
@@ -194,5 +201,72 @@ impl UnisonBlep {
         }
 
         self.dc_block.next(s)
+    }
+}
+
+pub struct FMOscillator {
+    srate:       f64,
+    phase1:      f64,
+    phase2:      f64,
+    op1_fb:      f64,
+    op2_fb:      f64,
+}
+
+impl FMOscillator {
+    pub fn new() -> Self {
+        Self {
+            srate: 44100.0,
+            phase1: 0.0,
+            phase2: 0.0,
+            op1_fb: 0.0,
+            op2_fb: 0.0,
+        }
+    }
+
+    pub fn set_sample_rate(&mut self, srate: f32) {
+        self.srate = srate as f64;
+    }
+
+    pub fn reset(&mut self) {
+        self.op1_fb = 0.0;
+        self.op2_fb = 0.0;
+        self.phase1 = 0.0;
+        self.phase2 = 0.0;
+    }
+
+    pub fn next<P: OscillatorInputParams>(&mut self, params: &P) -> f32 {
+        let freq1      = params.op1_freq() as f64;
+        let freq2      = params.op2_freq() as f64;
+        let phase1_inc =
+            (freq1
+             + freq1 * params.op1_self() as f64 * self.op1_fb * self.op1_fb
+             + freq1 * params.op2_op1()  as f64 * self.op2_fb * self.op2_fb) / self.srate;
+//            println!("F1 {:8.3} {:8.3} {:8.3} => {:8.3},{:8.3},{:8.3},{:8.3}",
+//                self.phase1,
+//                self.phase2,
+//                freq1,
+//                params.op1_self(),
+//                params.op2_op1(),
+//                self.op1_fb,
+//                self.op2_fb);
+        let phase2_inc =
+            (freq2
+             + freq2 * params.op2_self() as f64 * self.op2_fb * self.op2_fb
+             + freq2 * params.op1_op2()  as f64 * self.op1_fb * self.op1_fb) / self.srate;
+
+        let s_op1 =
+            crate::helpers::fast_sin(self.phase1 * 2.0 * std::f64::consts::PI);
+        let s_op2 =
+            crate::helpers::fast_sin(self.phase2 * 2.0 * std::f64::consts::PI);
+
+        self.op1_fb = s_op1;
+        self.op2_fb = s_op2;
+
+        self.phase1 += phase1_inc;
+        self.phase1 = self.phase1.fract();
+        self.phase2 += phase2_inc;
+        self.phase2 = self.phase2.fract();
+
+        s_op2 as f32
     }
 }

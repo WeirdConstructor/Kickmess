@@ -75,12 +75,21 @@ macro_rules! param_model {
         $x!{public f1_type         lin no_smooth 16,  0.0,   1.0,      0.0,     3,    1, "F1 Type"}
         $x!{public f1_drive        lin smooth    17,  0.0,   5.0,      1.0,     4,    2, "F1 Type"}
         $x!{public f1_on           lin no_smooth 18,  0.0,   1.0,      0.0,     3,    1, "F1 On"}
-        $x!{public o1_gain         lin smooth    19,  0.0,   2.0,      0.0,     4,    2, "O1 Gain"}
+        $x!{public o1_gain         exp smooth    19,  0.0,   2.0,      0.0,     4,    2, "O1 Gain"}
         $x!{public o1_waveform     lin smooth    20,  0.0,   1.0,      0.0,     4,    2, "O1 Wave"}
         $x!{public o1_pw           lin smooth    21,  0.0,   1.0,      1.0,     4,    2, "O1 PW"}
         $x!{public o1_unison       lin no_smooth 22,  0.0,  10.5,      0.0,     1,    0, "O1 Unison"}
         $x!{public o1_detune       lin smooth    23,  0.0,   1.0,      0.01,    5,    3, "O1 Detune"}
-        $x!{private phase_test     lin smooth    24,  0.0,   1.0,      0.0,     5,    2, "Click2"}
+
+        $x!{public o1fm_freq       exp smooth    24,  0.0,5000.0,     300.0,    5,    3, "OP1 Freq"}
+        $x!{public o1fm_self       lin smooth    25,  0.0,  10.0,       0.0,    5,    3, "OP1 Self"}
+        $x!{public o1fm_o2_mod     lin smooth    26,  0.0,  10.0,       0.5,    5,    3, "OP1>OP2"}
+        $x!{public o2fm_o1_mod     lin smooth    27,  0.0,  10.0,       0.0,    5,    3, "OP2>OP1"}
+        $x!{public o2fm_freq       exp smooth    28,  0.0,5000.0,     500.0,    5,    3, "OP2 Freq"}
+        $x!{public o2fm_self       lin smooth    29,  0.0,  10.0,       0.0,    5,    3, "OP2 Self"}
+        $x!{public o2fm_gain       lin smooth    30,  0.0,  10.0,       0.0,    5,    3, "OP2 Gain"}
+
+        $x!{private phase_test     lin smooth    31,  0.0,   1.0,      0.0,     5,    2, "Click2"}
     }
 }
 

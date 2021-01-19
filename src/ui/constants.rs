@@ -36,9 +36,9 @@ pub const UI_GUI_BG2_CLR          : (f64, f64, f64) = UI_BG2_CLR;
 pub const UI_GUI_CLEAR_CLR        : (f64, f64, f64) = UI_LBL_BG_CLR;
 pub const UI_BORDER_CLR           : (f64, f64, f64) = UI_ACCENT_CLR;
 pub const UI_BORDER_WIDTH         : f64 = 2.0;
-pub const UI_KNOB_RADIUS          : f64 = 30.0;
-pub const UI_KNOB_SMALL_RADIUS    : f64 = 20.0;
-pub const UI_KNOB_FONT_SIZE       : f64 = 12.0;
+pub const UI_KNOB_RADIUS          : f64 = 26.0;
+pub const UI_KNOB_SMALL_RADIUS    : f64 = 15.0;
+pub const UI_KNOB_FONT_SIZE       : f64 = 11.0;
 
 pub const UI_BTN_BORDER_CLR       : (f64, f64, f64) = UI_BG_KNOB_STROKE_CLR;
 pub const UI_BTN_BORDER2_CLR      : (f64, f64, f64) = UI_BORDER_CLR;

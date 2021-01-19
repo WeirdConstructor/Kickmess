@@ -12,8 +12,8 @@ use crate::ui::protocol::*;
 use crate::ui::constants::*;
 use crate::ui;
 
-pub const WINDOW_WIDTH:  i32 = 700;
-pub const WINDOW_HEIGHT: i32 = 700;
+pub const WINDOW_WIDTH:  i32 = 1000;
+pub const WINDOW_HEIGHT: i32 =  700;
 
 pub(crate) struct KickmessEditorController {
     host:    HostCallback,
@@ -98,7 +98,7 @@ impl UIController for KickmessEditorController {
 
 pub fn define_gui(ps: &crate::ParamSet, gui: &mut dyn ui::protocol::UI) {
     let mut values = vec![];
-    values.resize(30, UIValueSpec::new_id());
+    values.resize(45, UIValueSpec::new_id());
 
     let id_s_freq    = 0;
     let id_e_freq    = 1;
@@ -125,8 +125,16 @@ pub fn define_gui(ps: &crate::ParamSet, gui: &mut dyn ui::protocol::UI) {
     let id_o1_unison = 22;
     let id_o1_detune = 23;
 
-    let id_main_tab  = 24;
-    let id_lic_tab   = 25;
+    let id_of1_freq  = 24;
+    let id_of1_self  = 25;
+    let id_of1_o2    = 26;
+    let id_of2_o1    = 27;
+    let id_of2_freq  = 28;
+    let id_of2_self  = 29;
+    let id_of2_gain  = 30;
+
+    let id_main_tab  = 40;
+    let id_lic_tab   = 41;
 
     for i in 0..ps.param_count() {
         let help_text =
@@ -242,7 +250,7 @@ pub fn define_gui(ps: &crate::ParamSet, gui: &mut dyn ui::protocol::UI) {
     */
 
     let oscillator_params =
-        UIInput::container_border(UIPos::center(8, 12), 1.0,
+        UIInput::container_border(UIPos::center(6, 12), 1.0,
             vec![
                 vec![
                     UIInput::graph_huge(
@@ -364,6 +372,44 @@ pub fn define_gui(ps: &crate::ParamSet, gui: &mut dyn ui::protocol::UI) {
                 ]
             ]);
 
+
+    let fm_params =
+        UIInput::container_border(UIPos::center(4, 12), 1.0,
+            vec![
+                vec![
+                    UIInput::knob(
+                        id_of1_freq,
+                        String::from("Op1 Freq"),
+                        UIPos::center(4, 2).middle()),
+                    UIInput::knob(
+                        id_of2_freq,
+                        String::from("Op2 Freq"),
+                        UIPos::center(4, 2).middle()),
+                    UIInput::knob(
+                        id_of2_gain,
+                        String::from("Gain"),
+                        UIPos::center(4, 2).middle()),
+                ],
+                vec![
+                    UIInput::knob(
+                        id_of1_self,
+                        String::from("Op1 Self"),
+                        UIPos::center(3, 2).middle()),
+                    UIInput::knob(
+                        id_of2_self,
+                        String::from("Op2 Self"),
+                        UIPos::center(3, 2).middle()),
+                    UIInput::knob(
+                        id_of1_o2,
+                        String::from("Op2>Op1"),
+                        UIPos::center(3, 2).middle()),
+                    UIInput::knob(
+                        id_of2_o1,
+                        String::from("Op2>Op1"),
+                        UIPos::center(3, 2).middle()),
+                ],
+            ]);
+
     let mixer_params =
         UIInput::container_border(UIPos::center(12, 4), 1.0,
             vec![
@@ -421,10 +467,11 @@ pub fn define_gui(ps: &crate::ParamSet, gui: &mut dyn ui::protocol::UI) {
                             UIInput::container(UIPos::center(12, 12), 1.0, vec![
                                 vec![
                                     oscillator_params,
-                                    UIInput::container(UIPos::center(4, 12), 1.0, vec![
+                                    UIInput::container(UIPos::center(2, 12), 1.0, vec![
                                         vec![ mixer_params ],
                                         vec![ dist_params ],
                                     ]),
+                                    fm_params,
                                 ],
                             ])]],
                             vec![

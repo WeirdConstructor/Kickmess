@@ -32,7 +32,7 @@ use crate::helpers::*;
 use crate::env::*;
 use crate::param_model::*;
 use crate::filter::{MoogFilter, FilterInputParams};
-use crate::oscillator::{UnisonBlep, OscillatorInputParams};
+use crate::oscillator::{UnisonBlep, FMOscillator, OscillatorInputParams};
 
 use crate::MAX_BLOCKSIZE;
 const PI2 : f64 = std::f64::consts::PI * 2.0;
@@ -53,6 +53,13 @@ impl<'a, 'b> OscillatorInputParams for O1Params<'a, 'b> {
     fn pulse_width(&self)   -> f32 { self.0.o1_pw() }
     fn unison(&self)        -> f32 { self.0.o1_unison() }
     fn detune(&self)        -> f32 { self.0.o1_detune() }
+
+    fn op1_freq(&self)      -> f32 { self.0.o1fm_freq() }
+    fn op2_freq(&self)      -> f32 { self.0.o2fm_freq() }
+    fn op1_self(&self)      -> f32 { self.0.o1fm_self() }
+    fn op2_self(&self)      -> f32 { self.0.o2fm_self() }
+    fn op1_op2(&self)       -> f32 { self.0.o1fm_o2_mod() }
+    fn op2_op1(&self)       -> f32 { self.0.o2fm_o1_mod() }
 }
 
 pub struct OpKickmess {
@@ -71,6 +78,7 @@ pub struct OpKickmess {
     release:         REnv,
     filter1:         MoogFilter,
     oscillator1:     UnisonBlep,
+    fm_oscillator:   FMOscillator,
 }
 
 impl OpKickmess {
@@ -98,6 +106,7 @@ impl MonoProcessor for OpKickmess {
         self.f_env.set_sample_rate(sr);
         self.filter1.set_sample_rate(sr);
         self.oscillator1.set_sample_rate(sr);
+        self.fm_oscillator.set_sample_rate(sr);
     }
 
     fn process(&mut self, params: &SmoothParameters, proc_offs: usize, out: &mut [f32]) {
@@ -116,6 +125,7 @@ impl MonoProcessor for OpKickmess {
                     self.release.reset();
                     self.filter1.reset();
                     self.oscillator1.reset();
+                    self.fm_oscillator.reset();
 
                     self.cur_phase = 0.0;
 
@@ -164,6 +174,11 @@ impl MonoProcessor for OpKickmess {
                     (params.o1_gain()
                      * amp_gain as f32
                      * self.oscillator1.next(&O1Params(&params, &self.note_freq))) as f64;
+
+                kick_sample +=
+                    (params.o2fm_gain()
+                     * amp_gain as f32
+                     * self.fm_oscillator.next(&O1Params(&params, &self.note_freq))) as f64;
 
                 if params.f1_on() > 0.5 {
                     kick_sample =
@@ -215,6 +230,7 @@ impl MonoVoice for OpKickmess {
             release:         REnv::new(),
             filter1:         MoogFilter::new(),
             oscillator1:     UnisonBlep::new(10),
+            fm_oscillator:   FMOscillator::new(),
         }
     }
 

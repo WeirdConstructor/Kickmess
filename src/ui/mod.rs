@@ -250,7 +250,7 @@ impl WValuePlugUI {
             Box::new(SegmentedKnob::new(
                 (UI_KNOB_RADIUS * 0.75).round(),
                 (UI_KNOB_FONT_SIZE * 0.75).round(),
-                ((UI_KNOB_FONT_SIZE - 1.0) * 0.8).round())));
+                (UI_KNOB_FONT_SIZE * 0.8).round())));
 
         // ElementType::KnobHuge
         self.cache.push_element(
@@ -286,7 +286,7 @@ impl WValuePlugUI {
             Box::new(Graph::new(
                 (UI_GRPH_W * 0.6).round(),
                 (UI_GRPH_H * 0.6).round(),
-                ((UI_GRPH_FONT_SIZE - 1.0) * 0.8).round())));
+                (UI_GRPH_FONT_SIZE * 0.8).round())));
 
 //            button: SegmentedButton::new(UI_KNOB_FONT_SIZE),
     }
