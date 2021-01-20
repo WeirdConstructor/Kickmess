@@ -230,22 +230,25 @@ impl SmoothParameters {
         let last_v = &self.last[last_frame_idx..(last_frame_idx + param_count)];
 
         for pi in 0..param_count {
-            let end_param_val = ps.get(pi, pp) as f64;
-            let last_val      = last_v[pi] as f64;
+            let end_param_val = ps.get(pi, pp) as f32;
+            let last_val      = last_v[pi] as f32;
+//            println!("LASTVAL[pi={}]: {:?} => target={} | f={}, tot={}",
+//                     pi, last_val, end_param_val, frames, total_nframes);
 
-            if (end_param_val - last_val).abs() > std::f64::EPSILON
-               && ps.is_smooth(pi) {
+            if (end_param_val - last_val).abs() > std::f32::EPSILON
+                && ps.is_smooth(pi) {
 
-                let nframe_increment = 1.0 / (total_nframes - 1) as f64;
+                let inc_val =
+                    (end_param_val - last_val)
+                    / (total_nframes - last_frame_cnt) as f32;
 
                 for i in 0..frames {
-                    // calculate the interpolation factor between last_v and
-                    // the current frame number:
-                    let x : f64 =
-                        (i + last_frame_cnt) as f64 * nframe_increment;
-
                     v[i * param_count + pi] =
-                        (last_val * (1.0 - x) + x * end_param_val) as f32;
+                        last_val + (inc_val as f32 * (i + 1) as f32);
+//                    println!(
+//                        "[pi={}] i={}, lfc={}, iv={} => {}",
+//                        pi, i, last_frame_cnt, inc_val,
+//                        v[i * param_count + pi]);
 
 //                    println!("[{} @ {},{}] x= {} | {} => {} :::=> {}",
 //                             last_frame_cnt + i, last_frame_cnt,
@@ -254,7 +257,7 @@ impl SmoothParameters {
                 }
             } else {
                 for i in 0..frames {
-                    v[i * param_count + pi] = end_param_val as f32;
+                    v[i * param_count + pi] = end_param_val;
                 }
             }
         }
@@ -403,32 +406,33 @@ mod tests {
         smooth.advance_params(2, 66, &ps, &new_params);
 
         assert_eq!(
-            &fmt_vec(&smooth.current[0..4]),
+            &fmt_vec(&smooth.get_frame(0)),
             "[0.00, 274.55, 324.20, 1253.75]");
         assert_eq!(
-            &fmt_vec(&smooth.current[4..8]),
+            &fmt_vec(&smooth.get_frame(1)),
             "[0.00, 274.55, 324.20, 1253.75]");
 
         let new_params = vec![0.0, 1.0, 1.0, 1.0];
         smooth.advance_params(64, 66, &ps, &new_params);
 
         assert_eq!(
-            &fmt_vec(&smooth.current[(63 * 4)..(64 * 4)]),
-            "[0.00, 3000.00, 2000.00, 5000.00]");
+            &fmt_vec(&smooth.get_frame(0)),
+            "[0.00, 317.14, 2000.00, 1312.29]");
+//            "[0.00, 358.41, 2000.00, 1369.02]");
         assert_eq!(
-            &fmt_vec(&smooth.current[0..4]),
-            "[0.00, 358.41, 2000.00, 1369.02]");
+            &fmt_vec(&smooth.get_frame(63)),
+            "[0.00, 3000.00, 2000.00, 5000.00]");
 
 
         let new_params = vec![0.0, 0.0, 0.0, 0.0];
         smooth.advance_params(64, 64, &ps, &new_params);
 
         assert_eq!(
-            &fmt_vec(&smooth.current[(63 * 4)..(64 * 4)]),
-            "[0.00, 5.00, 5.00, 5.00]");
+            &fmt_vec(&smooth.get_frame(0)),
+            "[0.00, 2953.20, 5.00, 4921.95]");
         assert_eq!(
-            &fmt_vec(&smooth.current[0..4]),
-            "[0.00, 3000.00, 5.00, 5000.00]");
+            &fmt_vec(&smooth.get_frame(63)),
+            "[0.00, 5.00, 5.00, 5.00]");
 
         // new run...
         let new_params = vec![1.0, 1.0, 1.0, 1.0];
@@ -436,39 +440,70 @@ mod tests {
 
         assert_eq!(
             &fmt_vec(&smooth.get_frame(0)),
-            "[0.00, 5.00, 2000.00, 5.00]");
+            "[0.00, 16.70, 2000.00, 24.51]");
         assert_eq!(
             &fmt_vec(&smooth.get_frame(63)),
-            "[0.00, 744.94, 2000.00, 1239.06]");
+            "[0.00, 753.75, 2000.00, 1253.75]");
 
         smooth.advance_params(64, 256, &ps, &new_params);
 
         assert_eq!(
             &fmt_vec(&smooth.get_last_frame()),
-            "[0.00, 744.94, 2000.00, 1239.06]");
+            "[0.00, 753.75, 2000.00, 1253.75]");
         assert_eq!(
             &fmt_vec(&smooth.get_frame(0)),
-            "[0.00, 1310.92, 2000.00, 2182.98]");
+            "[0.00, 765.45, 2000.00, 1273.26]");
         assert_eq!(
             &fmt_vec(&smooth.get_frame(63)),
-            "[0.00, 1868.05, 2000.00, 3112.16]");
+            "[0.00, 1502.50, 2000.00, 2502.50]");
 
         smooth.advance_params(64, 256, &ps, &new_params);
 
         assert_eq!(
             &fmt_vec(&smooth.get_frame(0)),
-            "[0.00, 744.94, 2000.00, 1239.06]");
+            "[0.00, 1514.20, 2000.00, 2522.01]");
         assert_eq!(
             &fmt_vec(&smooth.get_frame(63)),
-            "[0.00, 3000.00, 5.00, 5000.00]");
+            "[0.00, 2251.25, 2000.00, 3751.25]");
 
         smooth.advance_params(64, 256, &ps, &new_params);
 
         assert_eq!(
             &fmt_vec(&smooth.get_frame(0)),
-            "[0.00, 5.00, 5.00, 5.00]");
+            "[0.00, 2262.95, 2000.00, 3770.76]");
         assert_eq!(
             &fmt_vec(&smooth.get_frame(63)),
-            "[0.00, 3000.00, 5.00, 5000.00]");
+            "[0.00, 3000.00, 2000.00, 5000.00]");
+
+        // run with return to original
+        let new_params = vec![0.5, 0.5, 0.5, 0.5];
+        smooth.advance_params(64, 256, &ps, &new_params);
+
+        assert_eq!(
+            &fmt_vec(&smooth.get_frame(0)),
+            "[0.00, 2991.23, 503.75, 4985.37]");
+        assert_eq!(
+            &fmt_vec(&smooth.get_frame(63)),
+            "[0.00, 2438.44, 503.75, 4063.44]");
+
+        let new_params = vec![1.0, 1.0, 1.0, 1.0];
+        smooth.advance_params(64, 256, &ps, &new_params);
+
+        assert_eq!(
+            &fmt_vec(&smooth.get_frame(0)),
+            "[0.00, 2441.36, 2000.00, 4068.32]");
+        assert_eq!(
+            &fmt_vec(&smooth.get_frame(63)),
+            "[0.00, 2625.62, 2000.00, 4375.62]");
+
+        smooth.advance_params(64, 256, &ps, &new_params);
+        smooth.advance_params(64, 256, &ps, &new_params);
+
+        assert_eq!(
+            &fmt_vec(&smooth.get_frame(0)),
+            "[0.00, 2815.74, 2000.00, 4692.69]");
+        assert_eq!(
+            &fmt_vec(&smooth.get_frame(63)),
+            "[0.00, 3000.00, 2000.00, 5000.00]");
     }
 }

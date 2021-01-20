@@ -425,7 +425,7 @@ pub fn define_gui(ps: &crate::ParamSet, gui: &mut dyn ui::protocol::UI) {
                         UIPos::center(3, 2).middle()),
                     UIInput::knob(
                         id_of1_o2,
-                        String::from("Op2>1 Hz"),
+                        String::from("Op1>2 Hz"),
                         UIPos::center(3, 2).middle()),
                     UIInput::knob(
                         id_of2_o1,

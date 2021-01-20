@@ -1,4 +1,5 @@
 use crate::helpers::*;
+use crate::log::Log;
 
 // Digital approx. of Chamberlin two-pole low pass.
 // From: Author or source: Effect Deisgn Part 1, Jon Dattorro, J. Audio Eng. Soc.,
@@ -115,10 +116,7 @@ impl MoogFilter {
         self.srate = srate;
     }
 
-    pub fn next<P: FilterInputParams>(&mut self, input: f32, params: &P) -> f32 {
-        if self.cnt % 10 == 0 {
-            println!("F: {}", params.freq());
-        }
+    pub fn next<P: FilterInputParams>(&mut self, mut input: f32, params: &P, log: &Log) -> f32 {
         self.cnt += 1;
         let freq = (params.freq()) / (self.srate * 0.5);
 
@@ -135,8 +133,19 @@ impl MoogFilter {
         let t1 = self.b3; self.b3 = (self.b2 +      t2) * p - self.b3 * f;
                           self.b4 = (self.b3 +      t1) * p - self.b4 * f;
 
-        self.b4 = self.b4 - self.b4 * self.b4 * self.b4 * 0.166667; // clipping
+        // clipping
+        self.b4 = self.b4 - self.b4 * self.b4 * self.b4 * 0.166667;
+        // clamp to keep feedback run-aways in check!
+//        self.b4 = f_distort(1.0, 1.0, self.b4); // .max(-1.0).min(1.0);
+        self.b4 = self.b4.max(-1.5).min(1.5);
         self.b0 = input;
+
+        if input.abs() > 0.99 {
+            log.log(|bw: &mut std::io::BufWriter<&mut [u8]>| {
+                use std::io::Write;
+                write!(bw, "fil: b0={:6.3} b3={:6.3} b4={:6.3} in={:6.3}", self.b0, self.b3, self.b4, input).unwrap();
+            });
+        }
 
         let ftype = params.typ();
         if      ftype < 0.33 { self.b4 }                   // lowpass

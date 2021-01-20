@@ -22,6 +22,7 @@ value, and it did not update the DSP parameter values properly.
 it also closes the window. So right mouse button also exits the input
 value mode.
 * Bugfix: UI container sizes were not correct.
+* Bugfix: Parameter smoothing did not work correctly!
 
 0.2.1 (2021-01-09)
 ==================

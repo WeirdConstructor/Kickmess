@@ -56,7 +56,7 @@ impl Log {
                 .create(true)
                 .write(true)
                 .append(true)
-                .open("C:\\Temp\\kickmess.log");
+                .open("/tmp/kickmess.log");
             let mut file =
                 match file {
                     Ok(file) => file,
@@ -100,7 +100,7 @@ impl Log {
                             .create(true)
                             .write(true)
                             .append(true)
-                            .open("C:\\Temp\\kickmess.log").unwrap();
+                            .open("/tmp/kickmess.log").unwrap();
 
                         file.write_all(&out_bytes[..]).unwrap();
                         file.flush();

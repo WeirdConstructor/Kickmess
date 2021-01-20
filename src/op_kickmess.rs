@@ -149,20 +149,39 @@ impl MonoProcessor for OpKickmess {
 
                 let sine = self.next_sine_sample(&params);
 
-                let mut s =
-                    lerp64(
-                        params.noise() as f64,
-                        sine,
-                        ((self.rng.next_open01() * 2.0) - 1.0)
-                        * amp_gain * amp_gain);
+                let noise =
+                    (((self.rng.next_open01() * 2.0) - 1.0)
+                     * amp_gain * amp_gain)
+                    .max(-0.99).min(0.99);
+
+                let mut s = lerp64(params.noise() as f64, sine, noise);
 
                 kick_sample = s * amp_gain;
 
+                kick_sample +=
+                    (params.o1_gain()
+                     * amp_gain as f32
+                     * self.oscillator1.next(&O1Params(&params, &self.note_freq))) as f64;
+
+                kick_sample +=
+                    (params.o2fm_gain()
+                     * amp_gain as f32
+                     * self.fm_oscillator.next(&O1Params(&params, &self.note_freq))) as f64;
+
+//                if kick_sample.abs() > 0.99 {
+//                    log.log(|bw: &mut std::io::BufWriter<&mut [u8]>| {
+//                        use std::io::Write;
+//                        write!(bw, "ks: {:9.6}", kick_sample).unwrap();
+//                    });
+//                }
+//
+                if params.f1_on() > 0.5 {
+                    kick_sample =
+                        self.filter1.next(kick_sample as f32, &F1Params(&params), log)
+                        as f64;
+                }
+
                 if params.dist_on() > 0.5 {
-                    log.log(|bw: &mut std::io::BufWriter<&mut [u8]>| {
-                        use std::io::Write;
-                        write!(bw, "ds: {:9.6}", params.dist_start()).unwrap();
-                    });
                     let thres =
                         lerp(
                             env_value as f32,
@@ -175,27 +194,11 @@ impl MonoProcessor for OpKickmess {
                     kick_sample *= params.gain() as f64;
                 }
 
-                kick_sample +=
-                    (params.o1_gain()
-                     * amp_gain as f32
-                     * self.oscillator1.next(&O1Params(&params, &self.note_freq))) as f64;
-
-                kick_sample +=
-                    (params.o2fm_gain()
-                     * amp_gain as f32
-                     * self.fm_oscillator.next(&O1Params(&params, &self.note_freq))) as f64;
-
-                if params.f1_on() > 0.5 {
-                    kick_sample =
-                        self.filter1.next(kick_sample as f32, &F1Params(&params))
-                        as f64;
-                }
-
-                let change : f64 =
+                let freq_change : f64 =
                     (self.cur_f_start - self.cur_f_end) as f64
                     * (1.0 - env_value.powf(params.freq_slope() as f64));
 
-                self.note_freq = self.cur_f_end as f64 + change;
+                self.note_freq = self.cur_f_end as f64 + freq_change;
             }
 
             let release_env_gain =

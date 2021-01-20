@@ -144,7 +144,7 @@ impl PolyBlepOscillator {
 
 pub struct UnisonBlep {
     oscs: Vec<PolyBlepOscillator>,
-    dc_block: crate::filter::DCBlockFilter,
+//    dc_block: crate::filter::DCBlockFilter,
 }
 
 impl UnisonBlep {
@@ -165,19 +165,19 @@ impl UnisonBlep {
 
         Self {
             oscs,
-            dc_block: crate::filter::DCBlockFilter::new(),
+//            dc_block: crate::filter::DCBlockFilter::new(),
         }
     }
 
     pub fn set_sample_rate(&mut self, srate: f32) {
-        self.dc_block.set_sample_rate(srate);
+//        self.dc_block.set_sample_rate(srate);
         for o in self.oscs.iter_mut() {
             o.set_sample_rate(srate);
         }
     }
 
     pub fn reset(&mut self) {
-        self.dc_block.reset();
+//        self.dc_block.reset();
         for o in self.oscs.iter_mut() {
             o.reset();
         }
@@ -200,7 +200,8 @@ impl UnisonBlep {
             s += mix * self.oscs[u + 1].next(params, detune_factor * 0.01);
         }
 
-        self.dc_block.next(s)
+//        self.dc_block.next(s)
+        s
     }
 }
 

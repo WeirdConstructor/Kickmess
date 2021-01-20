@@ -121,12 +121,12 @@ impl Plugin for Kickmess {
 
             let (lc, li) = (self.smooth_param.last_frame_cnt, self.smooth_param.last_frame_idx);
 
-            self.log.log(|bw: &mut std::io::BufWriter<&mut [u8]>| {
-                use std::io::Write;
-                write!(bw, "adv: [{:4}] {:4} => {:4}, 3 in: {}",
-                       lc, advance_frames, out_buf.len(),
-                       self.params.param(3)).unwrap();
-            });
+//            self.log.log(|bw: &mut std::io::BufWriter<&mut [u8]>| {
+//                use std::io::Write;
+//                write!(bw, "adv: [{:4}] {:4} => {:4}, 3 in: {}",
+//                       lc, advance_frames, out_buf.len(),
+//                       self.params.param(3)).unwrap();
+//            });
 
             self.smooth_param.advance_params(
                 advance_frames, out_buf.len(), &self.params.ps, &*self.params);
