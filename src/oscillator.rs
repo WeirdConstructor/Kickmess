@@ -1,4 +1,4 @@
-use crate::helpers;
+use crate::helpers::**;
 
 pub trait OscillatorInputParams{
     fn freq(&self)          -> f32;
@@ -72,7 +72,7 @@ impl PolyBlepOscillator {
     }
 
     pub fn next_sin(&mut self) -> f64 {
-        crate::helpers::fast_sin(self.phase * 2.0 * std::f64::consts::PI)
+        fast_sin(self.phase * 2.0 * std::f64::consts::PI)
     }
 
     pub fn next_tri(&mut self) -> f64 {
@@ -150,7 +150,7 @@ pub struct UnisonBlep {
 impl UnisonBlep {
     pub fn new(max_unison: usize) -> Self {
         let mut oscs = vec![];
-        let mut rng = crate::helpers::RandGen::new();
+        let mut rng = RandGen::new();
 
         let dis_init_phase = 0.05;
         for i in 0..(max_unison + 1) {
@@ -241,23 +241,13 @@ impl FMOscillator {
             (freq1
              + params.op1_self() as f64 * self.op1_fb
              + params.op2_op1()  as f64 * self.op2_fb) / self.srate;
-//            println!("F1 {:8.3} {:8.3} {:8.3} => {:8.3},{:8.3},{:8.3},{:8.3}",
-//                self.phase1,
-//                self.phase2,
-//                freq1,
-//                params.op1_self(),
-//                params.op2_op1(),
-//                self.op1_fb,
-//                self.op2_fb);
         let phase2_inc =
             (freq2
              + params.op2_self() as f64 * self.op2_fb
              + params.op1_op2()  as f64 * self.op1_fb) / self.srate;
 
-        let s_op1 =
-            crate::helpers::fast_sin(self.phase1 * 2.0 * std::f64::consts::PI);
-        let s_op2 =
-            crate::helpers::fast_sin(self.phase2 * 2.0 * std::f64::consts::PI);
+        let s_op1 = fast_sin(self.phase1 * 2.0 * std::f64::consts::PI);
+        let s_op2 = fast_sin(self.phase2 * 2.0 * std::f64::consts::PI);
 
         self.op1_fb = s_op1;
         self.op2_fb = s_op2;
