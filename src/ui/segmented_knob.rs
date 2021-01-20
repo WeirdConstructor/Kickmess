@@ -76,6 +76,20 @@ impl UIElement for SegmentedKnob {
                     true,
                     value);
             },
+            HLStyle::Inactive => {
+                self.draw_oct_arc(
+                    p, x + xo, y + yo,
+                    UI_MG_KNOB_STROKE * 1.1,
+                    UI_INACTIVE_CLR,
+                    false,
+                    1.0);
+                self.draw_oct_arc(
+                    p, x + xo, y + yo,
+                    UI_MG_KNOB_STROKE,
+                    UI_INACTIVE2_CLR,
+                    true,
+                    value);
+            },
             HLStyle::None => {
                 self.draw_oct_arc(
                     p, x + xo, y + yo,
@@ -223,7 +237,7 @@ impl SegmentedKnob {
     }
 
     pub fn get_label_rect(&self) -> (f64, f64, f64, f64) {
-        let width = self.radius * 2.5;
+        let width = self.radius * 2.75;
         ((self.sbottom.0 - width * 0.5).round(),
          (self.sbottom.1 + UI_BG_KNOB_STROKE).round(),
          width.round(),
@@ -250,12 +264,13 @@ impl SegmentedKnob {
         let color =
             match highlight {
                 HLStyle::Hover(_subtype) => { UI_TXT_KNOB_HOVER_CLR },
+                HLStyle::Inactive        => { UI_INACTIVE_CLR },
                 HLStyle::ModTarget       => { UI_TXT_KNOB_HLIGHT_CLR },
                 _                        => { UI_TXT_KNOB_CLR },
             };
 
         let some_right_padding = 6.0;
-        let light_font_offs    = 1.0;
+        let light_font_offs    = 2.0;
 
         p.label(
             self.font_size_data, 1, color,

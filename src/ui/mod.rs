@@ -20,7 +20,7 @@ use crate::ui::painting::{ActiveZone, HLStyle, Painter};
 use crate::ui::draw_cache::{DrawCache};
 use crate::ui::protocol::{UIPos, UIKnobData,
                           UITabData, UILayout, UIBtnData, UIInput,
-                          UIValueSpec, UIGraphValueSource,
+                          UIValueSpec, UIValueSource,
                           UIInputValue, UI, UIController};
 use crate::ui::constants::*;
 use keyboard_types::{Key, KeyboardEvent};
@@ -161,6 +161,11 @@ impl Rect {
                 _ => { self.y },
             };
 
+        let x = x.floor();
+        let y = y.floor();
+        let w = w.ceil();
+        let h = h.ceil();
+
         Self { x, y, w, h, }
     }
 
@@ -177,8 +182,8 @@ impl Rect {
     }
 }
 
-impl UIGraphValueSource for WValuePlugUI {
-    fn param_value(&mut self, idx: usize) -> f64 {
+impl UIValueSource for WValuePlugUI {
+    fn param_value(&self, idx: usize) -> f64 {
         self.get_element_value(idx) as f64
     }
 }
@@ -732,6 +737,18 @@ impl WValuePlugUI {
         dbg!(self.value_specs[id].toggle_next(cur))
     }
 
+    fn hover_zone_element_is_active(&self) -> bool {
+        if let Some(hz) = self.hover_zone {
+            self.is_active(hz.id)
+        } else {
+            false
+        }
+    }
+
+    fn is_active(&self, id: usize) -> bool {
+        self.value_specs[id].is_active(id, self)
+    }
+
     fn is_mod_target_value(&self, mod_id: usize, id: usize) -> bool {
         self.value_specs[mod_id].v2v(id as f64) > 0.5
     }
@@ -869,7 +886,11 @@ impl WValuePlugUI {
                     }
                 },
                 _ => {
-                    self.hover_highligh_for_id(id)
+                    if self.is_active(id) {
+                        self.hover_highligh_for_id(id)
+                    } else {
+                        HLStyle::Inactive
+                    }
                 },
             };
 
@@ -1147,12 +1168,12 @@ impl WValuePlugUI {
                             p, label, *font_size as f64, UI_LBL_TXT_CLR,
                             crect.x, crect.y, crect.w, crect.h, true, None);
                     },
-                    UIInput::Container(_, childs, next_border, size_factor) => {
+                    UIInput::Container(_, childs, next_border, size_factor, label) => {
                         let (align, valign) = pos.alignment();
                         let crect =
                             el_rect.mul_size(*size_factor as f64, align, valign);
                         self.layout_container(
-                            p, *next_border, "",
+                            p, *next_border, &label,
                             if border { depth + 1 } else { depth },
                             crect, childs);
                     },

@@ -156,6 +156,20 @@ pub fn define_gui(ps: &crate::ParamSet, gui: &mut dyn ui::protocol::UI) {
     let ht = crate::param_model::help_texts[id_f1_on];
     values[id_f1_on]    = UIValueSpec::new_toggle(&[ "Off", "On" ]).help(ht.0, ht.1);
 
+
+    values[id_d_start]  .set_active_when_gt05(id_dist_on);
+    values[id_d_end]    .set_active_when_gt05(id_dist_on);
+
+    values[id_f1_cutoff].set_active_when_gt05(id_f1_on);
+    values[id_f1_res]   .set_active_when_gt05(id_f1_on);
+    values[id_f1_type]  .set_active_when_gt05(id_f1_on);
+    values[id_f1_drive] .set_active_when_gt05(id_f1_on);
+
+    values[id_o1_wave]  .set_active_when_gt0(id_o1_gain);
+    values[id_o1_pw]    .set_active_when_gt0(id_o1_gain);
+    values[id_o1_unison].set_active_when_gt0(id_o1_gain);
+    values[id_o1_detune].set_active_when_gt0(id_o1_gain);
+
     gui.define_value_spec(values);
 
     let id_s_freq_f     = id_s_freq;
@@ -164,7 +178,7 @@ pub fn define_gui(ps: &crate::ParamSet, gui: &mut dyn ui::protocol::UI) {
     let id_ae_s_freq    = id_s_freq;
     let id_ae_e_freq    = id_e_freq;
     let f_env_fun =
-        Arc::new(move |_id: usize, src: &mut dyn UIGraphValueSource, out: &mut Vec<(f64, f64)>| {
+        Arc::new(move |_id: usize, src: &mut dyn UIValueSource, out: &mut Vec<(f64, f64)>| {
             let min_x = 0.2;
             let max_x =
                 min_x + (1.0 - min_x) * src.param_value(id_ae_f_env_rel).sqrt();
@@ -195,7 +209,7 @@ pub fn define_gui(ps: &crate::ParamSet, gui: &mut dyn ui::protocol::UI) {
     let id_ae_e_freq    = id_e_freq;
     let amp_env_fun =
         Arc::new(move |_id: usize,
-                       src: &mut dyn UIGraphValueSource,
+                       src: &mut dyn UIValueSource,
                        out: &mut Vec<(f64, f64)>| {
 
             let slope = src.param_value(id_ae_env_slope).max(0.01);
@@ -215,7 +229,7 @@ pub fn define_gui(ps: &crate::ParamSet, gui: &mut dyn ui::protocol::UI) {
     let id_ph_click = id_click;
     let phase_fun =
         Arc::new(move |_id: usize,
-                       src: &mut dyn UIGraphValueSource,
+                       src: &mut dyn UIValueSource,
                        out: &mut Vec<(f64, f64)>| {
 
             let samples = 80;
@@ -250,7 +264,7 @@ pub fn define_gui(ps: &crate::ParamSet, gui: &mut dyn ui::protocol::UI) {
     */
 
     let oscillator_params =
-        UIInput::container_border(UIPos::center(6, 12), 1.0,
+        UIInput::container_border(UIPos::center(6, 12), 1.0, "Main Oscillator",
             vec![
                 vec![
                     UIInput::graph_huge(
@@ -258,7 +272,7 @@ pub fn define_gui(ps: &crate::ParamSet, gui: &mut dyn ui::protocol::UI) {
                         String::from("Amp Env"),
                         UIPos::center(4, 2).bottom(),
                         amp_env_fun.clone()),
-                    UIInput::container(UIPos::center(8, 2), 1.0, vec![vec![
+                    UIInput::container(UIPos::center(8, 2), 1.0, "Amp", vec![vec![
                         UIInput::knob(
                             id_f_env_rel,
                             String::from("Length (ms)"),
@@ -279,7 +293,7 @@ pub fn define_gui(ps: &crate::ParamSet, gui: &mut dyn ui::protocol::UI) {
                         String::from("Freq. Env"),
                         UIPos::center(4, 2).bottom(),
                         f_env_fun.clone()),
-                    UIInput::container(UIPos::center(8, 2), 1.0, vec![vec![
+                    UIInput::container(UIPos::center(8, 2), 1.0, "Pitch", vec![vec![
                         UIInput::knob(
                             id_s_freq,
                             String::from("Start Hz"),
@@ -296,8 +310,9 @@ pub fn define_gui(ps: &crate::ParamSet, gui: &mut dyn ui::protocol::UI) {
                 ],
                 vec![
                     UIInput::container_border(
-                        UIPos::left(6, 2).middle(),
+                        UIPos::center(4, 2).middle(),
                         0.9,
+                        "",
                         vec![
                             vec![
                                 UIInput::knob_small(
@@ -311,22 +326,24 @@ pub fn define_gui(ps: &crate::ParamSet, gui: &mut dyn ui::protocol::UI) {
                                     phase_fun.clone()),
                             ],
                         ]),
-                    UIInput::btn_toggle(
-                        id_n_s_freq,
-                        String::from("Note>Start F"),
-                        UIPos::center(3, 2).middle()),
-                    UIInput::btn_toggle(
-                        id_n_e_freq,
-                        String::from("Note>End F"),
-                        UIPos::center(3, 2).middle()),
+                    UIInput::container(UIPos::center(8, 2), 1.0, "", vec![vec![
+                        UIInput::btn_toggle(
+                            id_n_s_freq,
+                            String::from("Note>St. F"),
+                            UIPos::center(4, 12).middle()),
+                        UIInput::btn_toggle(
+                            id_n_e_freq,
+                            String::from("Note>End F"),
+                            UIPos::center(4, 12).middle()),
+                    ]]),
                 ],
                 vec![
-                    UIInput::container_border(UIPos::center(12, 2), 1.0, vec![vec![
+                    UIInput::container_border(UIPos::center(12, 3), 1.01, "Filter 1", vec![vec![
                         UIInput::btn_toggle_small(
                             id_f1_on,
                             String::from("Filter 1"),
                             UIPos::center(2, 12).middle()),
-                        UIInput::container(UIPos::center(10, 12), 1.0, vec![vec![
+                        UIInput::container(UIPos::center(10, 12), 1.0, "", vec![vec![
                             UIInput::knob(
                                 id_f1_cutoff,
                                 String::from("F1 Cut"),
@@ -347,7 +364,7 @@ pub fn define_gui(ps: &crate::ParamSet, gui: &mut dyn ui::protocol::UI) {
                     ]]),
                 ],
                 vec![
-                    UIInput::container_border(UIPos::center(12, 2), 1.0, vec![vec![
+                    UIInput::container_border(UIPos::center(12, 3), 1.0, "Oscillator 1", vec![vec![
                         UIInput::knob(
                             id_o1_gain,
                             String::from("Osc1 Gain"),
@@ -374,7 +391,7 @@ pub fn define_gui(ps: &crate::ParamSet, gui: &mut dyn ui::protocol::UI) {
 
 
     let fm_params =
-        UIInput::container_border(UIPos::center(4, 12), 1.0,
+        UIInput::container_border(UIPos::center(4, 12), 1.0, "FM Oscillator",
             vec![
                 vec![
                     UIInput::knob(
@@ -411,7 +428,7 @@ pub fn define_gui(ps: &crate::ParamSet, gui: &mut dyn ui::protocol::UI) {
             ]);
 
     let mixer_params =
-        UIInput::container_border(UIPos::center(12, 4), 1.0,
+        UIInput::container_border(UIPos::center(12, 4), 1.0, "Mixer",
             vec![
                 vec![
                     UIInput::knob(
@@ -426,9 +443,9 @@ pub fn define_gui(ps: &crate::ParamSet, gui: &mut dyn ui::protocol::UI) {
             ]);
 
     let dist_params =
-        UIInput::container_border(UIPos::center(12, 6), 1.0,
+        UIInput::container_border(UIPos::center(12, 6), 1.0, "Distortion",
             vec![vec![
-                UIInput::container(UIPos::center(12, 12), 1.0,
+                UIInput::container(UIPos::center(12, 12), 1.0, "",
                     vec![
                         vec![
                             UIInput::btn_toggle(
@@ -464,10 +481,10 @@ pub fn define_gui(ps: &crate::ParamSet, gui: &mut dyn ui::protocol::UI) {
                         ],
                         childs: vec![
                             vec![vec![
-                            UIInput::container(UIPos::center(12, 12), 1.0, vec![
+                            UIInput::container(UIPos::center(12, 12), 1.0, "", vec![
                                 vec![
                                     oscillator_params,
-                                    UIInput::container(UIPos::center(2, 12), 1.0, vec![
+                                    UIInput::container(UIPos::center(2, 12), 1.0, "", vec![
                                         vec![ mixer_params ],
                                         vec![ dist_params ],
                                     ]),

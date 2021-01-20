@@ -7,7 +7,12 @@ sine phase. This makes a Click value of 1.0 more meaningful, as "full click".
 * Change: Improved explanation of F1 help mode.
 * Change: Mouse button release now does some UI actions directly, instead on
 mouse button down.
+* Change: Make UI elements gray out when not active.
+* Change: Make some UI elements smaller (knobs, text labels).
+* Change: Added container titles.
 * Feature: Added a filter implementation for filtering the output.
+* Feature: Added saw/tri/square oscillator with unison/detune.
+* Feature: Added FM oscillator.
 * Bugfix: Middle click to restore default value did not restore the default
 value, and it did not update the DSP parameter values properly.
 * Bugfix: Fixed output range of noise oscillator.

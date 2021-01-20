@@ -13,9 +13,10 @@ pub struct UIInputValue {
 
 #[derive(Clone)]
 pub struct UIValueSpec {
-    fun: Arc<dyn Fn(f64) -> f64 + Send + Sync>,
-    fmt: Arc<dyn Fn(f64, f64, &mut std::io::Write) -> bool + Send + Sync>,
-    parse: Arc<dyn Fn(&str) -> Option<f64> + Send + Sync>,
+    fun:            Arc<dyn Fn(f64) -> f64 + Send + Sync>,
+    fmt:            Arc<dyn Fn(f64, f64, &mut std::io::Write) -> bool + Send + Sync>,
+    active:         Arc<dyn Fn(usize, &dyn UIValueSource) -> bool + Send + Sync>,
+    parse:          Arc<dyn Fn(&str) -> Option<f64> + Send + Sync>,
     coarse_step:    f64,
     fine_step:      f64,
     default:        f64,
@@ -43,6 +44,7 @@ impl UIValueSpec {
         Self {
             fun: Arc::new(|x| x),
             fmt: Arc::new(|_, x, writer| write!(writer, "{:4.2}", x).is_ok()),
+            active: Arc::new(|_, _| true),
             parse: Arc::new(|s| {
                 match s.parse::<f64>() {
                     Ok(v) => Some(v),
@@ -61,6 +63,7 @@ impl UIValueSpec {
         Self {
             fun,
             fmt: Arc::new(|_, x, writer| write!(writer, "{:4.2}", x).is_ok()),
+            active: Arc::new(|_, _| true),
             parse: Arc::new(|s| {
                 match s.parse::<f64>() {
                     Ok(v) => Some(v),
@@ -115,6 +118,7 @@ impl UIValueSpec {
                     write!(writer, "{}", strings[idx]).is_ok()
                 }
             }),
+            active: Arc::new(|_, _| true),
             parse: Arc::new(|_| None),
             coarse_step: 0.0,
             fine_step:   0.0,
@@ -168,6 +172,7 @@ impl UIValueSpec {
 
                 write!(writer, "{}", empty_label).is_ok()
             }),
+            active: Arc::new(|_, _| true),
             parse: Arc::new(|_| None),
             coarse_step: 0.0,
             fine_step:   0.0,
@@ -183,6 +188,7 @@ impl UIValueSpec {
         Self {
             fun: Arc::new(move |x| min * (1.0 - (x * x)) + max * (x * x)),
             fmt: Arc::new(move |_, x, writer| write!(writer, "{2:0$.1$}", width, prec, x).is_ok()),
+            active: Arc::new(|_, _| true),
             parse: Arc::new(move |s| {
                 match s.parse::<f64>() {
                     Ok(v) => {
@@ -207,6 +213,7 @@ impl UIValueSpec {
         Self {
             fun: Arc::new(move |x| min * (1.0 - x) + max * x),
             fmt: Arc::new(move |_, x, writer| write!(writer, "{2:0$.1$}", width, prec, x).is_ok()),
+            active: Arc::new(|_, _| true),
             parse: Arc::new(move |s| {
                 match s.parse::<f64>() {
                     Ok(v) => Some(clamp01((v - min_p) / (max_p - min_p).abs())),
@@ -232,12 +239,25 @@ impl UIValueSpec {
         self
     }
 
+    pub fn set_active_when_gt05(&mut self, id_gt_05: usize) {
+        self.active = Arc::new(move |_my_id, values| {
+            values.param_value(id_gt_05) > 0.5
+        });
+    }
+
+    pub fn set_active_when_gt0(&mut self, id_gt_0: usize) {
+        self.active = Arc::new(move |_my_id, values| {
+            values.param_value(id_gt_0) > std::f64::EPSILON
+        });
+    }
+
     pub fn new_with_fmt(fun: Arc<dyn Fn(f64) -> f64 + Send + Sync>,
                         fmt: Arc<dyn Fn(f64, f64, &mut std::io::Write) + Send + Sync>) -> Self {
         Self {
             fun,
-            fmt: Arc::new(|_, x, writer| write!(writer, "{:4.2}", x).is_ok()),
-            parse: Arc::new(|_| None),
+            fmt:         Arc::new(|_, x, writer| write!(writer, "{:4.2}", x).is_ok()),
+            active:      Arc::new(|_, _| true),
+            parse:       Arc::new(|_| None),
             coarse_step: DEFAULT_COARSE_STEP,
             fine_step:   DEFAULT_FINE_STEP,
             default:     0.0,
@@ -252,6 +272,7 @@ impl UIValueSpec {
     pub fn parse(&self, s: &str) -> Option<f64> { (self.parse)(s) }
     pub fn get_default(&self) -> f64        { self.default }
     pub fn fmt(&self, x: f64, writer: &mut std::io::Write) -> bool { (self.fmt)(x, self.v2v(x), writer) }
+    pub fn is_active(&self, id: usize, valsrc: &dyn UIValueSource) -> bool { (self.active)(id, valsrc) }
 }
 
 // TODO: Define default margin/padding between grid cells
@@ -307,8 +328,8 @@ impl UIElementData for UIKnobData {
     fn value_id(&self) -> usize { self.id }
 }
 
-pub trait UIGraphValueSource {
-    fn param_value(&mut self, idx: usize) -> f64;
+pub trait UIValueSource {
+    fn param_value(&self, idx: usize) -> f64;
 }
 
 #[derive(Clone)]
@@ -317,7 +338,7 @@ pub struct UIGraphData {
     pub id:          usize,
     pub label:       String,
     pub data:        Box<std::cell::RefCell<Vec<(f64,f64)>>>,
-    pub fun:         Arc<dyn Fn(usize, &mut dyn UIGraphValueSource, &mut Vec<(f64,f64)>) + Send + Sync>,
+    pub fun:         Arc<dyn Fn(usize, &mut dyn UIValueSource, &mut Vec<(f64,f64)>) + Send + Sync>,
 }
 
 impl std::fmt::Debug for UIGraphData {
@@ -327,7 +348,7 @@ impl std::fmt::Debug for UIGraphData {
 }
 
 impl UIGraphData {
-    pub fn new(id: usize, label: String, pos: UIPos, fun: Arc<dyn Fn(usize, &mut dyn UIGraphValueSource, &mut Vec<(f64, f64)>) + Send + Sync>) -> Self {
+    pub fn new(id: usize, label: String, pos: UIPos, fun: Arc<dyn Fn(usize, &mut dyn UIValueSource, &mut Vec<(f64, f64)>) + Send + Sync>) -> Self {
         Self {
             id,
             label,
@@ -354,7 +375,7 @@ pub struct UITabData {
 #[derive(Debug, Clone)]
 pub enum UIInput {
     None(UIPos),
-    Container(UIPos, Vec<Vec<UIInput>>, bool, f32),
+    Container(UIPos, Vec<Vec<UIInput>>, bool, f32, String),
     Label(UIPos, f32, String),
     LabelMono(UIPos, f32, String),
     Tabs(UITabData),
@@ -374,7 +395,7 @@ impl UIInput {
     pub fn position(&self) -> UIPos {
         match self {
             UIInput::None(p)                             => *p,
-            UIInput::Container(p, _, _, _)               => *p,
+            UIInput::Container(p, _, _, _, _)            => *p,
             UIInput::Label(p, _, _)                      => *p,
             UIInput::LabelMono(p, _, _)                  => *p,
             UIInput::Tabs(UITabData { pos, .. })         => *pos,
@@ -426,7 +447,7 @@ impl UIInput {
                 }
             ]);
         }
-        UIInput::Container(pos, childs, border, 1.0)
+        UIInput::Container(pos, childs, border, 1.0, "".to_string())
     }
 
     pub fn btn_drag_value(id: usize, label: String, pos: UIPos) -> Self {
@@ -449,15 +470,15 @@ impl UIInput {
         UIInput::Knob(UIKnobData { id, label, pos })
     }
 
-    pub fn graph(id: usize, label: String, pos: UIPos, fun: Arc<dyn Fn(usize, &mut dyn UIGraphValueSource, &mut Vec<(f64, f64)>) + Send + Sync>) -> Self {
+    pub fn graph(id: usize, label: String, pos: UIPos, fun: Arc<dyn Fn(usize, &mut dyn UIValueSource, &mut Vec<(f64, f64)>) + Send + Sync>) -> Self {
         UIInput::Graph(UIGraphData::new(id, label, pos, fun))
     }
 
-    pub fn graph_huge(id: usize, label: String, pos: UIPos, fun: Arc<dyn Fn(usize, &mut dyn UIGraphValueSource, &mut Vec<(f64, f64)>) + Send + Sync>) -> Self {
+    pub fn graph_huge(id: usize, label: String, pos: UIPos, fun: Arc<dyn Fn(usize, &mut dyn UIValueSource, &mut Vec<(f64, f64)>) + Send + Sync>) -> Self {
         UIInput::GraphHuge(UIGraphData::new(id, label, pos, fun))
     }
 
-    pub fn graph_small(id: usize, label: String, pos: UIPos, fun: Arc<dyn Fn(usize, &mut dyn UIGraphValueSource, &mut Vec<(f64, f64)>) + Send + Sync>) -> Self {
+    pub fn graph_small(id: usize, label: String, pos: UIPos, fun: Arc<dyn Fn(usize, &mut dyn UIValueSource, &mut Vec<(f64, f64)>) + Send + Sync>) -> Self {
         UIInput::GraphSmall(UIGraphData::new(id, label, pos, fun))
     }
 
@@ -469,12 +490,12 @@ impl UIInput {
         UIInput::KnobHuge(UIKnobData { id, label, pos })
     }
 
-    pub fn container_border(pos: UIPos, size_factor: f32, childs: Vec<Vec<UIInput>>) -> Self {
-        UIInput::Container(pos, childs, true, size_factor)
+    pub fn container_border(pos: UIPos, size_factor: f32, label: &str, childs: Vec<Vec<UIInput>>) -> Self {
+        UIInput::Container(pos, childs, true, size_factor, label.to_string())
     }
 
-    pub fn container(pos: UIPos, size_factor: f32, childs: Vec<Vec<UIInput>>) -> Self {
-        UIInput::Container(pos, childs, false, size_factor)
+    pub fn container(pos: UIPos, size_factor: f32, label: &str, childs: Vec<Vec<UIInput>>) -> Self {
+        UIInput::Container(pos, childs, false, size_factor, label.to_string())
     }
 }
 

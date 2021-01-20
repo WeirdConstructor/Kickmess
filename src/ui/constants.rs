@@ -11,6 +11,9 @@ pub const UI_PRIM2_CLR            : (f64, f64, f64) = (26.0  / 255.0,  174.0 / 2
 pub const UI_HLIGHT_CLR           : (f64, f64, f64) = (233.0 / 255.0,  248.0 / 255.0,   64.0 / 255.0);
 pub const UI_HLIGHT2_CLR          : (f64, f64, f64) = (181.0 / 255.0,  196.0 / 255.0,   18.0 / 255.0);
 
+pub const UI_INACTIVE_CLR         : (f64, f64, f64) = (111.0 / 255.0,   99.0 / 255.0,  116.0 / 255.0);
+pub const UI_INACTIVE2_CLR        : (f64, f64, f64) = (167.0 / 255.0,  148.0 / 255.0,  174.0 / 255.0);
+
 pub const UI_VERSION_FONT_SIZE    : f64 = 10.0;
 
 pub const UI_HELP_FONT_SIZE       : f64 = 16.0;
@@ -36,8 +39,8 @@ pub const UI_GUI_BG2_CLR          : (f64, f64, f64) = UI_BG2_CLR;
 pub const UI_GUI_CLEAR_CLR        : (f64, f64, f64) = UI_LBL_BG_CLR;
 pub const UI_BORDER_CLR           : (f64, f64, f64) = UI_ACCENT_CLR;
 pub const UI_BORDER_WIDTH         : f64 = 2.0;
-pub const UI_KNOB_RADIUS          : f64 = 26.0;
-pub const UI_KNOB_SMALL_RADIUS    : f64 = 15.0;
+pub const UI_KNOB_RADIUS          : f64 = 25.0;
+pub const UI_KNOB_SMALL_RADIUS    : f64 = 14.0;
 pub const UI_KNOB_FONT_SIZE       : f64 = 11.0;
 
 pub const UI_BTN_BORDER_CLR       : (f64, f64, f64) = UI_BG_KNOB_STROKE_CLR;
@@ -71,7 +74,7 @@ pub const UI_BOX_H          : f64 = 200.0;
 pub const UI_BOX_BORD       : f64 =   3.0;
 pub const UI_MARGIN         : f64 =   4.0;
 pub const UI_PADDING        : f64 =   6.0;
-pub const UI_ELEM_TXT_H     : f64 =  20.0;
+pub const UI_ELEM_TXT_H     : f64 =  16.0;
 pub const UI_SAFETY_PAD     : f64 =   1.0;
 
 pub const UI_INPUT_BOX_W         : f64 = 200.0;
