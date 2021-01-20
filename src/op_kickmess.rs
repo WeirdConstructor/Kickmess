@@ -33,6 +33,7 @@ use crate::env::*;
 use crate::param_model::*;
 use crate::filter::{MoogFilter, FilterInputParams};
 use crate::oscillator::{UnisonBlep, FMOscillator, OscillatorInputParams};
+use crate::log::Log;
 
 use crate::MAX_BLOCKSIZE;
 const PI2 : f64 = std::f64::consts::PI * 2.0;
@@ -109,7 +110,7 @@ impl MonoProcessor for OpKickmess {
         self.fm_oscillator.set_sample_rate(sr);
     }
 
-    fn process(&mut self, params: &SmoothParameters, proc_offs: usize, out: &mut [f32]) {
+    fn process(&mut self, params: &SmoothParameters, proc_offs: usize, out: &mut [f32], log: &mut Log) {
         let block_params = ParamModel::new(params.get_frame(0));
         self.f_env.set_release(block_params.f_env_release());
         self.release.set_release(block_params.env_release());
@@ -158,6 +159,10 @@ impl MonoProcessor for OpKickmess {
                 kick_sample = s * amp_gain;
 
                 if params.dist_on() > 0.5 {
+                    log.log(|bw: &mut std::io::BufWriter<&mut [u8]>| {
+                        use std::io::Write;
+                        write!(bw, "ds: {:9.6}", params.dist_start()).unwrap();
+                    });
                     let thres =
                         lerp(
                             env_value as f32,

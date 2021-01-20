@@ -13,6 +13,8 @@ mouse button down.
 * Feature: Added a filter implementation for filtering the output.
 * Feature: Added saw/tri/square oscillator with unison/detune.
 * Feature: Added FM oscillator.
+* Bugfix: The frequency envelope view in the UI was inverted
+before the frequencies were inverted.
 * Bugfix: Middle click to restore default value did not restore the default
 value, and it did not update the DSP parameter values properly.
 * Bugfix: Fixed output range of noise oscillator.

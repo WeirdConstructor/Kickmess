@@ -108,6 +108,8 @@ pub struct WValuePlugUI {
 
     needs_redraw_flag: bool,
 
+    last_log:       String,
+
     version_label:  &'static str,
 }
 
@@ -186,6 +188,10 @@ impl UIValueSource for WValuePlugUI {
     fn param_value(&self, idx: usize) -> f64 {
         self.get_element_value(idx) as f64
     }
+
+    fn param_value_denorm(&self, idx: usize) -> f64 {
+        self.get_element_value_denorm(idx) as f64
+    }
 }
 
 impl UI for WValuePlugUI {
@@ -232,6 +238,7 @@ impl WValuePlugUI {
                 help_id:            None,
                 help_texts:         vec![],
                 version_label:      "",
+                last_log:           String::from(""),
             };
         this.init_draw_cache();
         this.controller.clone().init(&mut this);
@@ -779,6 +786,15 @@ impl WValuePlugUI {
         self.value_specs[id].get_default() as f32
     }
 
+    fn get_element_value_denorm(&self, id: usize) -> f32 {
+        if id >= self.element_values.len() {
+            return 0.0;
+        }
+
+        let v = self.get_element_value(id);
+        self.value_specs[id].v2v(v as f64) as f32
+    }
+
     fn get_element_value(&self, id: usize) -> f32 {
         if id >= self.element_values.len() {
             return 0.0;
@@ -1307,6 +1323,16 @@ impl WValuePlugUI {
                 self.draw_text_lines(
                     p, txt, UI_HELP_FONT_SIZE, UI_HELP_TXT_CLR,
                     x, y, ww, wh, true, Some(name));
+
+                if let Some(s) = self.controller.fetch_logs() {
+                    self.last_log = s;
+                }
+
+                if crate::DEBUG_LOGGING {
+                    self.draw_text_lines(
+                        p, &self.last_log, UI_HELP_FONT_SIZE, UI_HELP_TXT_CLR,
+                        x, y, ww, wh, true, Some("Log"));
+                }
             }
         }
 

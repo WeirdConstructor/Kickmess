@@ -94,6 +94,10 @@ impl UIController for KickmessEditorController {
             self.host.end_edit(id as i32);
         }
     }
+
+    fn fetch_logs(&self) -> Option<String> {
+        self.params.gui_log.collect()
+    }
 }
 
 pub fn define_gui(ps: &crate::ParamSet, gui: &mut dyn ui::protocol::UI) {
@@ -185,7 +189,10 @@ pub fn define_gui(ps: &crate::ParamSet, gui: &mut dyn ui::protocol::UI) {
             let slope = src.param_value(id_ae_f_slope).max(0.01);
 
             let (sign, y_offs) =
-                if src.param_value(id_ae_s_freq) - src.param_value(id_ae_e_freq) < 0.0 {
+                if (src.param_value_denorm(id_ae_s_freq)
+                    - src.param_value_denorm(id_ae_e_freq))
+                   < 0.0 {
+
                     (-1.0, -1.0)
                 } else {
                     (1.0, 0.0)

@@ -1,4 +1,4 @@
-use crate::helpers::**;
+use crate::helpers::*;
 
 pub trait OscillatorInputParams{
     fn freq(&self)          -> f32;

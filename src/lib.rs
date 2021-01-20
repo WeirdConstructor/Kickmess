@@ -10,6 +10,7 @@ mod ringbuf_shared;
 mod param_model;
 mod filter;
 mod oscillator;
+mod log;
 pub mod editor;
 pub mod ui;
 pub mod window;
@@ -21,9 +22,12 @@ pub use proc::MonoProcessor;
 pub use proc::ParamSet;
 use op_kickmess::*;
 use helpers::note_to_freq;
+use log::Log;
 
 #[macro_use]
 extern crate vst;
+
+pub const DEBUG_LOGGING : bool = true;
 
 use vst::util::AtomicFloat;
 use vst::api::Events;
@@ -43,6 +47,7 @@ struct Kickmess {
     params:         Arc<KickmessVSTParams>,
     voices:         VoiceManager<OpKickmess>,
     smooth_param:   SmoothParameters,
+    log:            Log,
 }
 
 impl Default for Kickmess {
@@ -52,6 +57,7 @@ impl Default for Kickmess {
             params: Arc::new(KickmessVSTParams::default()),
             voices: VoiceManager::new(MAX_POLY),
             smooth_param: SmoothParameters::new(MAX_BLOCKSIZE, 0),
+            log:    Log::new(),
         }
     }
 }
@@ -66,11 +72,19 @@ impl Plugin for Kickmess {
             voices: VoiceManager::new(MAX_POLY),
             params,
             smooth_param,
+            log: Log::new(),
         }
     }
 
     fn init(&mut self) {
         helpers::init_cos_tab();
+        if DEBUG_LOGGING {
+            use std::io::Write;
+            let r = self.log.start_writer_thread();
+            self.params.gui_log.log(|bw| {
+                write!(bw, "start: {}", r).unwrap();
+            });
+        }
     }
 
     fn get_info(&self) -> Info {
@@ -105,13 +119,22 @@ impl Plugin for Kickmess {
             let advance_frames =
                 if remaining > MAX_BLOCKSIZE { MAX_BLOCKSIZE } else { remaining };
 
+            let (lc, li) = (self.smooth_param.last_frame_cnt, self.smooth_param.last_frame_idx);
+
+            self.log.log(|bw: &mut std::io::BufWriter<&mut [u8]>| {
+                use std::io::Write;
+                write!(bw, "adv: [{:4}] {:4} => {:4}, 3 in: {}",
+                       lc, advance_frames, out_buf.len(),
+                       self.params.param(3)).unwrap();
+            });
+
             self.smooth_param.advance_params(
                 advance_frames, out_buf.len(), &self.params.ps, &*self.params);
 
             self.voices.process(
                 offs,
                 &mut out_buf[offs..(offs + advance_frames)],
-                &self.smooth_param);
+                &self.smooth_param, &mut self.log);
 
             offs      += advance_frames;
             remaining -= advance_frames;
@@ -157,6 +180,7 @@ pub(crate) struct KickmessVSTParams {
     public_ps:      ParamSet,
     params:         Vec<AtomicFloat>,
     dirty_params:   ringbuf_shared::RingBuf<usize>,
+    gui_log:        Log,
 }
 
 impl KickmessVSTParams {
@@ -206,6 +230,7 @@ impl Default for KickmessVSTParams {
             public_ps,
             params,
             dirty_params: buf,
+            gui_log: Log::new(),
         }
     }
 }

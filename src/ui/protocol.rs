@@ -330,6 +330,7 @@ impl UIElementData for UIKnobData {
 
 pub trait UIValueSource {
     fn param_value(&self, idx: usize) -> f64;
+    fn param_value_denorm(&self, idx: usize) -> f64;
 }
 
 #[derive(Clone)]
@@ -526,4 +527,5 @@ pub trait UIController : Send + Sync {
     fn window_closed(&self, ui: &mut dyn UI) {}
     fn pre_frame(&self, ui: &mut dyn UI) {}
     fn post_frame(&self, ui: &mut dyn UI) {}
+    fn fetch_logs(&self) -> Option<String>;
 }
