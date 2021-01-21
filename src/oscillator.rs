@@ -128,9 +128,12 @@ impl PolyBlepOscillator {
                 Waveform::Sqr => {
                     let pw = params.pulse_width() as f64;
                     let pw = (0.1 * pw) + ((1.0 - pw) * 0.5);
+                    let dc_compensation = (0.5 - pw) * 2.0;
                     let mut sample = self.next_sqr(pw);
                     sample += poly_blep(self.phase, phase_inc);
-                    sample -= poly_blep((self.phase + (1.0 - pw)).fract(), phase_inc);
+                    sample -= poly_blep((self.phase + (1.0 - pw)).fract(),
+                                        phase_inc);
+                    sample += dc_compensation;
                     sample
                 },
             };
@@ -189,7 +192,7 @@ impl UnisonBlep {
             .min(self.oscs.len() - 1);
         let detune = params.detune() as f64;
 
-        let mix = 1.0 / ((unison + 1) as f32);
+        let mix = (1.0 / ((unison + 1) as f32)).sqrt();
 
         let mut s = mix * self.oscs[0].next(params, 0.0);
 
