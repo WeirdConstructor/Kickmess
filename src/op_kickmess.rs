@@ -189,7 +189,7 @@ impl MonoProcessor for OpKickmess {
                             params.dist_end());
 
                     kick_sample =
-                        f_distort(1.0, thres, kick_sample as f32) as f64;
+                        f_distort(0.7, thres, kick_sample as f32) as f64;
                 }
 
                 kick_sample *= params.main_gain() as f64;

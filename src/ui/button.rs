@@ -41,6 +41,29 @@ impl Button {
     }
 }
 
+impl Button {
+    fn draw_divider(&self, p: &mut dyn Painter, width: f64, color: (f64, f64, f64), x: f64, y: f64) {
+        let (x, y) = (
+            x + (UI_BTN_BORDER_WIDTH / 2.0).round(),
+            y + (UI_BTN_BORDER_WIDTH / 2.0).round(),
+        );
+
+        let w = self.width;
+        let h = UI_ELEM_TXT_H * 2.0 + UI_BTN_BORDER_WIDTH;
+
+        // divider
+        p.path_stroke(
+            UI_BTN_BORDER2_WIDTH,
+            color,
+            &mut [
+                (x,     y + (h / 2.0).round()),
+                (x + w, y + (h / 2.0).round()),
+            ].iter().copied(),
+            false);
+    }
+
+}
+
 impl UIElement for Button {
     fn size(&self) -> (f64, f64) {
         (self.width
@@ -103,6 +126,14 @@ impl UIElement for Button {
                         x + xo, y + yo, w, h, false);
                     UI_BTN_TXT_HLIGHT_CLR
                 },
+                HLStyle::Inactive => {
+                    self.draw_border(
+                        p, UI_BTN_BORDER2_WIDTH, UI_INACTIVE_CLR,
+                        x + xo, y + yo, w, h, false);
+                    self.draw_divider(
+                        p, UI_BTN_BORDER2_WIDTH * 1.2, UI_INACTIVE_CLR, x, y);
+                    UI_INACTIVE2_CLR
+                },
                 _ => UI_BTN_TXT_CLR,
             };
 
@@ -111,37 +142,24 @@ impl UIElement for Button {
     }
 
     fn draw_bg(&self, p: &mut dyn Painter, x: f64, y: f64) {
-        let (w, h) = self.size();
-
         let (xo, yo) = (
             x + (UI_BTN_BORDER_WIDTH / 2.0).round(),
             y + (UI_BTN_BORDER_WIDTH / 2.0).round(),
         );
-
-        let x = xo;
-        let y = yo;
 
         let w = self.width;
         let h = UI_ELEM_TXT_H * 2.0 + UI_BTN_BORDER_WIDTH;
 
         // border
         self.draw_border(
-            p, UI_BTN_BORDER_WIDTH, UI_BTN_BORDER_CLR, x, y, w, h, false);
+            p, UI_BTN_BORDER_WIDTH, UI_BTN_BORDER_CLR, xo, yo, w, h, false);
 
         self.draw_border(
-            p, UI_BTN_BORDER2_WIDTH, UI_BTN_BORDER2_CLR, x, y, w, h, false);
+            p, UI_BTN_BORDER2_WIDTH, UI_BTN_BORDER2_CLR, xo, yo, w, h, false);
 
         self.draw_border(
-            p, 0.0, UI_BTN_BG_CLR, x, y, w, h, true);
+            p, 0.0, UI_BTN_BG_CLR, xo, yo, w, h, true);
 
-        // divider
-        p.path_stroke(
-            UI_BTN_BORDER2_WIDTH,
-            UI_BTN_BORDER2_CLR,
-            &mut [
-                (x,     y + (h / 2.0).round()),
-                (x + w, y + (h / 2.0).round()),
-            ].iter().copied(),
-            false);
+        self.draw_divider(p, UI_BTN_BORDER2_WIDTH, UI_BTN_BORDER2_CLR, x, y);
     }
 }

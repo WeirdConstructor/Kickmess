@@ -162,6 +162,8 @@ pub fn define_gui(ps: &crate::ParamSet, gui: &mut dyn ui::protocol::UI) {
     let ht = crate::param_model::help_texts[id_f1_on];
     values[id_f1_on]    = UIValueSpec::new_toggle(&[ "Off", "On" ]).help(ht.0, ht.1);
 
+    values[id_f1_type]  = UIValueSpec::new_toggle(&[ "LP", "HP", "BP" ]).help(ht.0, ht.1);
+
 
     values[id_d_start]  .set_active_when_gt05(id_dist_on);
     values[id_d_end]    .set_active_when_gt05(id_dist_on);
@@ -175,6 +177,17 @@ pub fn define_gui(ps: &crate::ParamSet, gui: &mut dyn ui::protocol::UI) {
     values[id_o1_pw]    .set_active_when_gt0(id_o1_gain);
     values[id_o1_unison].set_active_when_gt0(id_o1_gain);
     values[id_o1_detune].set_active_when_gt0(id_o1_gain);
+
+    values[id_s_freq    ].set_active_when_gt0(id_gain);
+    values[id_e_freq    ].set_active_when_gt0(id_gain);
+    values[id_f_env_rel ].set_active_when_gt0(id_gain);
+    values[id_env_slope ].set_active_when_gt0(id_gain);
+    values[id_f_slope   ].set_active_when_gt0(id_gain);
+    values[id_noise     ].set_active_when_gt0(id_gain);
+    values[id_n_s_freq  ].set_active_when_gt0(id_gain);
+    values[id_n_e_freq  ].set_active_when_gt0(id_gain);
+    values[id_env_rel   ].set_active_when_gt0(id_gain);
+    values[id_click     ].set_active_when_gt0(id_gain);
 
     gui.define_value_spec(values);
 
@@ -361,10 +374,10 @@ pub fn define_gui(ps: &crate::ParamSet, gui: &mut dyn ui::protocol::UI) {
                                 id_f1_res,
                                 String::from("F1 Res"),
                                 UIPos::center(3, 12).middle()),
-                            UIInput::knob(
+                            UIInput::btn_toggle(
                                 id_f1_type,
                                 String::from("F1 Type"),
-                                UIPos::center(3, 12).middle()),
+                                UIPos::left(3, 12).top()),
                             UIInput::knob(
                                 id_f1_drive,
                                 String::from("F1 Drive"),
