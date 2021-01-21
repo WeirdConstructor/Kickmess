@@ -137,6 +137,8 @@ pub fn define_gui(ps: &crate::ParamSet, gui: &mut dyn ui::protocol::UI) {
     let id_of2_self  = 29;
     let id_of2_gain  = 30;
 
+    let id_main_gain = 31;
+
     let id_main_tab  = 40;
     let id_lic_tab   = 41;
 
@@ -440,12 +442,18 @@ pub fn define_gui(ps: &crate::ParamSet, gui: &mut dyn ui::protocol::UI) {
                 vec![
                     UIInput::knob(
                         id_gain,
-                        String::from("Gain"),
-                        UIPos::center(6, 12).middle()),
+                        String::from("MOsc Gain"),
+                        UIPos::center(6, 6).middle()),
                     UIInput::knob(
                         id_noise,
                         String::from("Tone/Noise"),
-                        UIPos::center(6, 12).middle()),
+                        UIPos::center(6, 6).middle()),
+                ],
+                vec![
+                    UIInput::knob(
+                        id_main_gain,
+                        String::from("Main Gain"),
+                        UIPos::center(6, 6).middle()),
                 ],
             ]);
 

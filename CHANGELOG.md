@@ -10,6 +10,8 @@ mouse button down.
 * Change: Make UI elements gray out when not active.
 * Change: Make some UI elements smaller (knobs, text labels).
 * Change: Added container titles.
+* Change: Added main level and moved the original gain back to the
+sin/noise oscillator.
 * Feature: Added a filter implementation for filtering the output.
 * Feature: Added saw/tri/square oscillator with unison/detune.
 * Feature: Added FM oscillator.

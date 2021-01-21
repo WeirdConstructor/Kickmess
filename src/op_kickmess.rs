@@ -156,7 +156,7 @@ impl MonoProcessor for OpKickmess {
 
                 let mut s = lerp64(params.noise() as f64, sine, noise);
 
-                kick_sample = s * amp_gain;
+                kick_sample = s * amp_gain * params.gain() as f64;
 
                 kick_sample +=
                     (params.o1_gain()
@@ -189,10 +189,10 @@ impl MonoProcessor for OpKickmess {
                             params.dist_end());
 
                     kick_sample =
-                        f_distort(params.gain(), thres, kick_sample as f32) as f64;
-                } else {
-                    kick_sample *= params.gain() as f64;
+                        f_distort(1.0, thres, kick_sample as f32) as f64;
                 }
+
+                kick_sample *= params.main_gain() as f64;
 
                 let freq_change : f64 =
                     (self.cur_f_start - self.cur_f_end) as f64

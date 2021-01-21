@@ -70,11 +70,13 @@ macro_rules! param_model {
         $x!{public env_release     lin no_smooth 11,  1.0,1000.0,      5.0,     4,    2, "Env Release"}
         $x!{public phase_offs      lin smooth    12,  0.0,   1.0,      0.0,     4,    2, "Click"}
         $x!{public dist_on         lin no_smooth 13,  0.0,   1.0,      0.0,     3,    1, "Dist. On"}
+
         $x!{public f1_cutoff       exp smooth    14, 20.0,   22050.0,  5000.0,  7,    1, "F1 Cutoff"}
         $x!{public f1_res          lin smooth    15,  0.0,   1.0,      0.0,     4,    2, "F1 Res"}
         $x!{public f1_type         lin no_smooth 16,  0.0,   1.0,      0.0,     3,    1, "F1 Type"}
         $x!{public f1_drive        lin smooth    17,  0.0,   5.0,      1.0,     4,    2, "F1 Type"}
         $x!{public f1_on           lin no_smooth 18,  0.0,   1.0,      0.0,     3,    1, "F1 On"}
+
         $x!{public o1_gain         exp smooth    19,  0.0,   2.0,      0.0,     4,    2, "O1 Gain"}
         $x!{public o1_waveform     lin smooth    20,  0.0,   1.0,      0.0,     4,    2, "O1 Wave"}
         $x!{public o1_pw           lin smooth    21,  0.0,   1.0,      1.0,     4,    2, "O1 PW"}
@@ -89,7 +91,9 @@ macro_rules! param_model {
         $x!{public o2fm_self       exp smooth    29,  0.0,30000.0,      0.0,    7,    2, "OP2 Self Hz"}
         $x!{public o2fm_gain       lin smooth    30,  0.0,   2.0,       0.0,    5,    3, "OP2 Gain"}
 
-        $x!{private phase_test     lin smooth    31,  0.0,   1.0,      0.0,     5,    2, "Click2"}
+        $x!{public main_gain       exp smooth    31,  0.0,   2.0,       1.0,    4,    3, "Main Gain"}
+
+        $x!{private phase_test     lin smooth    32,  0.0,   1.0,      0.0,     5,    2, "Click2"}
     }
 }
 
