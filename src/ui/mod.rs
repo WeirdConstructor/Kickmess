@@ -66,7 +66,7 @@ pub enum UIEvent {
 #[derive(Debug, Clone)]
 enum InputMode {
     None,
-    ValueDrag  { zone: ActiveZone, orig_pos: (f64, f64), fine_key: bool },
+    ValueDrag  { zone: ActiveZone, orig_pos: (f64, f64), pre_fine_delta: f64, fine_key: bool },
     SelectMod  { zone: ActiveZone },
     InputValue { zone: ActiveZone,
                  value: String,
@@ -338,22 +338,54 @@ impl WValuePlugUI {
         }
     }
 
+    fn handle_fine_drag_key(&mut self, pressed: bool) {
+        let mut change_drag_id : Option<usize> = None;
+
+        self.fine_drag_key_held = pressed;
+
+        let drag_tmp_delta_value = self.drag_tmp_value.unwrap_or((0, 0.0)).1;
+        let last_mouse_pos       = self.last_mouse_pos;
+
+        if let InputMode::ValueDrag { orig_pos, zone, fine_key, pre_fine_delta }
+            = &mut self.input_mode {
+            if pressed && !*fine_key {
+                *fine_key       = pressed;
+                *pre_fine_delta = drag_tmp_delta_value;
+                *orig_pos       = last_mouse_pos;
+                change_drag_id  = Some(zone.id);
+
+                self.queue_redraw();
+            }
+        }
+
+        if let Some(id) = change_drag_id {
+            self.recalc_drag_value();
+            let value = self.get_element_value(id);
+            self.controller.clone().value_change(
+                self, id, value, false);
+        }
+    }
+
     fn recalc_drag_value(&mut self) {
-        if let InputMode::ValueDrag { zone, orig_pos, fine_key } = self.input_mode {
+        if let InputMode::ValueDrag { zone, orig_pos, fine_key, pre_fine_delta }
+            = self.input_mode {
+
             let xd = self.last_mouse_pos.0 - orig_pos.0;
             let yd = self.last_mouse_pos.1 - orig_pos.1;
             let mut distance = -yd;
 
             let steps = if fine_key { distance / 25.0 } else { distance / 10.0 };
 
-            let step_val =
+            let delta_val =
                 if zone.subtype == (painting::AZ_COARSE_DRAG as usize) {
                     self.calc_coarse_step(zone.id, steps)
+                    + pre_fine_delta
                 } else {
                     self.calc_fine_step(zone.id, steps)
+                    + pre_fine_delta
                 };
 
-            self.drag_tmp_value = Some((zone.id, step_val));
+            self.drag_tmp_value = Some((zone.id, delta_val));
         } else {
             self.drag_tmp_value = None;
         }
@@ -415,6 +447,7 @@ impl WValuePlugUI {
                                                 orig_pos: self.last_mouse_pos,
                                                 zone:     self.hover_zone.unwrap(),
                                                 fine_key: self.fine_drag_key_held,
+                                                pre_fine_delta: 0.0,
                                             };
                                         self.recalc_drag_value();
 
@@ -604,7 +637,9 @@ impl WValuePlugUI {
             },
             UIEvent::KeyPressed(key_event) => {
                 match key_event.key {
-                    Key::Shift => { self.fine_drag_key_held = true; },
+                    Key::Shift => {
+                        self.handle_fine_drag_key(true);
+                    },
                     Key::Enter => {
                         let new_value : Option<(usize, f32)> =
                             if let InputMode::InputValue { input, zone, .. } = &self.input_mode {
@@ -671,7 +706,9 @@ impl WValuePlugUI {
             },
             UIEvent::KeyReleased(key_event) => {
                 match key_event.key {
-                    Key::Shift  => { self.fine_drag_key_held = false; },
+                    Key::Shift  => {
+                        self.handle_fine_drag_key(false);
+                    },
                     Key::F1     => {
                         if let Some(_) = self.help_id {
                             self.input_mode = InputMode::None;
@@ -1410,9 +1447,25 @@ impl WValuePlugUI {
         } else {
             let hover_lbl =
                 if self.hover_zone_submode() == painting::AZ_COARSE_DRAG {
-                    Some("coarse zone")
+                    if let InputMode::ValueDrag { fine_key, .. } = self.input_mode {
+                        if fine_key {
+                            Some("fine coarse")
+                        } else {
+                            Some("coarse")
+                        }
+                    } else {
+                        Some("coarse zone")
+                    }
                 } else if self.hover_zone_submode() == painting::AZ_FINE_DRAG {
-                    Some("fine zone")
+                    if let InputMode::ValueDrag { fine_key, .. } = self.input_mode {
+                        if fine_key {
+                            Some("super-fine")
+                        } else {
+                            Some("fine")
+                        }
+                    } else {
+                        Some("fine zone")
+                    }
                 } else {
                     None
                 };

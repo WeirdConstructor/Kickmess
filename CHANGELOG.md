@@ -12,9 +12,14 @@ mouse button down.
 * Change: Added container titles.
 * Change: Added main level and moved the original gain back to the
 sin/noise oscillator.
+* Change: Presets are now saved as serialized data.
+* Change: The Shift key does now also work while dragging (once only, and will
+only enable but not disable fine drag mode).
 * Feature: Added a filter implementation for filtering the output.
 * Feature: Added saw/tri/square oscillator with unison/detune.
 * Feature: Added FM oscillator.
+* Bugfix: Keys did not work in Ardour/Zrythm and other DAWs.
+* Bugfix: The string min/max represenation for the VST parameters were fixed.
 * Bugfix: The frequency envelope view in the UI was inverted
 before the frequencies were inverted.
 * Bugfix: Middle click to restore default value did not restore the default
