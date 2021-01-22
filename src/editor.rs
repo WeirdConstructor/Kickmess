@@ -624,6 +624,7 @@ fn keycode_to_keyevent(is_down: bool, kc: KeyCode) -> KeyboardEvent {
                 => keyboard_types::Key::Character(
                     kc.character.encode_utf8(&mut buf).to_string()),
             vst::editor::Key::Tab      => keyboard_types::Key::Tab,
+            vst::editor::Key::Back     => keyboard_types::Key::Backspace,
             vst::editor::Key::Return   => keyboard_types::Key::Enter,
             vst::editor::Key::Enter    => keyboard_types::Key::Enter,
             vst::editor::Key::Escape   => keyboard_types::Key::Escape,
