@@ -7,7 +7,7 @@ use std::sync::Arc;
 use std::rc::Rc;
 use vst::plugin::{HostCallback};
 use vst::host::Host;
-use ringbuf::RingBuffer;
+use crate::ringbuf_shared::RingBuf;
 use keyboard_types::KeyboardEvent;
 
 use crate::ui::protocol::*;
@@ -19,6 +19,7 @@ const MAX_KEY_EVENTS_PER_FRAME : usize = 128;
 pub const WINDOW_WIDTH:  i32 = 1000;
 pub const WINDOW_HEIGHT: i32 =  700;
 
+#[derive(Debug, Clone)]
 enum VSTKeyEvent {
     Pressed(KeyboardEvent),
     Released(KeyboardEvent),
@@ -29,8 +30,7 @@ pub(crate) struct KickmessEditorController {
     params:         Arc<KickmessVSTParams>,
     is_open:        std::sync::atomic::AtomicBool,
     close_request:  std::sync::atomic::AtomicBool,
-    key_events_tx:  ringbuf::Producer<VSTKeyEvent>,
-    key_events_rx:  ringbuf::Consumer<VSTKeyEvent>,
+    key_events:     RingBuf<VSTKeyEvent>,
 }
 
 pub(crate) struct KickmessEditor {
@@ -77,7 +77,7 @@ impl UIController for KickmessEditorController {
                 }]);
         }
 
-        while let Some(vst_ev) = self.key_events_rx.pop() {
+        while let Some(vst_ev) = self.key_events.pop() {
             match vst_ev {
                 VSTKeyEvent::Pressed(kev)  => ui.key_pressed(kev),
                 VSTKeyEvent::Released(kev) => ui.key_released(kev),
@@ -98,7 +98,6 @@ impl UIController for KickmessEditorController {
         if let Some(af) = self.params.params.get(id) {
             af.set(value);
             if single_change { self.host.begin_edit(id as i32); }
-            println!("AUTOM {}: {}", id, value);
             self.host.automate(id as i32, value);
             if single_change { self.host.end_edit(id as i32); }
         }
@@ -602,50 +601,74 @@ Glyphs imported from Arev fonts are (c) Tavmjong Bah
 
 impl KickmessEditor {
     pub(crate) fn new(host: HostCallback, params: Arc<KickmessVSTParams>) -> Self {
-        let buf = RingBuffer::<T>::new(MAX_KEY_EVENTS_PER_FRAME);
-        let (prod, cons) = buf.split();
-
         Self {
             controller: Arc::new(KickmessEditorController {
                 host,
                 params,
                 is_open: std::sync::atomic::AtomicBool::new(true),
                 close_request: std::sync::atomic::AtomicBool::new(false),
-                key_events_tx: prod,
-                key_events_rx: cons,
+                key_events: RingBuf::new(MAX_KEY_EVENTS_PER_FRAME),
             }),
         }
     }
 }
 
-//fn keycode_to_keyevent(is_down: bool, kc: KeyCode) -> KeyboardEvent {
-//    let mut modifiers : u32 = 0;
-//
-//    if kc.modifiers & vst::api::ModifierKey::SHIFT {
-//        modifiers |= keyboard_types::Modifier::SHIFT;
-//    }
-//    if kc.modifiers & vst::api::ModifierKey::ALT {
-//        modifiers |= keyboard_types::Modifier::ALT;
-//    }
-//    if kc.modifiers & vst::api::ModifierKey::COMMAND {
-//        modifiers |= keyboard_types::Modifier::COMMAND;
-//    }
-//    if kc.modifiers & vst::api::ModifierKey::CONTROL {
-//        modifiers |= keyboard_types::Modifier::CONTROL;
-//    }
-//
-//    let mut kev = KeyboardEvent {
-//        state:          if is_down { keyboard_types::KeyState::Down }
-//                        else       { keyboard_types::KeyState::Up },
-//        location:   keyboard_types::Location::Standard,
-//        modifiers,
-//        repeat:         false,
-//        is_composing:   false,
-//    };
-//    match kc.key {
-//        vst::editor::Key::
-//    }
-//}
+fn keycode_to_keyevent(is_down: bool, kc: KeyCode) -> KeyboardEvent {
+    let mut modifiers : keyboard_types::Modifiers =
+        keyboard_types::Modifiers::empty();
+
+    let mut buf = [0; 8];
+    let key =
+        match kc.key {
+            vst::editor::Key::None
+                => keyboard_types::Key::Character(
+                    kc.character.encode_utf8(&mut buf).to_string()),
+            vst::editor::Key::Tab      => keyboard_types::Key::Tab,
+            vst::editor::Key::Return   => keyboard_types::Key::Enter,
+            vst::editor::Key::Enter    => keyboard_types::Key::Enter,
+            vst::editor::Key::Escape   => keyboard_types::Key::Escape,
+            vst::editor::Key::End      => keyboard_types::Key::End,
+            vst::editor::Key::Home     => keyboard_types::Key::Home,
+            vst::editor::Key::Left     => keyboard_types::Key::ArrowLeft,
+            vst::editor::Key::Up       => keyboard_types::Key::ArrowUp,
+            vst::editor::Key::Right    => keyboard_types::Key::ArrowRight,
+            vst::editor::Key::Down     => keyboard_types::Key::ArrowDown,
+            vst::editor::Key::PageUp   => keyboard_types::Key::PageUp,
+            vst::editor::Key::PageDown => keyboard_types::Key::PageDown,
+            vst::editor::Key::Insert   => keyboard_types::Key::Insert,
+            vst::editor::Key::Delete   => keyboard_types::Key::Delete,
+            vst::editor::Key::Help     => keyboard_types::Key::Help,
+            vst::editor::Key::F1       => keyboard_types::Key::F1,
+            vst::editor::Key::F2       => keyboard_types::Key::F2,
+            vst::editor::Key::F3       => keyboard_types::Key::F3,
+            vst::editor::Key::F4       => keyboard_types::Key::F4,
+            vst::editor::Key::F5       => keyboard_types::Key::F5,
+            vst::editor::Key::F6       => keyboard_types::Key::F6,
+            vst::editor::Key::F7       => keyboard_types::Key::F7,
+            vst::editor::Key::F8       => keyboard_types::Key::F8,
+            vst::editor::Key::F9       => keyboard_types::Key::F9,
+            vst::editor::Key::F10      => keyboard_types::Key::F10,
+            vst::editor::Key::F11      => keyboard_types::Key::F11,
+            vst::editor::Key::F12      => keyboard_types::Key::F12,
+            vst::editor::Key::Shift    => keyboard_types::Key::Shift,
+            vst::editor::Key::Control  => keyboard_types::Key::Control,
+            vst::editor::Key::Alt      => keyboard_types::Key::Alt,
+            _ => keyboard_types::Key::Unidentified
+        };
+
+    let mut kev = KeyboardEvent {
+        key,
+        state:          if is_down { keyboard_types::KeyState::Down }
+                        else       { keyboard_types::KeyState::Up },
+        code:           keyboard_types::Code::Unidentified,
+        location:       keyboard_types::Location::Standard,
+        modifiers,
+        repeat:         false,
+        is_composing:   false,
+    };
+
+    kev
+}
 
 impl Editor for KickmessEditor {
     fn size(&self) -> (i32, i32) {
@@ -677,12 +700,16 @@ impl Editor for KickmessEditor {
     }
 
     fn key_up(&mut self, keyc: KeyCode) -> bool {
-        println!("KEY UP {:?}", keyc);
-        false
+        self.controller.key_events.push(
+            VSTKeyEvent::Released(
+                keycode_to_keyevent(false, keyc)));
+        true
     }
 
     fn key_down(&mut self, keyc: KeyCode) -> bool {
-        println!("KEY DOWN {:?}", keyc);
-        false
+        self.controller.key_events.push(
+            VSTKeyEvent::Pressed(
+                keycode_to_keyevent(true, keyc)));
+        true
     }
 }

@@ -216,6 +216,13 @@ impl UI for WValuePlugUI {
         self.version_label = version_label;
         self.queue_redraw();
     }
+
+    fn key_pressed(&mut self, keev: KeyboardEvent) {
+        self.handle_ui_event(UIEvent::KeyPressed(keev));
+    }
+    fn key_released(&mut self, keev: KeyboardEvent) {
+        self.handle_ui_event(UIEvent::KeyReleased(keev));
+    }
 }
 
 impl WValuePlugUI {
