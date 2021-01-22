@@ -97,8 +97,9 @@ impl Plugin for Kickmess {
             midi_outputs: 0,
             parameters:   self.params.public_ps.param_count() as i32,
             unique_id:    934843292,
-            version:      0001,
+            version:      0220,
             category:     Category::Synth,
+            preset_chunks: true,
             ..Default::default()
         }
     }
@@ -253,7 +254,19 @@ impl PluginParameters for KickmessVSTParams {
 
         let v = self.get_parameter(index);
         let pd = self.public_ps.definition(index as usize).unwrap();
-        format!("{} >= {:.2} >= {}", pd.min(), pd.map(v), pd.max())
+        format!("{} <= {:.2} <= {}", pd.min(), pd.map(v), pd.max())
+    }
+
+    fn get_bank_data(&self) -> Vec<u8> {
+        crate::param_model::serialize_preset(self)
+    }
+
+    fn load_bank_data(&self, data: &[u8]) {
+        crate::param_model::deserialize_preset(
+            data, |idx, v| {
+                println!("SET PARA {} = {}", idx, v);
+                self.set_parameter(idx as i32, v)
+            });
     }
 
     fn get_parameter_name(&self, index: i32) -> String {

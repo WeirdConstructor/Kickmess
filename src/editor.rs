@@ -178,17 +178,6 @@ pub fn define_gui(ps: &crate::ParamSet, gui: &mut dyn ui::protocol::UI) {
     values[id_o1_unison].set_active_when_gt0(id_o1_gain);
     values[id_o1_detune].set_active_when_gt0(id_o1_gain);
 
-    values[id_s_freq    ].set_active_when_gt0(id_gain);
-    values[id_e_freq    ].set_active_when_gt0(id_gain);
-    values[id_f_env_rel ].set_active_when_gt0(id_gain);
-    values[id_env_slope ].set_active_when_gt0(id_gain);
-    values[id_f_slope   ].set_active_when_gt0(id_gain);
-    values[id_noise     ].set_active_when_gt0(id_gain);
-    values[id_n_s_freq  ].set_active_when_gt0(id_gain);
-    values[id_n_e_freq  ].set_active_when_gt0(id_gain);
-    values[id_env_rel   ].set_active_when_gt0(id_gain);
-    values[id_click     ].set_active_when_gt0(id_gain);
-
     gui.define_value_spec(values);
 
     let id_s_freq_f     = id_s_freq;

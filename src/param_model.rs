@@ -109,6 +109,75 @@ macro_rules! param_impl_accessors {
     }
 }
 
+pub fn deserialize_preset<F: Fn(usize, f32)>(preset: &[u8], out: F) {
+    let mut preset_data : Vec<(String, f32)> = vec![];
+
+    let mut data = String::from_utf8_lossy(preset);
+    let fields : Vec<&str> = data.split(";").collect();
+
+    let mut start_params = false;
+    for f in fields.iter() {
+        let part = f.trim();
+
+        if start_params {
+            let par : Vec<&str> = part.split("=").collect();
+            preset_data.push((
+                (*par.get(0).unwrap_or_else(|| &"?")).to_string(),
+                par.get(1).unwrap_or_else(|| &"0").parse::<f32>().unwrap_or(0.0)
+            ));
+
+        } else {
+            if f == &"!PARAMS" {
+                start_params = true;
+            }
+        }
+    }
+
+    macro_rules! param_deserialize {
+        (public $name:ident $e:ident $s:ident $idx:expr, $min:expr, $max:expr, $def:expr, $width:expr, $prec:expr, $lbl:expr) => {
+            for (name, value) in preset_data.iter() {
+                if name == stringify!(pub:$name) {
+                    (out)($idx, *value);
+                }
+            }
+        };
+        (private $name:ident $e:ident $s:ident $idx:expr, $min:expr, $max:expr, $def:expr, $width:expr, $prec:expr, $lbl:expr) => {
+            for (name, value) in preset_data.iter() {
+                if name == stringify!(priv:$name) {
+                    (out)($idx, *value);
+                }
+            }
+        };
+    }
+
+    param_model!{param_deserialize}
+}
+
+pub fn serialize_preset(pp: &dyn ParamProvider) -> Vec<u8> {
+    let mut out = String::new();
+
+    out += "!PARAMS;\n";
+
+    macro_rules! param_serialize {
+        (public $name:ident $e:ident $s:ident $idx:expr, $min:expr, $max:expr, $def:expr, $width:expr, $prec:expr, $lbl:expr) => {
+            out += stringify!(pub:$name);
+            out += "=";
+            out += &pp.param($idx).to_string();
+            out += ";\n";
+        };
+        (private $name:ident $e:ident $s:ident $idx:expr, $min:expr, $max:expr, $def:expr, $width:expr, $prec:expr, $lbl:expr) => {
+            out += stringify!(priv:$name);
+            out += "=";
+            out += &pp.param($idx).to_string();
+            out += ";\n";
+        };
+    }
+
+    param_model!{param_serialize}
+
+    out.into_bytes()
+}
+
 impl<'a> ParamModel<'a> {
     pub fn new(v: &'a [f32]) -> Self {
         Self { v }
