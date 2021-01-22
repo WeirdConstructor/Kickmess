@@ -2,24 +2,35 @@
 // This is a part of Kickmess. See README.md and COPYING for details.
 
 use crate::KickmessVSTParams;
-use vst::editor::Editor;
+use vst::editor::{Editor, KeyCode};
 use std::sync::Arc;
 use std::rc::Rc;
 use vst::plugin::{HostCallback};
 use vst::host::Host;
+use ringbuf::RingBuffer;
+use keyboard_types::KeyboardEvent;
 
 use crate::ui::protocol::*;
 use crate::ui::constants::*;
 use crate::ui;
 
+const MAX_KEY_EVENTS_PER_FRAME : usize = 128;
+
 pub const WINDOW_WIDTH:  i32 = 1000;
 pub const WINDOW_HEIGHT: i32 =  700;
 
+enum VSTKeyEvent {
+    Pressed(KeyboardEvent),
+    Released(KeyboardEvent),
+}
+
 pub(crate) struct KickmessEditorController {
-    host:    HostCallback,
-    params:  Arc<KickmessVSTParams>,
-    is_open: std::sync::atomic::AtomicBool,
-    close_request: std::sync::atomic::AtomicBool,
+    host:           HostCallback,
+    params:         Arc<KickmessVSTParams>,
+    is_open:        std::sync::atomic::AtomicBool,
+    close_request:  std::sync::atomic::AtomicBool,
+    key_events_tx:  ringbuf::Producer<VSTKeyEvent>,
+    key_events_rx:  ringbuf::Consumer<VSTKeyEvent>,
 }
 
 pub(crate) struct KickmessEditor {
@@ -64,6 +75,13 @@ impl UIController for KickmessEditorController {
                     id: id,
                     value: self.params.param(id)
                 }]);
+        }
+
+        while let Some(vst_ev) = self.key_events_rx.pop() {
+            match vst_ev {
+                VSTKeyEvent::Pressed(kev)  => ui.key_pressed(kev),
+                VSTKeyEvent::Released(kev) => ui.key_released(kev),
+            }
         }
     }
 
@@ -584,16 +602,50 @@ Glyphs imported from Arev fonts are (c) Tavmjong Bah
 
 impl KickmessEditor {
     pub(crate) fn new(host: HostCallback, params: Arc<KickmessVSTParams>) -> Self {
+        let buf = RingBuffer::<T>::new(MAX_KEY_EVENTS_PER_FRAME);
+        let (prod, cons) = buf.split();
+
         Self {
             controller: Arc::new(KickmessEditorController {
                 host,
                 params,
                 is_open: std::sync::atomic::AtomicBool::new(true),
                 close_request: std::sync::atomic::AtomicBool::new(false),
+                key_events_tx: prod,
+                key_events_rx: cons,
             }),
         }
     }
 }
+
+//fn keycode_to_keyevent(is_down: bool, kc: KeyCode) -> KeyboardEvent {
+//    let mut modifiers : u32 = 0;
+//
+//    if kc.modifiers & vst::api::ModifierKey::SHIFT {
+//        modifiers |= keyboard_types::Modifier::SHIFT;
+//    }
+//    if kc.modifiers & vst::api::ModifierKey::ALT {
+//        modifiers |= keyboard_types::Modifier::ALT;
+//    }
+//    if kc.modifiers & vst::api::ModifierKey::COMMAND {
+//        modifiers |= keyboard_types::Modifier::COMMAND;
+//    }
+//    if kc.modifiers & vst::api::ModifierKey::CONTROL {
+//        modifiers |= keyboard_types::Modifier::CONTROL;
+//    }
+//
+//    let mut kev = KeyboardEvent {
+//        state:          if is_down { keyboard_types::KeyState::Down }
+//                        else       { keyboard_types::KeyState::Up },
+//        location:   keyboard_types::Location::Standard,
+//        modifiers,
+//        repeat:         false,
+//        is_composing:   false,
+//    };
+//    match kc.key {
+//        vst::editor::Key::
+//    }
+//}
 
 impl Editor for KickmessEditor {
     fn size(&self) -> (i32, i32) {
@@ -622,5 +674,15 @@ impl Editor for KickmessEditor {
 
     fn close(&mut self) {
         self.controller.request_close();
+    }
+
+    fn key_up(&mut self, keyc: KeyCode) -> bool {
+        println!("KEY UP {:?}", keyc);
+        false
+    }
+
+    fn key_down(&mut self, keyc: KeyCode) -> bool {
+        println!("KEY DOWN {:?}", keyc);
+        false
     }
 }

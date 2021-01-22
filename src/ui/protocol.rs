@@ -4,6 +4,7 @@
 use std::sync::mpsc::{Sender, Receiver};
 use std::sync::Arc;
 use crate::ui::element::UIElementData;
+use keyboard_types::KeyboardEvent;
 
 #[derive(Debug, Clone)]
 pub struct UIInputValue {
@@ -517,6 +518,8 @@ pub trait UI {
     fn define_value_spec(&mut self, spec: Vec<UIValueSpec>);
     fn set_values(&mut self, vals: &[UIInputValue]);
     fn set_version(&mut self, version_label: &'static str);
+    fn key_pressed(&mut self, kev: KeyboardEvent);
+    fn key_released(&mut self, kev: KeyboardEvent);
 }
 
 pub trait UIController : Send + Sync {
