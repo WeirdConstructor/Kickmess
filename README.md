@@ -2,8 +2,9 @@
 
 Kickmess is a port of the easy to use and good sounding _Kicker_ plugin from
 LMMS to a reusable audio plugin format on Linux (VST currently). The DSP code
-has been ported and also changed, that means an accurate
-reimplementation of _Kicker_ is out of scope.
+has been ported, changed a bit and extended with some other functionality.
+It's useful for many kinds of percussion synthesis, for synthesizing
+bass sounds and other fx sounds.
 
 More features and changes might be added and before Version 1.0 is released I
 will not guarantee that your presets will sound the same. After Version 1.0
