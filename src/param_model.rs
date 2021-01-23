@@ -79,58 +79,57 @@ pub const help_texts : [(&str, &str); 43] = [
 
 macro_rules! param_model {
     ($x: ident) => {
-        //  scope  name         exp/lin smooth   idx  min    max     def    width  prec  name
-        $x!{public freq_start      exp no_smooth 0,   5.0,   3000.0, 150.0,     7,    2, "Start Freq."}
-        $x!{public freq_end        exp no_smooth 1,   5.0,   2000.0,  40.0,     7,    2, "End Freq."}
-        $x!{public f_env_release   exp no_smooth 2,   5.0,   5000.0, 440.0,     6,    1, "Length"}
-        $x!{public dist_start      lin smooth    3,   0.0,   100.0,    0.8,     4,    2, "Dist. Start"}
-        $x!{public dist_end        lin smooth    4,   0.0,   100.0,    0.8,     4,    2, "Dist. End"}
-        $x!{public gain            lin smooth    5,   0.0,   2.0,      1.0,     4,    2, "Gain"}
-        $x!{public env_slope       lin smooth    6,   0.01,  1.0,    0.163,     5,    3, "Env. slope"}
-        $x!{public freq_slope      lin smooth    7,   0.001, 1.0,     0.06,     5,    3, "Freq. slope"}
-        $x!{public noise           exp smooth    8,   0.0,   1.0,      0.0,     4,    2, "Tone/Noise"}
-        $x!{public freq_note_start lin no_smooth 9,   0.0,   1.0,      0.0,     3,    1, "Note > Start Freq"}
-        $x!{public freq_note_end   lin no_smooth 10,  0.0,   1.0,      0.0,     3,    1, "Note > End Freq"}
-        $x!{public env_release     lin no_smooth 11,  1.0,1000.0,      5.0,     4,    2, "Env Release"}
-        $x!{public phase_offs      lin smooth    12,  0.0,   1.0,      0.0,     4,    2, "Click"}
-        $x!{public dist_on         lin no_smooth 13,  0.0,   1.0,      0.0,     3,    1, "Dist. On"}
+        //  scope   name         exp/lin smooth   idx  min    max     def    width  prec  label
+        $x!{public  freq_start      exp no_smooth 0,   5.0,   3000.0, 150.0,     4,    2, "Start Freq."}
+        $x!{public  freq_end        exp no_smooth 1,   5.0,   2000.0,  40.0,     4,    2, "End Freq."}
+        $x!{public  f_env_release   exp no_smooth 2,   5.0,   5000.0, 440.0,     3,    1, "Length"}
+        $x!{public  dist_start      lin smooth    3,   0.0,   100.0,    0.8,     4,    2, "Dist. Start"}
+        $x!{public  dist_end        lin smooth    4,   0.0,   100.0,    0.8,     4,    2, "Dist. End"}
+        $x!{public  gain            lin smooth    5,   0.0,   2.0,      1.0,     4,    2, "Gain"}
+        $x!{public  env_slope       lin smooth    6,   0.01,  1.0,    0.163,     5,    3, "Env. slope"}
+        $x!{public  freq_slope      lin smooth    7,   0.001, 1.0,     0.06,     5,    3, "Freq. slope"}
+        $x!{public  noise           exp smooth    8,   0.0,   1.0,      0.0,     4,    2, "Tone/Noise"}
+        $x!{public  freq_note_start lin no_smooth 9,   0.0,   1.0,      0.0,     3,    1, "Note > Start Freq"}
+        $x!{public  freq_note_end   lin no_smooth 10,  0.0,   1.0,      0.0,     3,    1, "Note > End Freq"}
+        $x!{public  env_release     lin no_smooth 11,  1.0,1000.0,      5.0,     4,    2, "Env Release"}
+        $x!{public  phase_offs      lin smooth    12,  0.0,   1.0,      0.0,     4,    2, "Click"}
+        $x!{public  dist_on         lin no_smooth 13,  0.0,   1.0,      0.0,     3,    1, "Dist. On"}
 
-        $x!{public f1_cutoff       exp smooth    14, 20.0,   22050.0,  5000.0,  7,    1, "F1 Cutoff"}
-        $x!{public f1_res          lin smooth    15,  0.0,   1.0,      0.0,     4,    2, "F1 Res"}
-        $x!{public f1_type         lin no_smooth 16,  0.0,   1.0,      0.0,     3,    1, "F1 Type"}
-        $x!{public f1_drive        lin smooth    17,  0.0,   5.0,      1.0,     4,    2, "F1 Type"}
-        $x!{public f1_on           lin no_smooth 18,  0.0,   1.0,      0.0,     3,    1, "F1 On"}
+        $x!{public  f1_cutoff       exp smooth    14, 20.0,   22050.0,  5000.0,  3,    1, "F1 Cutoff"}
+        $x!{public  f1_res          lin smooth    15,  0.0,   1.0,      0.0,     4,    2, "F1 Res"}
+        $x!{private f1_type         lin no_smooth 36,  0.0,   1.0,      0.0,     3,    1, "F1 Type"}
+        $x!{public  f1_drive        lin smooth    16,  0.0,   5.0,      1.0,     4,    2, "F1 Drive"}
+        $x!{private f1_on           lin no_smooth 37,  0.0,   1.0,      0.0,     3,    1, "F1 On"}
 
-        $x!{public o1_gain         exp smooth    19,  0.0,   2.0,      0.0,     4,    2, "O1 Gain"}
-        $x!{public o1_waveform     lin no_smooth 20,  0.0,   1.0,      0.0,     4,    2, "O1 Wave"}
-        $x!{public o1_pw           lin smooth    21,  0.0,   1.0,      1.0,     4,    2, "O1 PW"}
-        $x!{public o1_unison       lin no_smooth 22,  0.0,  10.5,      0.0,     1,    0, "O1 Unison"}
-        $x!{public o1_detune       lin smooth    23,  0.0,   1.0,      0.01,    5,    3, "O1 Detune"}
+        $x!{public  o1_gain         exp smooth    17,  0.0,   2.0,      0.0,     4,    2, "O1 Gain"}
+        $x!{public  o1_waveform     lin no_smooth 18,  0.0,   1.0,      0.0,     4,    2, "O1 Wave"}
+        $x!{public  o1_pw           lin smooth    19,  0.0,   1.0,      1.0,     4,    2, "O1 PW"}
+        $x!{public  o1_unison       lin no_smooth 20,  0.0,  10.5,      0.0,     1,    0, "O1 Unison"}
+        $x!{public  o1_detune       lin smooth    21,  0.0,   1.0,      0.01,    5,    3, "O1 Detune"}
 
-        $x!{public o1fm_ratio      exp smooth    24,  0.0,  30.0,       2.0,    6,    3, "OP1 Ratio"}
-        $x!{public o1fm_self       exp smooth    25,  0.0,30000.0,      0.0,    7,    2, "OP1 Self Hz"}
-        $x!{public o1fm_o2_mod     exp smooth    26,  0.0,30000.0,    100.0,    7,    2, "OP1>OP2 Hz"}
-        $x!{public o2fm_o1_mod     exp smooth    27,  0.0,30000.0,      0.0,    7,    2, "OP2>OP1 Hz"}
-        $x!{public o2fm_freq       exp smooth    28,  0.0,30000.0,    500.0,    7,    2, "OP2 Freq Hz"}
-        $x!{public o2fm_self       exp smooth    29,  0.0,30000.0,      0.0,    7,    2, "OP2 Self Hz"}
-        $x!{public o2fm_gain       lin smooth    30,  0.0,   2.0,       0.0,    5,    3, "OP2 Gain"}
-        $x!{public o2fm_mode       lin no_smooth 31,  0.0,   1.0,       0.0,    3,    1, "OP2 Mode"}
+        $x!{public  o1fm_ratio      exp smooth    22,  0.0,  30.0,       2.0,    5,    3, "OP1 Ratio"}
+        $x!{public  o1fm_self       exp smooth    23,  0.0,30000.0,      0.0,    4,    2, "OP1 Self Hz"}
+        $x!{public  o1fm_o2_mod     exp smooth    24,  0.0,30000.0,    100.0,    4,    2, "OP1>OP2 Hz"}
+        $x!{public  o2fm_o1_mod     exp smooth    25,  0.0,30000.0,      0.0,    4,    2, "OP2>OP1 Hz"}
+        $x!{public  o2fm_freq       exp smooth    26,  0.0,30000.0,    500.0,    4,    2, "OP2 Freq Hz"}
+        $x!{public  o2fm_self       exp smooth    27,  0.0,30000.0,      0.0,    4,    2, "OP2 Self Hz"}
+        $x!{public  o2fm_gain       lin smooth    28,  0.0,   2.0,       0.0,    5,    3, "OP2 Gain"}
+        $x!{private o2fm_mode       lin no_smooth 38,  0.0,   1.0,       0.0,    3,    1, "OP2 Mode"}
 
-        $x!{public main_gain       exp smooth    32,  0.0,   2.0,       1.0,    4,    3, "Main Gain"}
+        $x!{public  main_gain       exp smooth    29,  0.0,   2.0,       1.0,    5,    3, "Main Gain"}
 
-        $x!{public lfo1_freq       lin smooth    33,  0.0,1000.0,       5.0,    6,    1, "LFO1 Freq"}
-        $x!{public lfo1_wave       lin no_smooth 34,  0.0,   1.0,       0.0,    3,    1, "LFO1 Wave"}
-        $x!{public lfo1_pw         lin smooth    35,  0.0,   1.0,       0.0,    3,    1, "LFO1 PW"}
-        $x!{public lfo1_phase      lin smooth    36,  0.0,   1.0,       0.0,    3,    1, "LFO1 Phase"}
+        $x!{public  lfo1_freq       lin smooth    30,  0.0,1000.0,       5.0,    3,    1, "LFO1 Freq"}
+        $x!{public  lfo1_wave       lin no_smooth 31,  0.0,   1.0,       0.0,    3,    1, "LFO1 Wave"}
+        $x!{public  lfo1_pw         lin smooth    32,  0.0,   1.0,       0.0,    3,    1, "LFO1 PW"}
+        $x!{public  lfo1_phase      lin smooth    33,  0.0,   1.0,       0.0,    3,    1, "LFO1 Phase"}
 
-        $x!{public  m1_amount      lin smooth    37,  0.0,   1.0,       0.0,    4,    2, "Mod1 Amt"}
-        $x!{public  m1_slope       lin smooth    38,  0.0,   1.0,       0.0,    5,    3, "Mod1 Slope"}
+        $x!{public   m1_amount      lin smooth    34,  0.0,   1.0,       0.0,    4,    2, "Mod1 Amt"}
+        $x!{public   m1_slope       lin smooth    35,  0.0,   1.0,       0.0,    5,    3, "Mod1 Slope"}
+        $x!{private  m1_src_id      lin no_smooth 39,  0.0,1000.0,       0.0,    1,    0, "Mod1 Src"}
+        $x!{private  m1_dest_id     lin no_smooth 40,  0.0,1000.0,       0.0,    1,    0, "Mod1 Dest"}
+        $x!{private  m1_fun         lin no_smooth 41,  0.0,   1.0,       0.0,    3,    1, "Mod1 Fun"}
 
-        $x!{private m1_src_id      lin no_smooth 39,  0.0,1000.0,       0.0,    6,    0, "Mod1 Src"}
-        $x!{private m1_dest_id     lin no_smooth 40,  0.0,1000.0,       0.0,    6,    0, "Mod1 Dest"}
-        $x!{private m1_fun         lin no_smooth 41,  0.0,   1.0,       0.0,    3,    1, "Mod1 Fun"}
-
-        $x!{private phase_test     lin smooth    42,  0.0,   1.0,       0.0,     5,    2, "Click2"}
+        $x!{private  phase_test     lin smooth    42,  0.0,   1.0,       0.0,    4,    2, "Click2"}
     }
 }
 
@@ -155,6 +154,15 @@ macro_rules! param_impl_accessors {
             pub fn $name(&self) -> f32 { self.v[self.idx][$idx] }
         }
     }
+}
+
+pub mod pid {
+    macro_rules! param_ids {
+        ($_:ident $name:ident $e:ident $s:ident $idx:expr, $($tt:tt)*) => {
+            pub const $name : usize = $idx;
+        }
+    }
+    param_model!{param_ids}
 }
 
 

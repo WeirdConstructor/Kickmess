@@ -270,10 +270,10 @@ impl SegmentedKnob {
             };
 
         let some_right_padding = 6.0;
-        let light_font_offs    = 2.0;
+        let light_font_offs    = 4.0;
 
         p.label(
-            self.font_size_data, 1, color,
+            self.font_size_data, 0, color,
             x + r.0 + light_font_offs,
             y + r.1,
             r.2 - some_right_padding,

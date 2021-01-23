@@ -114,47 +114,14 @@ impl UIController for KickmessEditorController {
 }
 
 pub fn define_gui(ps: &crate::ParamSet, gui: &mut dyn ui::protocol::UI) {
+    use crate::param_model::pid::{self};
+    use crate::param_model::PARAM_COUNT;
+
     let mut values = vec![];
-    values.resize(45, UIValueSpec::new_id());
+    values.resize(PARAM_COUNT + 2, UIValueSpec::new_id());
 
-    let id_s_freq    = 0;
-    let id_e_freq    = 1;
-    let id_f_env_rel = 2;
-    let id_d_start   = 3;
-    let id_d_end     = 4;
-    let id_gain      = 5;
-    let id_env_slope = 6;
-    let id_f_slope   = 7;
-    let id_noise     = 8;
-    let id_n_s_freq  = 9;
-    let id_n_e_freq  = 10;
-    let id_env_rel   = 11;
-    let id_click     = 12;
-    let id_dist_on   = 13;
-    let id_f1_cutoff = 14;
-    let id_f1_res    = 15;
-    let id_f1_type   = 16;
-    let id_f1_drive  = 17;
-    let id_f1_on     = 18;
-    let id_o1_gain   = 19;
-    let id_o1_wave   = 20;
-    let id_o1_pw     = 21;
-    let id_o1_unison = 22;
-    let id_o1_detune = 23;
-
-    let id_of1_freq  = 24;
-    let id_of1_self  = 25;
-    let id_of1_o2    = 26;
-    let id_of2_o1    = 27;
-    let id_of2_freq  = 28;
-    let id_of2_self  = 29;
-    let id_of2_gain  = 30;
-
-    let id_of2_mode  = 31;
-    let id_main_gain = 32;
-
-    let id_main_tab  = 40;
-    let id_lic_tab   = 41;
+    let id_main_tab  = PARAM_COUNT;
+    let id_lic_tab   = PARAM_COUNT + 1;
 
     for i in 0..ps.param_count() {
         let help_text =
@@ -167,43 +134,49 @@ pub fn define_gui(ps: &crate::ParamSet, gui: &mut dyn ui::protocol::UI) {
               .help(help_text.0, help_text.1);
     }
 
-    let ht = crate::param_model::help_texts[id_n_s_freq];
-    values[id_n_s_freq] = UIValueSpec::new_toggle(&[ "Off", "On" ]).help(ht.0, ht.1);
-    let ht = crate::param_model::help_texts[id_n_e_freq];
-    values[id_n_e_freq] = UIValueSpec::new_toggle(&[ "Off", "On" ]).help(ht.0, ht.1);
-    let ht = crate::param_model::help_texts[id_dist_on];
-    values[id_dist_on]  = UIValueSpec::new_toggle(&[ "Off", "On" ]).help(ht.0, ht.1);
-    let ht = crate::param_model::help_texts[id_f1_on];
-    values[id_f1_on]    = UIValueSpec::new_toggle(&[ "Off", "On" ]).help(ht.0, ht.1);
+    let ht = crate::param_model::help_texts[pid::freq_note_start];
+    values[pid::freq_note_start] = UIValueSpec::new_toggle(&[ "Off", "On" ]).help(ht.0, ht.1);
+    let ht = crate::param_model::help_texts[pid::freq_note_end];
+    values[pid::freq_note_end] = UIValueSpec::new_toggle(&[ "Off", "On" ]).help(ht.0, ht.1);
+    let ht = crate::param_model::help_texts[pid::dist_on];
+    values[pid::dist_on]  = UIValueSpec::new_toggle(&[ "Off", "On" ]).help(ht.0, ht.1);
+    let ht = crate::param_model::help_texts[pid::f1_on];
+    values[pid::f1_on]    = UIValueSpec::new_toggle(&[ "Off", "On" ]).help(ht.0, ht.1);
 
-    let ht = crate::param_model::help_texts[id_of2_mode];
-    values[id_of2_mode] = UIValueSpec::new_toggle(&[ "Env", "Fixed" ]).help(ht.0, ht.1);
+    let ht = crate::param_model::help_texts[pid::o2fm_mode];
+    values[pid::o2fm_mode] = UIValueSpec::new_toggle(&[ "Env", "Fixed" ]).help(ht.0, ht.1);
 
-    values[id_f1_type]  = UIValueSpec::new_toggle(&[ "LP", "HP", "BP" ]).help(ht.0, ht.1);
+    values[pid::f1_type]  = UIValueSpec::new_toggle(&[ "LP", "HP", "BP" ]).help(ht.0, ht.1);
 
 
-    values[id_d_start]  .set_active_when_gt05(id_dist_on);
-    values[id_d_end]    .set_active_when_gt05(id_dist_on);
+    values[pid::dist_start]  .set_active_when_gt05(pid::dist_on);
+    values[pid::dist_end]    .set_active_when_gt05(pid::dist_on);
 
-    values[id_f1_cutoff].set_active_when_gt05(id_f1_on);
-    values[id_f1_res]   .set_active_when_gt05(id_f1_on);
-    values[id_f1_type]  .set_active_when_gt05(id_f1_on);
-    values[id_f1_drive] .set_active_when_gt05(id_f1_on);
+    values[pid::f1_cutoff].set_active_when_gt05(pid::f1_on);
+    values[pid::f1_res]   .set_active_when_gt05(pid::f1_on);
+    values[pid::f1_type]  .set_active_when_gt05(pid::f1_on);
+    values[pid::f1_drive] .set_active_when_gt05(pid::f1_on);
 
-    values[id_o1_wave]  .set_active_when_gt0(id_o1_gain);
-    values[id_o1_pw]    .set_active_when_gt0(id_o1_gain);
-    values[id_o1_unison].set_active_when_gt0(id_o1_gain);
-    values[id_o1_detune].set_active_when_gt0(id_o1_gain);
+    values[pid::o1_waveform]  .set_active_when_gt0(pid::o1_gain);
+    values[pid::o1_pw]    .set_active_when_gt0(pid::o1_gain);
+    values[pid::o1_unison].set_active_when_gt0(pid::o1_gain);
+    values[pid::o1_detune].set_active_when_gt0(pid::o1_gain);
 
-    values[id_of2_freq] .set_active_when_gt05(id_of2_mode);
+    values[pid::o1fm_ratio]    .set_active_when_gt0(pid::o2fm_gain);
+    values[pid::o1fm_self]    .set_active_when_gt0(pid::o2fm_gain);
+    values[pid::o1fm_o2_mod]      .set_active_when_gt0(pid::o2fm_gain);
+    values[pid::o2fm_o1_mod]      .set_active_when_gt0(pid::o2fm_gain);
+    values[pid::o2fm_self]    .set_active_when_gt0(pid::o2fm_gain);
+
+    values[pid::o2fm_freq]    .set_active_when_gt05(pid::o2fm_mode);
 
     gui.define_value_spec(values);
 
-    let id_s_freq_f     = id_s_freq;
-    let id_ae_f_env_rel = id_f_env_rel;
-    let id_ae_f_slope   = id_f_slope;
-    let id_ae_s_freq    = id_s_freq;
-    let id_ae_e_freq    = id_e_freq;
+    let id_s_freq_f     = pid::freq_start;
+    let id_ae_f_env_rel = pid::f_env_release;
+    let id_ae_f_slope   = pid::freq_slope;
+    let id_ae_s_freq    = pid::freq_start;
+    let id_ae_e_freq    = pid::freq_end;
     let f_env_fun =
         Arc::new(move |_id: usize, src: &mut dyn UIValueSource, out: &mut Vec<(f64, f64)>| {
             let min_x = 0.2;
@@ -232,11 +205,11 @@ pub fn define_gui(ps: &crate::ParamSet, gui: &mut dyn ui::protocol::UI) {
             }
         });
 
-    let id_s_freq_f     = id_s_freq;
-    let id_ae_f_env_rel = id_f_env_rel;
-    let id_ae_env_slope = id_env_slope;
-    let id_ae_s_freq    = id_s_freq;
-    let id_ae_e_freq    = id_e_freq;
+    let id_s_freq_f     = pid::freq_start;
+    let id_ae_f_env_rel = pid::f_env_release;
+    let id_ae_env_slope = pid::env_slope;
+    let id_ae_s_freq    = pid::freq_start;
+    let id_ae_e_freq    = pid::freq_end;
     let amp_env_fun =
         Arc::new(move |_id: usize,
                        src: &mut dyn UIValueSource,
@@ -256,7 +229,6 @@ pub fn define_gui(ps: &crate::ParamSet, gui: &mut dyn ui::protocol::UI) {
             }
         });
 
-    let id_ph_click = id_click;
     let phase_fun =
         Arc::new(move |_id: usize,
                        src: &mut dyn UIValueSource,
@@ -268,7 +240,7 @@ pub fn define_gui(ps: &crate::ParamSet, gui: &mut dyn ui::protocol::UI) {
                 let x = x as f64 / (samples as f64);
                 out.push((
                     x,
-                    (((x + 0.25 * src.param_value(id_ph_click))
+                    (((x + 0.25 * src.param_value(pid::phase_offs))
                        * 2.0 * std::f64::consts::PI).sin() + 1.0) / 2.0));
             }
         });
@@ -304,15 +276,15 @@ pub fn define_gui(ps: &crate::ParamSet, gui: &mut dyn ui::protocol::UI) {
                         amp_env_fun.clone()),
                     UIInput::container(UIPos::center(8, 2), 1.0, "Amp", vec![vec![
                         UIInput::knob(
-                            id_f_env_rel,
+                            pid::f_env_release,
                             String::from("Length (ms)"),
                             UIPos::center(4, 12).bottom()),
                         UIInput::knob(
-                            id_env_slope,
+                            pid::env_slope,
                             String::from("Amp Slope"),
                             UIPos::center(4, 12).bottom()),
                         UIInput::knob(
-                            id_env_rel,
+                            pid::env_release,
                             String::from("Rel (ms)"),
                             UIPos::center(4, 12).bottom()),
                     ]]),
@@ -325,15 +297,15 @@ pub fn define_gui(ps: &crate::ParamSet, gui: &mut dyn ui::protocol::UI) {
                         f_env_fun.clone()),
                     UIInput::container(UIPos::center(8, 2), 1.0, "Pitch", vec![vec![
                         UIInput::knob(
-                            id_s_freq,
+                            pid::freq_start,
                             String::from("Start Hz"),
                             UIPos::center(4, 12).bottom()),
                         UIInput::knob(
-                            id_e_freq,
+                            pid::freq_end,
                             String::from("End Hz"),
                             UIPos::center(4, 12).bottom()),
                         UIInput::knob(
-                            id_f_slope,
+                            pid::freq_slope,
                             String::from("Freq Slope"),
                             UIPos::center(4, 12).bottom()),
                     ]]),
@@ -346,7 +318,7 @@ pub fn define_gui(ps: &crate::ParamSet, gui: &mut dyn ui::protocol::UI) {
                         vec![
                             vec![
                                 UIInput::knob_small(
-                                    id_click,
+                                    pid::phase_offs,
                                     String::from("Click"),
                                     UIPos::center(6, 12).middle()),
                                 UIInput::graph_small(
@@ -358,11 +330,11 @@ pub fn define_gui(ps: &crate::ParamSet, gui: &mut dyn ui::protocol::UI) {
                         ]),
                     UIInput::container(UIPos::center(8, 2), 1.0, "", vec![vec![
                         UIInput::btn_toggle(
-                            id_n_s_freq,
+                            pid::freq_note_start,
                             String::from("Note>St. F"),
                             UIPos::center(4, 12).middle()),
                         UIInput::btn_toggle(
-                            id_n_e_freq,
+                            pid::freq_note_end,
                             String::from("Note>End F"),
                             UIPos::center(4, 12).middle()),
                     ]]),
@@ -370,24 +342,24 @@ pub fn define_gui(ps: &crate::ParamSet, gui: &mut dyn ui::protocol::UI) {
                 vec![
                     UIInput::container_border(UIPos::center(12, 3), 1.01, "Filter 1", vec![vec![
                         UIInput::btn_toggle_small(
-                            id_f1_on,
+                            pid::f1_on,
                             String::from("Filter 1"),
                             UIPos::center(2, 12).middle()),
                         UIInput::container(UIPos::center(10, 12), 1.0, "", vec![vec![
                             UIInput::knob(
-                                id_f1_cutoff,
+                                pid::f1_cutoff,
                                 String::from("F1 Cut"),
                                 UIPos::center(3, 12).middle()),
                             UIInput::knob(
-                                id_f1_res,
+                                pid::f1_res,
                                 String::from("F1 Res"),
                                 UIPos::center(3, 12).middle()),
                             UIInput::btn_toggle(
-                                id_f1_type,
+                                pid::f1_type,
                                 String::from("F1 Type"),
                                 UIPos::left(3, 12).top()),
                             UIInput::knob(
-                                id_f1_drive,
+                                pid::f1_drive,
                                 String::from("F1 Drive"),
                                 UIPos::center(3, 12).middle()),
                         ]])
@@ -396,23 +368,23 @@ pub fn define_gui(ps: &crate::ParamSet, gui: &mut dyn ui::protocol::UI) {
                 vec![
                     UIInput::container_border(UIPos::center(12, 3), 1.0, "Oscillator 1", vec![vec![
                         UIInput::knob(
-                            id_o1_gain,
+                            pid::o1_gain,
                             String::from("Osc1 Gain"),
                             UIPos::center(2, 12).middle()),
                         UIInput::knob(
-                            id_o1_wave,
+                            pid::o1_waveform,
                             String::from("Osc1 Wave"),
                             UIPos::center(2, 12).middle()),
                         UIInput::knob(
-                            id_o1_pw,
+                            pid::o1_pw,
                             String::from("Osc1 PW"),
                             UIPos::center(2, 12).middle()),
                         UIInput::knob(
-                            id_o1_unison,
+                            pid::o1_unison,
                             String::from("Osc1 Uni."),
                             UIPos::center(2, 12).middle()),
                         UIInput::knob(
-                            id_o1_detune,
+                            pid::o1_detune,
                             String::from("Osc1 Det."),
                             UIPos::center(2, 12).middle()),
                     ]]),
@@ -425,37 +397,37 @@ pub fn define_gui(ps: &crate::ParamSet, gui: &mut dyn ui::protocol::UI) {
             vec![
                 vec![
                     UIInput::knob(
-                        id_of1_freq,
+                        pid::o1fm_ratio,
                         String::from("Op1 Hz"),
                         UIPos::center(3, 2).middle()),
                     UIInput::knob(
-                        id_of2_freq,
+                        pid::o2fm_freq,
                         String::from("Op2 Hz"),
                         UIPos::center(3, 2).middle()),
                     UIInput::btn_toggle(
-                        id_of2_mode,
+                        pid::o2fm_mode,
                         String::from("Op2 Pitch"),
                         UIPos::center(3, 2).middle()),
                     UIInput::knob(
-                        id_of2_gain,
+                        pid::o2fm_gain,
                         String::from("Gain"),
                         UIPos::center(3, 2).middle()),
                 ],
                 vec![
                     UIInput::knob(
-                        id_of1_self,
+                        pid::o1fm_self,
                         String::from("Op1<o Hz"),
                         UIPos::center(3, 2).middle()),
                     UIInput::knob(
-                        id_of2_self,
+                        pid::o2fm_self,
                         String::from("Op2<o Hz"),
                         UIPos::center(3, 2).middle()),
                     UIInput::knob(
-                        id_of1_o2,
+                        pid::o1fm_o2_mod,
                         String::from("Op1>2 Hz"),
                         UIPos::center(3, 2).middle()),
                     UIInput::knob(
-                        id_of2_o1,
+                        pid::o2fm_o1_mod,
                         String::from("Op2>1 Hz"),
                         UIPos::center(3, 2).middle()),
                 ],
@@ -466,17 +438,17 @@ pub fn define_gui(ps: &crate::ParamSet, gui: &mut dyn ui::protocol::UI) {
             vec![
                 vec![
                     UIInput::knob(
-                        id_gain,
+                        pid::gain,
                         String::from("MOsc Gain"),
                         UIPos::center(6, 6).middle()),
                     UIInput::knob(
-                        id_noise,
+                        pid::noise,
                         String::from("Tone/Noise"),
                         UIPos::center(6, 6).middle()),
                 ],
                 vec![
                     UIInput::knob(
-                        id_main_gain,
+                        pid::main_gain,
                         String::from("Main Gain"),
                         UIPos::center(6, 6).middle()),
                 ],
@@ -489,17 +461,17 @@ pub fn define_gui(ps: &crate::ParamSet, gui: &mut dyn ui::protocol::UI) {
                     vec![
                         vec![
                             UIInput::btn_toggle(
-                                id_dist_on,
+                                pid::dist_on,
                                 String::from("Distortion"),
                                 UIPos::left(12, 4).top()),
                         ],
                         vec![
                             UIInput::knob(
-                                id_d_start,
+                                pid::dist_start,
                                 String::from("Start Amt"),
                                 UIPos::center(6, 8).middle()),
                             UIInput::knob(
-                                id_d_end,
+                                pid::dist_end,
                                 String::from("End Amt"),
                                 UIPos::center(6, 8).middle()),
                         ],

@@ -165,23 +165,20 @@ impl MonoProcessor for OpKickmess {
 
                 kick_sample = s * amp_gain * params.gain() as f64;
 
-                kick_sample +=
-                    (params.o1_gain()
-                     * amp_gain as f32
-                     * self.oscillator1.next(&O1Params(&params, &self.note_freq))) as f64;
+                if params.o1_gain() > 0.001 {
+                    kick_sample +=
+                        (params.o1_gain()
+                         * amp_gain as f32
+                         * self.oscillator1.next(&O1Params(&params, &self.note_freq))) as f64;
+                }
 
-                kick_sample +=
-                    (params.o2fm_gain()
-                     * amp_gain as f32
-                     * self.fm_oscillator.next(&O1Params(&params, &self.note_freq))) as f64;
+                if params.o2fm_gain() > 0.001 {
+                    kick_sample +=
+                        (params.o2fm_gain()
+                         * amp_gain as f32
+                         * self.fm_oscillator.next(&O1Params(&params, &self.note_freq))) as f64;
+                }
 
-//                if kick_sample.abs() > 0.99 {
-//                    log.log(|bw: &mut std::io::BufWriter<&mut [u8]>| {
-//                        use std::io::Write;
-//                        write!(bw, "ks: {:9.6}", kick_sample).unwrap();
-//                    });
-//                }
-//
                 if params.f1_on() > 0.5 {
                     kick_sample =
                         self.filter1.next(kick_sample as f32, &F1Params(&params), log)

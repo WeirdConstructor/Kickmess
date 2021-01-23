@@ -15,6 +15,8 @@ sin/noise oscillator.
 * Change: Presets are now saved as serialized data.
 * Change: The Shift key does now also work while dragging (once only, and will
 only enable but not disable fine drag mode).
+* Change: Value labels are centered now.
+* Change: Hide parameters that are not useful to be automateable.
 * Feature: Added a filter implementation for filtering the output.
 * Feature: Added saw/tri/square oscillator with unison/detune.
 * Feature: Added FM oscillator.
