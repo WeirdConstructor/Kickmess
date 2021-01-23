@@ -111,10 +111,6 @@ impl UIController for KickmessEditorController {
             self.host.end_edit(id as i32);
         }
     }
-
-    fn fetch_logs(&self) -> Option<String> {
-        self.params.gui_log.collect()
-    }
 }
 
 pub fn define_gui(ps: &crate::ParamSet, gui: &mut dyn ui::protocol::UI) {

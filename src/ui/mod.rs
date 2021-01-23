@@ -108,8 +108,6 @@ pub struct WValuePlugUI {
 
     needs_redraw_flag: bool,
 
-    last_log:       String,
-
     version_label:  &'static str,
 }
 
@@ -245,7 +243,6 @@ impl WValuePlugUI {
                 help_id:            None,
                 help_texts:         vec![],
                 version_label:      "",
-                last_log:           String::from(""),
             };
         this.init_draw_cache();
         this.controller.clone().init(&mut this);
@@ -1367,16 +1364,6 @@ impl WValuePlugUI {
                 self.draw_text_lines(
                     p, txt, UI_HELP_FONT_SIZE, UI_HELP_TXT_CLR,
                     x, y, ww, wh, true, Some(name));
-
-                if let Some(s) = self.controller.fetch_logs() {
-                    self.last_log = s;
-                }
-
-                if crate::DEBUG_LOGGING {
-                    self.draw_text_lines(
-                        p, &self.last_log, UI_HELP_FONT_SIZE, UI_HELP_TXT_CLR,
-                        x, y, ww, wh, true, Some("Log"));
-                }
             }
         }
 

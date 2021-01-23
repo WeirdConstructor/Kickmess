@@ -23,10 +23,6 @@ impl UIController for TestController {
     fn window_closed(&self, _ui: &mut dyn UI) {
 //        self.is_open.store(false, std::sync::atomic::Ordering::Relaxed);
     }
-
-    fn fetch_logs(&self) -> Option<String> {
-        None
-    }
 }
 
 fn main() {

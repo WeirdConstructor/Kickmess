@@ -80,10 +80,7 @@ impl Plugin for Kickmess {
         helpers::init_cos_tab();
         if DEBUG_LOGGING {
             use std::io::Write;
-            let r = self.log.start_writer_thread();
-            self.params.gui_log.log(|bw| {
-                write!(bw, "start: {}", r).unwrap();
-            });
+            self.log.start_writer_thread();
         }
     }
 
@@ -181,7 +178,6 @@ pub(crate) struct KickmessVSTParams {
     public_ps:      ParamSet,
     params:         Vec<AtomicFloat>,
     dirty_params:   ringbuf_shared::RingBuf<usize>,
-    gui_log:        Log,
 }
 
 impl KickmessVSTParams {
@@ -231,7 +227,6 @@ impl Default for KickmessVSTParams {
             public_ps,
             params,
             dirty_params: buf,
-            gui_log: Log::new(),
         }
     }
 }

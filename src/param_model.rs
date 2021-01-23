@@ -97,8 +97,15 @@ macro_rules! param_model {
     }
 }
 
+pub const PARAM_COUNT : usize = 33;
+
 pub struct ParamModel<'a> {
     v: &'a [f32],
+}
+
+pub struct ParamModelMut {
+    idx: usize,
+    v: [[f32; PARAM_COUNT]; 2],
 }
 
 macro_rules! param_impl_accessors {
@@ -106,8 +113,13 @@ macro_rules! param_impl_accessors {
         impl ParamModel<'_> {
             pub fn $name(&self) -> f32 { self.v[$idx] }
         }
+
+        impl ParamModelMut {
+            pub fn $name(&self) -> f32 { self.v[self.idx][$idx] }
+        }
     }
 }
+
 
 pub fn deserialize_preset<F: Fn(usize, f32)>(preset: &[u8], out: F) {
     let mut preset_data : Vec<(String, f32)> = vec![];
@@ -203,6 +215,50 @@ impl<'a> ParamModel<'a> {
         }
 
         param_model!{param_add_ps_priv}
+    }
+}
+
+impl ParamModelMut {
+    pub fn new() -> Self {
+        let mut v = [[0.0; PARAM_COUNT]; 2];
+        Self {
+            v,
+            idx: 0,
+        }
+    }
+
+    pub fn reset(&mut self) {
+        self.idx = 0;
+        for v in self.v[self.idx].iter_mut() {
+            *v = 0.0;
+        }
+    }
+
+    pub fn get_prev_frame(&mut self) -> &[f32] {
+        &self.v[(self.idx + 1) % 2][..]
+    }
+
+    pub fn swap(&mut self, i: &[f32]) {
+        self.idx = (self.idx + 1) % 2;
+        for (i, v) in i.iter().zip(self.v[self.idx].iter_mut()) {
+            *v = *i;
+        }
+    }
+
+    pub fn mod_idx_with_fun(&mut self, id: f32, modulator_id: f32, fun: f32, a: f32, slope: f32) {
+        let mod_val = self.v[self.idx][(modulator_id + 0.1).floor() as usize];
+        let mod_val = mod_val.powf(slope);
+        let fun =
+            if fun < 0.25 {         // a * x            [0, a]
+                a * mod_val
+            } else if fun < 0.5 {   // a * (1 - x)      [a, 0]
+                a * (1.0 - mod_val)
+            } else if fun < 0.75 {  // 1 - a * x        [1, 1 - a]
+                1.0 - (a * mod_val)
+            } else {                // 1 - a * (1 - x)  [1 - a, 1]
+                1.0 - a * (1.0 - mod_val)
+            };
+        self.v[self.idx][(id + 0.1).floor() as usize] *= pow_fun;
     }
 }
 
