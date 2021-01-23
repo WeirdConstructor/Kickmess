@@ -1,6 +1,6 @@
 use crate::helpers::*;
 
-pub trait OscillatorInputParams{
+pub trait OscillatorInputParams {
     fn freq(&self)          -> f32;
     fn waveform(&self)      -> f32;
     fn pulse_width(&self)   -> f32;
@@ -13,6 +13,7 @@ pub trait OscillatorInputParams{
     fn op2_self(&self)      -> f32;
     fn op1_op2(&self)       -> f32;
     fn op2_op1(&self)       -> f32;
+    fn op2_mode(&self)      -> f32;
 }
 
 pub struct PolyBlepOscillator {
@@ -239,7 +240,10 @@ impl FMOscillator {
     }
 
     pub fn next<P: OscillatorInputParams>(&mut self, params: &P) -> f32 {
-        let freq2      = params.op2_freq() as f64;
+        let freq2 =
+            if params.op2_mode() < 0.5 { params.freq() as f64 }
+            else                       { params.op2_freq() as f64 };
+
         let freq1      = freq2 * (params.op1_ratio() as f64);
         let phase1_inc =
             (freq1

@@ -150,7 +150,8 @@ pub fn define_gui(ps: &crate::ParamSet, gui: &mut dyn ui::protocol::UI) {
     let id_of2_self  = 29;
     let id_of2_gain  = 30;
 
-    let id_main_gain = 31;
+    let id_of2_mode  = 31;
+    let id_main_gain = 32;
 
     let id_main_tab  = 40;
     let id_lic_tab   = 41;
@@ -175,6 +176,9 @@ pub fn define_gui(ps: &crate::ParamSet, gui: &mut dyn ui::protocol::UI) {
     let ht = crate::param_model::help_texts[id_f1_on];
     values[id_f1_on]    = UIValueSpec::new_toggle(&[ "Off", "On" ]).help(ht.0, ht.1);
 
+    let ht = crate::param_model::help_texts[id_of2_mode];
+    values[id_of2_mode] = UIValueSpec::new_toggle(&[ "Env", "Fixed" ]).help(ht.0, ht.1);
+
     values[id_f1_type]  = UIValueSpec::new_toggle(&[ "LP", "HP", "BP" ]).help(ht.0, ht.1);
 
 
@@ -190,6 +194,8 @@ pub fn define_gui(ps: &crate::ParamSet, gui: &mut dyn ui::protocol::UI) {
     values[id_o1_pw]    .set_active_when_gt0(id_o1_gain);
     values[id_o1_unison].set_active_when_gt0(id_o1_gain);
     values[id_o1_detune].set_active_when_gt0(id_o1_gain);
+
+    values[id_of2_freq] .set_active_when_gt05(id_of2_mode);
 
     gui.define_value_spec(values);
 
@@ -421,15 +427,19 @@ pub fn define_gui(ps: &crate::ParamSet, gui: &mut dyn ui::protocol::UI) {
                     UIInput::knob(
                         id_of1_freq,
                         String::from("Op1 Hz"),
-                        UIPos::center(4, 2).middle()),
+                        UIPos::center(3, 2).middle()),
                     UIInput::knob(
                         id_of2_freq,
                         String::from("Op2 Hz"),
-                        UIPos::center(4, 2).middle()),
+                        UIPos::center(3, 2).middle()),
+                    UIInput::btn_toggle(
+                        id_of2_mode,
+                        String::from("Op2 Pitch"),
+                        UIPos::center(3, 2).middle()),
                     UIInput::knob(
                         id_of2_gain,
                         String::from("Gain"),
-                        UIPos::center(4, 2).middle()),
+                        UIPos::center(3, 2).middle()),
                 ],
                 vec![
                     UIInput::knob(

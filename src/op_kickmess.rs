@@ -34,6 +34,7 @@ use crate::param_model::*;
 use crate::filter::{MoogFilter, FilterInputParams};
 use crate::oscillator::{UnisonBlep, FMOscillator, OscillatorInputParams};
 use crate::log::Log;
+use crate::lfo::{LFO, LFOInputParams};
 
 use crate::MAX_BLOCKSIZE;
 const PI2 : f64 = std::f64::consts::PI * 2.0;
@@ -61,6 +62,7 @@ impl<'a, 'b> OscillatorInputParams for O1Params<'a, 'b> {
     fn op2_self(&self)      -> f32 { self.0.o2fm_self() }
     fn op1_op2(&self)       -> f32 { self.0.o1fm_o2_mod() }
     fn op2_op1(&self)       -> f32 { self.0.o2fm_o1_mod() }
+    fn op2_mode(&self)      -> f32 { self.0.o2fm_mode() }
 }
 
 pub struct OpKickmess {

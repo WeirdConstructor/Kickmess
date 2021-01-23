@@ -10,6 +10,7 @@ mod ringbuf_shared;
 mod param_model;
 mod filter;
 mod oscillator;
+mod lfo;
 mod log;
 pub mod editor;
 pub mod ui;

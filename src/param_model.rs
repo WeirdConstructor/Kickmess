@@ -1,6 +1,6 @@
 use crate::proc::*;
 
-pub const help_texts : [(&str, &str); 19] = [
+pub const help_texts : [(&str, &str); 43] = [
     ("Start Frequency",
         "This is the starting frequency of the frequency envelope."),
     ("End Frequency",
@@ -51,6 +51,30 @@ pub const help_texts : [(&str, &str); 19] = [
         "),
     ("Filter 1 Overdrive", ""),
     ("Filter 1 On/Off", ""),
+    ("", ""),
+    ("", ""),
+    ("", ""),
+    ("", ""),
+    ("", ""),
+    ("", ""),
+    ("", ""),
+    ("", ""),
+    ("", ""),
+    ("", ""),
+    ("", ""),
+    ("", ""),
+    ("", ""),
+    ("", ""),
+    ("", ""),
+    ("", ""),
+    ("", ""),
+    ("", ""),
+    ("", ""),
+    ("", ""),
+    ("", ""),
+    ("", ""),
+    ("", ""),
+    ("", ""),
 ];
 
 macro_rules! param_model {
@@ -78,7 +102,7 @@ macro_rules! param_model {
         $x!{public f1_on           lin no_smooth 18,  0.0,   1.0,      0.0,     3,    1, "F1 On"}
 
         $x!{public o1_gain         exp smooth    19,  0.0,   2.0,      0.0,     4,    2, "O1 Gain"}
-        $x!{public o1_waveform     lin smooth    20,  0.0,   1.0,      0.0,     4,    2, "O1 Wave"}
+        $x!{public o1_waveform     lin no_smooth 20,  0.0,   1.0,      0.0,     4,    2, "O1 Wave"}
         $x!{public o1_pw           lin smooth    21,  0.0,   1.0,      1.0,     4,    2, "O1 PW"}
         $x!{public o1_unison       lin no_smooth 22,  0.0,  10.5,      0.0,     1,    0, "O1 Unison"}
         $x!{public o1_detune       lin smooth    23,  0.0,   1.0,      0.01,    5,    3, "O1 Detune"}
@@ -90,14 +114,27 @@ macro_rules! param_model {
         $x!{public o2fm_freq       exp smooth    28,  0.0,30000.0,    500.0,    7,    2, "OP2 Freq Hz"}
         $x!{public o2fm_self       exp smooth    29,  0.0,30000.0,      0.0,    7,    2, "OP2 Self Hz"}
         $x!{public o2fm_gain       lin smooth    30,  0.0,   2.0,       0.0,    5,    3, "OP2 Gain"}
+        $x!{public o2fm_mode       lin no_smooth 31,  0.0,   1.0,       0.0,    3,    1, "OP2 Mode"}
 
-        $x!{public main_gain       exp smooth    31,  0.0,   2.0,       1.0,    4,    3, "Main Gain"}
+        $x!{public main_gain       exp smooth    32,  0.0,   2.0,       1.0,    4,    3, "Main Gain"}
 
-        $x!{private phase_test     lin smooth    32,  0.0,   1.0,      0.0,     5,    2, "Click2"}
+        $x!{public lfo1_freq       lin smooth    33,  0.0,1000.0,       5.0,    6,    1, "LFO1 Freq"}
+        $x!{public lfo1_wave       lin no_smooth 34,  0.0,   1.0,       0.0,    3,    1, "LFO1 Wave"}
+        $x!{public lfo1_pw         lin smooth    35,  0.0,   1.0,       0.0,    3,    1, "LFO1 PW"}
+        $x!{public lfo1_phase      lin smooth    36,  0.0,   1.0,       0.0,    3,    1, "LFO1 Phase"}
+
+        $x!{public  m1_amount      lin smooth    37,  0.0,   1.0,       0.0,    4,    2, "Mod1 Amt"}
+        $x!{public  m1_slope       lin smooth    38,  0.0,   1.0,       0.0,    5,    3, "Mod1 Slope"}
+
+        $x!{private m1_src_id      lin no_smooth 39,  0.0,1000.0,       0.0,    6,    0, "Mod1 Src"}
+        $x!{private m1_dest_id     lin no_smooth 40,  0.0,1000.0,       0.0,    6,    0, "Mod1 Dest"}
+        $x!{private m1_fun         lin no_smooth 41,  0.0,   1.0,       0.0,    3,    1, "Mod1 Fun"}
+
+        $x!{private phase_test     lin smooth    42,  0.0,   1.0,       0.0,     5,    2, "Click2"}
     }
 }
 
-pub const PARAM_COUNT : usize = 33;
+pub const PARAM_COUNT : usize = 43;
 
 pub struct ParamModel<'a> {
     v: &'a [f32],
