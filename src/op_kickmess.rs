@@ -38,8 +38,8 @@ use crate::log::Log;
 use crate::MAX_BLOCKSIZE;
 const PI2 : f64 = std::f64::consts::PI * 2.0;
 
-struct F1Params<'a>(&'a ParamModel<'a>);
-struct O1Params<'a, 'b>(&'a ParamModel<'a>, &'b f64);
+struct F1Params<'a>(&'a ParamModelMut);
+struct O1Params<'a, 'b>(&'a ParamModelMut, &'b f64);
 
 impl<'a> FilterInputParams for F1Params<'a> {
     fn freq(&self)  -> f32 { self.0.f1_cutoff() }
@@ -80,10 +80,11 @@ pub struct OpKickmess {
     filter1:         MoogFilter,
     oscillator1:     UnisonBlep,
     fm_oscillator:   FMOscillator,
+    params:          ParamModelMut,
 }
 
 impl OpKickmess {
-    fn next_sine_sample(&mut self, params: &ParamModel) -> f64 {
+    fn next_sine_sample(&mut self, params: &ParamModelMut) -> f64 {
         let s =
             fast_sin(
                 (self.cur_phase as f64
@@ -110,13 +111,17 @@ impl MonoProcessor for OpKickmess {
         self.fm_oscillator.set_sample_rate(sr);
     }
 
-    fn process(&mut self, params: &SmoothParameters, proc_offs: usize, out: &mut [f32], log: &mut Log) {
-        let block_params = ParamModel::new(params.get_frame(0));
+    fn process(&mut self, smth_params: &SmoothParameters, proc_offs: usize, out: &mut [f32], log: &mut Log) {
+        let block_params = ParamModel::new(smth_params.get_frame(0));
         self.f_env.set_release(block_params.f_env_release());
         self.release.set_release(block_params.env_release());
 
+        let mut params = ParamModelMut::new();
+
         for (offs, os) in out.iter_mut().enumerate() {
-            let params = ParamModel::new(params.get_frame(offs));
+            let prev = ParamModel::new(params.get_prev_frame());
+            params.swap(smth_params.get_frame(offs));
+
             let block_offs = offs + proc_offs;
 
             let mut kick_sample : f64 = 0.0;
@@ -239,6 +244,7 @@ impl MonoVoice for OpKickmess {
             filter1:         MoogFilter::new(),
             oscillator1:     UnisonBlep::new(10),
             fm_oscillator:   FMOscillator::new(),
+            params:          ParamModelMut::new(),
         }
     }
 
