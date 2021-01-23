@@ -149,26 +149,26 @@ pub fn define_gui(ps: &crate::ParamSet, gui: &mut dyn ui::protocol::UI) {
     values[pid::f1_type]  = UIValueSpec::new_toggle(&[ "LP", "HP", "BP" ]).help(ht.0, ht.1);
 
 
-    values[pid::dist_start]  .set_active_when_gt05(pid::dist_on);
-    values[pid::dist_end]    .set_active_when_gt05(pid::dist_on);
+    values[pid::dist_start] .set_active_when_gt05(pid::dist_on);
+    values[pid::dist_end]   .set_active_when_gt05(pid::dist_on);
 
-    values[pid::f1_cutoff].set_active_when_gt05(pid::f1_on);
-    values[pid::f1_res]   .set_active_when_gt05(pid::f1_on);
-    values[pid::f1_type]  .set_active_when_gt05(pid::f1_on);
-    values[pid::f1_drive] .set_active_when_gt05(pid::f1_on);
+    values[pid::f1_cutoff]  .set_active_when_gt05(pid::f1_on);
+    values[pid::f1_res]     .set_active_when_gt05(pid::f1_on);
+    values[pid::f1_type]    .set_active_when_gt05(pid::f1_on);
+    values[pid::f1_drive]   .set_active_when_gt05(pid::f1_on);
 
-    values[pid::o1_waveform]  .set_active_when_gt0(pid::o1_gain);
-    values[pid::o1_pw]    .set_active_when_gt0(pid::o1_gain);
-    values[pid::o1_unison].set_active_when_gt0(pid::o1_gain);
-    values[pid::o1_detune].set_active_when_gt0(pid::o1_gain);
+    values[pid::o1_waveform].set_active_when_gt0(pid::o1_gain);
+    values[pid::o1_pw]      .set_active_when_gt0(pid::o1_gain);
+    values[pid::o1_unison]  .set_active_when_gt0(pid::o1_gain);
+    values[pid::o1_detune]  .set_active_when_gt0(pid::o1_gain);
 
-    values[pid::o1fm_ratio]    .set_active_when_gt0(pid::o2fm_gain);
-    values[pid::o1fm_self]    .set_active_when_gt0(pid::o2fm_gain);
-    values[pid::o1fm_o2_mod]      .set_active_when_gt0(pid::o2fm_gain);
-    values[pid::o2fm_o1_mod]      .set_active_when_gt0(pid::o2fm_gain);
-    values[pid::o2fm_self]    .set_active_when_gt0(pid::o2fm_gain);
+    values[pid::o1fm_ratio] .set_active_when_gt0(pid::o2fm_gain);
+    values[pid::o1fm_self]  .set_active_when_gt0(pid::o2fm_gain);
+    values[pid::o1fm_o2_mod].set_active_when_gt0(pid::o2fm_gain);
+    values[pid::o2fm_o1_mod].set_active_when_gt0(pid::o2fm_gain);
+    values[pid::o2fm_self]  .set_active_when_gt0(pid::o2fm_gain);
 
-    values[pid::o2fm_freq]    .set_active_when_gt05(pid::o2fm_mode);
+    values[pid::o2fm_freq]  .set_active_when_gt05(pid::o2fm_mode);
 
     gui.define_value_spec(values);
 
