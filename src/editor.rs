@@ -10,6 +10,8 @@ use vst::host::Host;
 use crate::ringbuf_shared::RingBuf;
 use keyboard_types::KeyboardEvent;
 
+use crate::param_model::pid::{self};
+use crate::param_model::PARAM_COUNT;
 use crate::ui::protocol::*;
 use crate::ui::constants::*;
 use crate::ui;
@@ -122,10 +124,58 @@ impl UIController for KickmessEditorController {
     }
 }
 
-pub fn define_gui(ps: &crate::ParamSet, gui: &mut dyn ui::protocol::UI) {
-    use crate::param_model::pid::{self};
-    use crate::param_model::PARAM_COUNT;
+fn prepare_values(values: &mut [UIValueSpec]) {
 
+    let ht = crate::param_model::help_texts[pid::freq_note_start];
+    values[pid::freq_note_start] = UIValueSpec::new_toggle(&[ "Off", "On" ]).help(ht.0, ht.1);
+    let ht = crate::param_model::help_texts[pid::freq_note_end];
+    values[pid::freq_note_end] = UIValueSpec::new_toggle(&[ "Off", "On" ]).help(ht.0, ht.1);
+    let ht = crate::param_model::help_texts[pid::dist_on];
+    values[pid::dist_on]  = UIValueSpec::new_toggle(&[ "Off", "On" ]).help(ht.0, ht.1);
+    let ht = crate::param_model::help_texts[pid::f1_on];
+    values[pid::f1_on]    = UIValueSpec::new_toggle(&[ "Off", "On" ]).help(ht.0, ht.1);
+
+    values[pid::midi_chan]= UIValueSpec::new_toggle(&[
+        "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16"
+    ]).help(ht.0, ht.1);
+
+    values[pid::dist_start] .set_active_when_gt05(pid::dist_on);
+    values[pid::dist_end]   .set_active_when_gt05(pid::dist_on);
+
+    values[pid::f1_type]  = UIValueSpec::new_toggle(&[ "LP", "HP", "BP" ]).help(ht.0, ht.1);
+    values[pid::f1_cutoff]  .set_active_when_gt05(pid::f1_on);
+    values[pid::f1_res]     .set_active_when_gt05(pid::f1_on);
+    values[pid::f1_type]    .set_active_when_gt05(pid::f1_on);
+    values[pid::f1_drive]   .set_active_when_gt05(pid::f1_on);
+
+    #[cfg(feature="mega")]
+    {
+        let ht = crate::param_model::help_texts[pid::o2fm_mode];
+        values[pid::o2fm_mode] =
+            UIValueSpec::new_toggle(&[ "Env", "Fixed" ]).help(ht.0, ht.1);
+
+        values[pid::o1_waveform].set_active_when_gt0(pid::o1_gain);
+        values[pid::o1_pw]      .set_active_when_gt0(pid::o1_gain);
+        values[pid::o1_unison]  .set_active_when_gt0(pid::o1_gain);
+        values[pid::o1_detune]  .set_active_when_gt0(pid::o1_gain);
+
+        values[pid::o1fm_ratio] .set_active_when_gt0(pid::o2fm_gain);
+        values[pid::o1fm_self]  .set_active_when_gt0(pid::o2fm_gain);
+        values[pid::o1fm_o2_mod].set_active_when_gt0(pid::o2fm_gain);
+        values[pid::o2fm_o1_mod].set_active_when_gt0(pid::o2fm_gain);
+        values[pid::o2fm_self]  .set_active_when_gt0(pid::o2fm_gain);
+
+        values[pid::o2fm_freq]  .set_active_when_gt05(pid::o2fm_mode);
+    }
+}
+
+//fn define_megamess_gui(ps: &crate::ParamSet, gui: &mut dyn ui::protocol::UI) -> UILayout {
+//}
+//
+//fn define_kickmess_gui(ps: &crate::ParamSet, gui: &mut dyn ui::protocol::UI) -> UILayout {
+//}
+
+pub fn define_gui(ps: &crate::ParamSet, gui: &mut dyn ui::protocol::UI) {
     let mut values = vec![];
     values.resize(PARAM_COUNT + 2, UIValueSpec::new_id());
 
@@ -143,62 +193,20 @@ pub fn define_gui(ps: &crate::ParamSet, gui: &mut dyn ui::protocol::UI) {
               .help(help_text.0, help_text.1);
     }
 
-    let ht = crate::param_model::help_texts[pid::freq_note_start];
-    values[pid::freq_note_start] = UIValueSpec::new_toggle(&[ "Off", "On" ]).help(ht.0, ht.1);
-    let ht = crate::param_model::help_texts[pid::freq_note_end];
-    values[pid::freq_note_end] = UIValueSpec::new_toggle(&[ "Off", "On" ]).help(ht.0, ht.1);
-    let ht = crate::param_model::help_texts[pid::dist_on];
-    values[pid::dist_on]  = UIValueSpec::new_toggle(&[ "Off", "On" ]).help(ht.0, ht.1);
-    let ht = crate::param_model::help_texts[pid::f1_on];
-    values[pid::f1_on]    = UIValueSpec::new_toggle(&[ "Off", "On" ]).help(ht.0, ht.1);
-
-    let ht = crate::param_model::help_texts[pid::o2fm_mode];
-    values[pid::o2fm_mode] = UIValueSpec::new_toggle(&[ "Env", "Fixed" ]).help(ht.0, ht.1);
-
-    values[pid::f1_type]  = UIValueSpec::new_toggle(&[ "LP", "HP", "BP" ]).help(ht.0, ht.1);
-
-    values[pid::midi_chan]= UIValueSpec::new_toggle(&[
-        "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16"
-    ]).help(ht.0, ht.1);
-
-    values[pid::dist_start] .set_active_when_gt05(pid::dist_on);
-    values[pid::dist_end]   .set_active_when_gt05(pid::dist_on);
-
-    values[pid::f1_cutoff]  .set_active_when_gt05(pid::f1_on);
-    values[pid::f1_res]     .set_active_when_gt05(pid::f1_on);
-    values[pid::f1_type]    .set_active_when_gt05(pid::f1_on);
-    values[pid::f1_drive]   .set_active_when_gt05(pid::f1_on);
-
-    values[pid::o1_waveform].set_active_when_gt0(pid::o1_gain);
-    values[pid::o1_pw]      .set_active_when_gt0(pid::o1_gain);
-    values[pid::o1_unison]  .set_active_when_gt0(pid::o1_gain);
-    values[pid::o1_detune]  .set_active_when_gt0(pid::o1_gain);
-
-    values[pid::o1fm_ratio] .set_active_when_gt0(pid::o2fm_gain);
-    values[pid::o1fm_self]  .set_active_when_gt0(pid::o2fm_gain);
-    values[pid::o1fm_o2_mod].set_active_when_gt0(pid::o2fm_gain);
-    values[pid::o2fm_o1_mod].set_active_when_gt0(pid::o2fm_gain);
-    values[pid::o2fm_self]  .set_active_when_gt0(pid::o2fm_gain);
-
-    values[pid::o2fm_freq]  .set_active_when_gt05(pid::o2fm_mode);
+    prepare_values(&mut values[..]);
 
     gui.define_value_spec(values);
 
-    let id_s_freq_f     = pid::freq_start;
-    let id_ae_f_env_rel = pid::f_env_release;
-    let id_ae_f_slope   = pid::freq_slope;
-    let id_ae_s_freq    = pid::freq_start;
-    let id_ae_e_freq    = pid::freq_end;
     let f_env_fun =
         Arc::new(move |_id: usize, src: &mut dyn UIValueSource, out: &mut Vec<(f64, f64)>| {
             let min_x = 0.2;
             let max_x =
-                min_x + (1.0 - min_x) * src.param_value(id_ae_f_env_rel).sqrt();
-            let slope = src.param_value(id_ae_f_slope).max(0.01);
+                min_x + (1.0 - min_x) * src.param_value(pid::f_env_release).sqrt();
+            let slope = src.param_value(pid::freq_slope).max(0.01);
 
             let (sign, y_offs) =
-                if (src.param_value_denorm(id_ae_s_freq)
-                    - src.param_value_denorm(id_ae_e_freq))
+                if (src.param_value_denorm(pid::freq_start)
+                    - src.param_value_denorm(pid::freq_end))
                    < 0.0 {
 
                     (-1.0, -1.0)
@@ -217,20 +225,15 @@ pub fn define_gui(ps: &crate::ParamSet, gui: &mut dyn ui::protocol::UI) {
             }
         });
 
-    let id_s_freq_f     = pid::freq_start;
-    let id_ae_f_env_rel = pid::f_env_release;
-    let id_ae_env_slope = pid::env_slope;
-    let id_ae_s_freq    = pid::freq_start;
-    let id_ae_e_freq    = pid::freq_end;
     let amp_env_fun =
         Arc::new(move |_id: usize,
                        src: &mut dyn UIValueSource,
                        out: &mut Vec<(f64, f64)>| {
 
-            let slope = src.param_value(id_ae_env_slope).max(0.01);
+            let slope = src.param_value(pid::env_slope).max(0.01);
             let min_x = 0.2;
             let max_x =
-                min_x + (1.0 - min_x) * src.param_value(id_ae_f_env_rel).sqrt();
+                min_x + (1.0 - min_x) * src.param_value(pid::f_env_release).sqrt();
 
             let samples = 80;
 
@@ -256,26 +259,6 @@ pub fn define_gui(ps: &crate::ParamSet, gui: &mut dyn ui::protocol::UI) {
                        * 2.0 * std::f64::consts::PI).sin() + 1.0) / 2.0));
             }
         });
-
-    /* ________________
-       | MAIN | About |
-       |======|-------|--------------------------------------------|
-       ||-------------------------------------| |-----------------||
-       || Osc                                 | |   O     O       ||
-       || |---------------|  |---------------|| |                 ||
-       || |               |  |               || |  Gain Noise     ||
-       || | Freq Env      |  | Amp Env + Rel || |                 ||
-       || |_______________|  |_______________|| |_________________||
-       ||                                     |                    |
-       ||    O       O           O       _v__ | ____________       |
-       || Length Amp Slope Amp Release  |Phas|| |Dist | Off |      |
-       ||                               |____|| |-----------------||
-       ||     O          O        O           | |                 ||
-       ||  F. Start   F. End   F. Slope   O   | |  O       O   O  ||
-       ||  [N.St]     [N.End]           Click | | Start   End Gain||
-       ||_____________________________________| |_________________||
-       |___________________________________________________________|
-    */
 
     let oscillator_params =
         UIInput::container_border(UIPos::center(6, 12), 1.0, "Main Oscillator",

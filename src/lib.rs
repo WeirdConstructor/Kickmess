@@ -87,17 +87,23 @@ impl Plugin for Kickmess {
     }
 
     fn get_info(&self) -> Info {
+        let name =
+            if cfg!(feature="mega") { "Megamess (VST)".to_string() }
+            else                    { "Kickmess (VST)".to_string() };
+        let unique_id =
+            if cfg!(feature="mega") { 934843291 } else { 934843292 };
+
         Info {
-            name:         "Kickmess (VST)".to_string(),
-            vendor:       "Weird Constructor".to_string(),
-            inputs:       0,
-            outputs:      1,
-            midi_inputs:  1,
-            midi_outputs: 0,
-            parameters:   self.params.public_ps.param_count() as i32,
-            unique_id:    934843292,
-            version:      0221,
-            category:     Category::Synth,
+            name,
+            unique_id,
+            vendor:        "Weird Constructor".to_string(),
+            inputs:        0,
+            outputs:       1,
+            midi_inputs:   1,
+            midi_outputs:  0,
+            parameters:    self.params.public_ps.param_count() as i32,
+            version:       0221,
+            category:      Category::Synth,
             preset_chunks: true,
             ..Default::default()
         }
