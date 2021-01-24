@@ -777,12 +777,12 @@ impl WValuePlugUI {
 
     fn get_prev_toggle_value(&self, id: usize) -> f32 {
         let cur = self.get_element_value(id);
-        dbg!(self.value_specs[id].toggle_prev(cur))
+        self.value_specs[id].toggle_prev(cur)
     }
 
     fn get_next_toggle_value(&self, id: usize) -> f32 {
         let cur = self.get_element_value(id);
-        dbg!(self.value_specs[id].toggle_next(cur))
+        self.value_specs[id].toggle_next(cur)
     }
 
     fn hover_zone_element_is_active(&self) -> bool {

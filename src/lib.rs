@@ -35,6 +35,7 @@ use vst::api::Events;
 use vst::event::{Event, MidiEvent};
 use vst::buffer::AudioBuffer;
 use vst::plugin::{HostCallback, Category, Info, Plugin, PluginParameters, CanDo};
+use vst::host::Host;
 
 use std::sync::Arc;
 
@@ -114,6 +115,51 @@ impl Plugin for Kickmess {
 
         for os in out_buf.iter_mut() { *os = 0.0; }
 
+//        let tiflag = {
+//            use vst::api::*;
+//            TimeInfoFlags::PPQ_POS_VALID | TimeInfoFlags::BARS_VALID | TimeInfoFlags::TEMPO_VALID | TimeInfoFlags::VST_CLOCK_VALID
+//        };
+//
+//        if let Some(ti) = self.host.get_time_info(tiflag.bits()) {
+//            use std::io::Write;
+//            use vst::api::*;
+//            let tif = TimeInfoFlags::from_bits_truncate(ti.flags);
+//
+//            if tif.contains(TimeInfoFlags::PPQ_POS_VALID) {
+//                self.log.log(|bw: &mut std::io::BufWriter<&mut [u8]>| {
+//                    write!(bw, "PPQ VALID");
+//                });
+//            }
+//
+//            if tif.contains(TimeInfoFlags::BARS_VALID) {
+//                self.log.log(|bw: &mut std::io::BufWriter<&mut [u8]>| {
+//                    write!(bw, "BARS VALID");
+//                });
+//            }
+//
+//            if tif.contains(TimeInfoFlags::TEMPO_VALID) {
+//                self.log.log(|bw: &mut std::io::BufWriter<&mut [u8]>| {
+//                    write!(bw, "TEMPO VALID");
+//                });
+//            }
+//
+//            if tif.contains(TimeInfoFlags::VST_CLOCK_VALID) {
+//                self.log.log(|bw: &mut std::io::BufWriter<&mut [u8]>| {
+//                    write!(bw, "VST CLOCK VALID");
+//                });
+//            }
+//
+//            self.log.log(|bw: &mut std::io::BufWriter<&mut [u8]>| {
+//                write!(bw, "TI: spos={}, sr={}, ppq_pos={}, tempo={}, bar_start_pos={}, samples_to_next_clock={}",
+//                    ti.sample_pos,
+//                    ti.sample_rate,
+//                    ti.ppq_pos,
+//                    ti.tempo,
+//                    ti.bar_start_pos,
+//                    ti.samples_to_next_clock);
+//            });
+//        }
+
         loop {
             let advance_frames =
                 if remaining > MAX_BLOCKSIZE { MAX_BLOCKSIZE } else { remaining };
@@ -147,7 +193,11 @@ impl Plugin for Kickmess {
         for e in events.events() {
             match e {
                 Event::Midi(MidiEvent { data, delta_frames, .. }) => {
-                    self.voices.handle_midi(&data, delta_frames as usize);
+                    let my_channel =
+                        self.params.ps.get(
+                            crate::param_model::pid::midi_chan,
+                            &*self.params);
+                    self.voices.handle_midi(&data, delta_frames as usize, my_channel.floor() as u8);
                 },
                 _ => (),
             }
@@ -238,7 +288,7 @@ impl PluginParameters for KickmessVSTParams {
     }
 
     fn set_parameter(&self, index: i32, val: f32) {
-        if let Some(pd) = self.public_ps.definition(index as usize) {
+        if let Some(pd) = self.ps.definition(index as usize) {
             self.set(pd.idx(), val);
         }
     }
@@ -260,7 +310,8 @@ impl PluginParameters for KickmessVSTParams {
     fn load_bank_data(&self, data: &[u8]) {
         crate::param_model::deserialize_preset(
             data, |idx, v| {
-                println!("SET PARA {} = {}", idx, v);
+                //d// println!("SET PARA {} = {}", idx, v);
+                dbg!("load data:", idx, v);
                 self.set_parameter(idx as i32, v)
             });
     }

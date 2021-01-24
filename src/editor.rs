@@ -88,27 +88,36 @@ impl UIController for KickmessEditorController {
     fn value_change_start(&self, ui: &mut dyn UI, id: usize, value: f32) {
         if let Some(af) = self.params.params.get(id) {
             af.set(value);
-            self.host.begin_edit(id as i32);
-            //d// println!("START AUTOM {}: {}", id, value);
-            self.host.automate(id as i32, value);
+
+            if crate::param_model::ParamModel::is_public(id) {
+                self.host.begin_edit(id as i32);
+                //d// println!("START AUTOM {}: {}", id, value);
+                self.host.automate(id as i32, value);
+            }
         }
     }
 
     fn value_change(&self, ui: &mut dyn UI, id: usize, value: f32, single_change: bool) {
         if let Some(af) = self.params.params.get(id) {
             af.set(value);
-            if single_change { self.host.begin_edit(id as i32); }
-            self.host.automate(id as i32, value);
-            if single_change { self.host.end_edit(id as i32); }
+
+            if crate::param_model::ParamModel::is_public(id) {
+                if single_change { self.host.begin_edit(id as i32); }
+                self.host.automate(id as i32, value);
+                if single_change { self.host.end_edit(id as i32); }
+            }
         }
     }
 
     fn value_change_stop(&self, ui: &mut dyn UI, id: usize, value: f32) {
         if let Some(af) = self.params.params.get(id) {
             af.set(value);
-            //d// println!("STOP AUTOM {}: {}", id, value);
-            self.host.automate(id as i32, value);
-            self.host.end_edit(id as i32);
+
+            if crate::param_model::ParamModel::is_public(id) {
+                //d// println!("STOP AUTOM {}: {}", id, value);
+                self.host.automate(id as i32, value);
+                self.host.end_edit(id as i32);
+            }
         }
     }
 }
@@ -148,6 +157,9 @@ pub fn define_gui(ps: &crate::ParamSet, gui: &mut dyn ui::protocol::UI) {
 
     values[pid::f1_type]  = UIValueSpec::new_toggle(&[ "LP", "HP", "BP" ]).help(ht.0, ht.1);
 
+    values[pid::midi_chan]= UIValueSpec::new_toggle(&[
+        "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16"
+    ]).help(ht.0, ht.1);
 
     values[pid::dist_start] .set_active_when_gt05(pid::dist_on);
     values[pid::dist_end]   .set_active_when_gt05(pid::dist_on);
@@ -391,6 +403,57 @@ pub fn define_gui(ps: &crate::ParamSet, gui: &mut dyn ui::protocol::UI) {
                 ]
             ]);
 
+    let lfo1_params =
+        UIInput::container_border(UIPos::center(12, 3), 1.0, "LFO 1",
+            vec![vec![
+                UIInput::knob(
+                    pid::lfo1_freq,
+                    String::from("LFO1 Hz"),
+                    UIPos::center(3, 12).middle()),
+                UIInput::knob(
+                    pid::lfo1_wave,
+                    String::from("LFO1 Wave"),
+                    UIPos::center(3, 12).middle()),
+                UIInput::knob(
+                    pid::lfo1_pw,
+                    String::from("LFO1 PW"),
+                    UIPos::center(3, 12).middle()),
+                UIInput::knob(
+                    pid::lfo1_phase,
+                    String::from("LFO1 Phase"),
+                    UIPos::center(3, 12).middle()),
+            ]]);
+
+    let mod1_params =
+        UIInput::container_border(UIPos::center(12, 4), 1.0, "Mod1",
+            vec![vec![
+                UIInput::knob(
+                    pid::m1_amount,
+                    String::from("M1 Amt"),
+                    UIPos::center(3, 12).middle()),
+                UIInput::knob(
+                    pid::m1_slope,
+                    String::from("M1 Slope"),
+                    UIPos::center(3, 12).middle()),
+                UIInput::container(UIPos::center(3, 12), 1.0, "",
+                    vec![
+                        vec![
+                            UIInput::knob_small(
+                                pid::m1_src_id,
+                                String::from("M1 Src"),
+                                UIPos::center(12, 6).middle()),
+                        ], vec![
+                            UIInput::knob_small(
+                                pid::m1_dest_id,
+                                String::from("M1 Dest"),
+                                UIPos::center(12, 6).middle()),
+                        ]
+                    ]),
+                UIInput::knob(
+                    pid::m1_fun,
+                    String::from("M1 Fun"),
+                    UIPos::center(3, 12).middle()),
+            ]]);
 
     let fm_params =
         UIInput::container_border(UIPos::center(4, 12), 1.0, "FM Oscillator",
@@ -431,6 +494,8 @@ pub fn define_gui(ps: &crate::ParamSet, gui: &mut dyn ui::protocol::UI) {
                         String::from("Op2>1 Hz"),
                         UIPos::center(3, 2).middle()),
                 ],
+                vec![ lfo1_params ],
+                vec![ mod1_params ],
             ]);
 
     let mixer_params =
@@ -447,6 +512,10 @@ pub fn define_gui(ps: &crate::ParamSet, gui: &mut dyn ui::protocol::UI) {
                         UIPos::center(6, 6).middle()),
                 ],
                 vec![
+                    UIInput::btn_toggle_small(
+                        pid::midi_chan,
+                        String::from("Chan"),
+                        UIPos::center(6, 6).middle()),
                     UIInput::knob(
                         pid::main_gain,
                         String::from("Main Gain"),

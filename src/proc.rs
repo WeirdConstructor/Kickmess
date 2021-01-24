@@ -319,8 +319,17 @@ impl<T: MonoVoice> VoiceManager<T> {
         }
     }
 
-    pub fn handle_midi(&mut self, data: &[u8], delta_frames: usize) {
-        if data[0] == 144 {
+    pub fn handle_midi(&mut self, data: &[u8], delta_frames: usize, my_channel: u8) {
+        let cmd  = (data[0] & 0xF0) >> 4;
+        let chan = data[0] & 0x0F;
+
+        //d// println!("MIDI {} {}: {} DT: {}", chan, my_channel, cmd, delta_frames);
+
+        if my_channel != chan {
+            return;
+        }
+
+        if cmd == 0b1001 {
             //d// println!("RECV: {} DT: {}", data[0], delta_frames);
             self.events.push(VoiceEvent::Start {
                 note:         data[1],
@@ -328,7 +337,7 @@ impl<T: MonoVoice> VoiceManager<T> {
                 delta_frames: delta_frames as usize,
             });
 
-        } else if data[0] == 128 {
+        } else if cmd == 0b1000 {
             self.events.push(VoiceEvent::End {
                 note:         data[1],
                 delta_frames: delta_frames as usize,

@@ -1,6 +1,6 @@
 use crate::proc::*;
 
-pub const help_texts : [(&str, &str); 43] = [
+pub const help_texts : [(&str, &str); 44] = [
     ("Start Frequency",
         "This is the starting frequency of the frequency envelope."),
     ("End Frequency",
@@ -75,6 +75,7 @@ pub const help_texts : [(&str, &str); 43] = [
     ("", ""),
     ("", ""),
     ("", ""),
+    ("", ""),
 ];
 
 macro_rules! param_model {
@@ -125,11 +126,12 @@ macro_rules! param_model {
 
         $x!{public   m1_amount      lin smooth    34,  0.0,   1.0,       0.0,    4,    2, "Mod1 Amt"}
         $x!{public   m1_slope       lin smooth    35,  0.0,   1.0,       0.0,    5,    3, "Mod1 Slope"}
+
         $x!{private  m1_src_id      lin no_smooth 39,  0.0,1000.0,       0.0,    1,    0, "Mod1 Src"}
         $x!{private  m1_dest_id     lin no_smooth 40,  0.0,1000.0,       0.0,    1,    0, "Mod1 Dest"}
         $x!{private  m1_fun         lin no_smooth 41,  0.0,   1.0,       0.0,    3,    1, "Mod1 Fun"}
 
-        $x!{private  phase_test     lin smooth    42,  0.0,   1.0,       0.0,    4,    2, "Click2"}
+        $x!{private  midi_chan      lin no_smooth 42,  0.0,  15.9,       0.0,    2,    0, "Midi Chan"}
     }
 }
 
@@ -238,6 +240,17 @@ pub fn serialize_preset(pp: &dyn ParamProvider) -> Vec<u8> {
 impl<'a> ParamModel<'a> {
     pub fn new(v: &'a [f32]) -> Self {
         Self { v }
+    }
+
+    pub fn is_public(id: usize) -> bool {
+        macro_rules! param_add_ps {
+            (private $name:ident $e:ident $s:ident $idx:expr, $min:expr, $max:expr, $def:expr, $width:expr, $prec:expr, $lbl:expr) => {
+                if id == $idx { return false; }
+            };
+            (public $($tt:tt)*) => {
+            }
+        }
+        true
     }
 
     pub fn init_public_set(ps: &mut ParamSet) {
