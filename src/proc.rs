@@ -363,7 +363,6 @@ impl<T: MonoVoice> VoiceManager<T> {
                 VoiceEvent::Start { note, delta_frames, vel } => {
                     for voice in self.voices.iter_mut() {
                         if !voice.is_playing() {
-//                            voice.read_params(&self.params.ps, &*self.params);
                             voice.start_note(
                                 note as usize,
                                 delta_frames as usize,
