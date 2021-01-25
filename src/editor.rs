@@ -144,6 +144,8 @@ fn prepare_values(values: &mut [UIValueSpec]) {
         "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16"
     ]).help(ht.0, ht.1);
 
+    // TODO: Make LFO display Hz above 1Hz and Seconds below 1Hz
+
     values[pid::dist_start] .set_active_when_gt05(pid::dist_on);
     values[pid::dist_end]   .set_active_when_gt05(pid::dist_on);
 
