@@ -78,15 +78,15 @@ pub const help_texts : [(&str, &str); 44] = [
     ("", ""),
 ];
 
-#[cfg(feature="mega")]
+#[cfg(not(feature="mega"))]
 macro_rules! define_constants {
     () => {
-        pub const PUB_PARAM_COUNT : usize = 17;
-        pub const PARAM_COUNT     : usize = 20;
+        pub const PUB_PARAM_COUNT : usize = 18;
+        pub const PARAM_COUNT     : usize = 21;
     }
 }
 
-#[cfg(not(feature="mega"))]
+#[cfg(feature="mega")]
 macro_rules! define_constants {
     () => {
         pub const PUB_PARAM_COUNT : usize = 36;
@@ -114,15 +114,13 @@ macro_rules! mega_params {
         $x!{public  o2fm_gain       lin smooth         28,  0.0,   2.0,       0.0,    5,    3, "OP2 Gain"}
         $x!{private o2fm_mode       lin no_smooth (PPC+3),  0.0,   1.0,       0.0,    3,    1, "OP2 Mode"}
 
-        $x!{public  main_gain       exp smooth         29,  0.0,   2.0,       1.0,    5,    3, "Main Gain"}
+        $x!{public  lfo1_freq       lin smooth         29,  0.0,1000.0,       5.0,    3,    1, "LFO1 Freq"}
+        $x!{public  lfo1_wave       lin no_smooth      30,  0.0,   1.0,       0.0,    3,    1, "LFO1 Wave"}
+        $x!{public  lfo1_pw         lin smooth         31,  0.0,   1.0,       0.0,    3,    1, "LFO1 PW"}
+        $x!{public  lfo1_phase      lin smooth         32,  0.0,   1.0,       0.0,    3,    1, "LFO1 Phase"}
 
-        $x!{public  lfo1_freq       lin smooth         30,  0.0,1000.0,       5.0,    3,    1, "LFO1 Freq"}
-        $x!{public  lfo1_wave       lin no_smooth      31,  0.0,   1.0,       0.0,    3,    1, "LFO1 Wave"}
-        $x!{public  lfo1_pw         lin smooth         32,  0.0,   1.0,       0.0,    3,    1, "LFO1 PW"}
-        $x!{public  lfo1_phase      lin smooth         33,  0.0,   1.0,       0.0,    3,    1, "LFO1 Phase"}
-
-        $x!{public   m1_amount      lin smooth         34,  0.0,   1.0,       0.0,    4,    2, "Mod1 Amt"}
-        $x!{public   m1_slope       lin smooth         35,  0.0,   1.0,       0.0,    5,    3, "Mod1 Slope"}
+        $x!{public   m1_amount      lin smooth         33,  0.0,   1.0,       0.0,    4,    2, "Mod1 Amt"}
+        $x!{public   m1_slope       lin smooth         34,  0.0,   1.0,       0.0,    5,    3, "Mod1 Slope"}
 
         $x!{private  m1_src_id      lin no_smooth (PPC+4),  0.0,1000.0,       0.0,    1,    0, "Mod1 Src"}
         $x!{private  m1_dest_id     lin no_smooth (PPC+5),  0.0,1000.0,       0.0,    1,    0, "Mod1 Dest"}
@@ -153,10 +151,10 @@ macro_rules! param_model {
         $x!{public  f1_cutoff       exp smooth         14, 20.0,   22050.0,  5000.0,  3,    1, "F1 Cutoff"}
         $x!{public  f1_res          lin smooth         15,  0.0,   1.0,      0.0,     4,    2, "F1 Res"}
         $x!{public  f1_drive        lin smooth         16,  0.0,   5.0,      1.0,     4,    2, "F1 Drive"}
+        $x!{public  main_gain       exp smooth         17,  0.0,   2.0,       1.0,    5,    3, "Main Gain"}
         $x!{private f1_type         lin no_smooth (PPC+0),  0.0,   1.0,      0.0,     3,    1, "F1 Type"}
         $x!{private f1_on           lin no_smooth (PPC+1),  0.0,   1.0,      0.0,     3,    1, "F1 On"}
         $x!{private midi_chan       lin no_smooth (PPC+2),  0.0,  15.9,       0.0,    2,    0, "Midi Chan"}
-
 
         #[cfg(feature="mega")]
         mega_params!{$x}
