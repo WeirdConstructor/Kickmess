@@ -1,19 +1,18 @@
 use crate::helpers::*;
 
 pub trait OscillatorInputParams {
-    fn freq(&self)          -> f32;
-    fn waveform(&self)      -> f32;
-    fn pulse_width(&self)   -> f32;
-    fn detune(&self)        -> f32;
-    fn unison(&self)        -> f32;
-
-    fn op1_ratio(&self)     -> f32;
-    fn op2_freq(&self)      -> f32;
-    fn op1_self(&self)      -> f32;
-    fn op2_self(&self)      -> f32;
-    fn op1_op2(&self)       -> f32;
-    fn op2_op1(&self)       -> f32;
-    fn op2_mode(&self)      -> f32;
+    fn freq(&self)          -> f32 { 0.0 }
+    fn waveform(&self)      -> f32 { 0.0 }
+    fn pulse_width(&self)   -> f32 { 0.0 }
+    fn detune(&self)        -> f32 { 0.0 }
+    fn unison(&self)        -> f32 { 0.0 }
+    fn op1_ratio(&self)     -> f32 { 0.0 }
+    fn op2_freq(&self)      -> f32 { 0.0 }
+    fn op1_self(&self)      -> f32 { 0.0 }
+    fn op2_self(&self)      -> f32 { 0.0 }
+    fn op1_op2(&self)       -> f32 { 0.0 }
+    fn op2_op1(&self)       -> f32 { 0.0 }
+    fn op2_mode(&self)      -> f32 { 0.0 }
 }
 
 pub struct PolyBlepOscillator {

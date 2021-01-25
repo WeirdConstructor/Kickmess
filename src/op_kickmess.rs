@@ -49,6 +49,7 @@ impl<'a> FilterInputParams for F1Params<'a> {
     fn drive(&self) -> f32 { self.0.f1_drive() }
 }
 
+#[cfg(feature="mega")]
 impl<'a, 'b> OscillatorInputParams for O1Params<'a, 'b> {
     fn freq(&self)          -> f32 { *self.1 as f32 }
     fn waveform(&self)      -> f32 { self.0.o1_waveform() }
@@ -165,6 +166,7 @@ impl MonoProcessor for OpKickmess {
 
                 kick_sample = s * amp_gain * params.gain() as f64;
 
+                #[cfg(feature="mega")]
                 if params.o1_gain() > 0.001 {
                     kick_sample +=
                         (params.o1_gain()
@@ -172,6 +174,7 @@ impl MonoProcessor for OpKickmess {
                          * self.oscillator1.next(&O1Params(&params, &self.note_freq))) as f64;
                 }
 
+                #[cfg(feature="mega")]
                 if params.o2fm_gain() > 0.001 {
                     kick_sample +=
                         (params.o2fm_gain()
