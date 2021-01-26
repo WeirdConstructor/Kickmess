@@ -18,8 +18,23 @@ use crate::ui;
 
 const MAX_KEY_EVENTS_PER_FRAME : usize = 128;
 
-pub const WINDOW_WIDTH:  i32 = 1000;
-pub const WINDOW_HEIGHT: i32 =  700;
+#[cfg(not(feature="mega"))]
+macro_rules! define_window_size {
+    () => {
+        pub const WINDOW_WIDTH:  i32 = 650;
+        pub const WINDOW_HEIGHT: i32 = 550;
+    }
+}
+
+#[cfg(feature="mega")]
+macro_rules! define_window_size {
+    () => {
+        pub const WINDOW_WIDTH:  i32 = 1000;
+        pub const WINDOW_HEIGHT: i32 =  700;
+    }
+}
+
+define_window_size!{}
 
 #[derive(Debug, Clone)]
 enum VSTKeyEvent {
@@ -284,16 +299,16 @@ fn new_click_section(pos: UIPos) -> UIInput {
             }
         });
 
-    UIInput::container_border(pos, 0.9, "", vec![
+    UIInput::container_border(pos, 0.98, "", vec![
         vec![
             UIInput::knob_small(
                 pid::phase_offs,
                 String::from("Click"),
-                UIPos::center(6, 12).middle()),
+                UIPos::left(6, 12).middle()),
             UIInput::graph_small(
                 0,
                 String::from("Click"),
-                UIPos::center(6, 12).middle(),
+                UIPos::right(6, 12).middle(),
                 phase_fun.clone()),
         ],
     ])
@@ -317,7 +332,7 @@ fn new_filter_section(pos: UIPos) -> UIInput {
             UIInput::btn_toggle(
                 pid::f1_type,
                 String::from("F1 Type"),
-                UIPos::left(3, 12).top()),
+                UIPos::center(3, 12).middle()),
             UIInput::knob(
                 pid::f1_drive,
                 String::from("F1 Drive"),
@@ -614,13 +629,13 @@ fn new_kickmess_layout() -> UILayout {
                         vec![vec![
                         UIInput::container(UIPos::center(12, 12), 1.0, "", vec![
                             vec![
-                                new_main_osc(UIPos::center(6, 6).top()),
-                                UIInput::container(UIPos::center(2, 12), 1.0, "", vec![
-                                    vec![ new_mixer_section(UIPos::center(12, 4)) ],
-                                    vec![ new_distortion_section(UIPos::center(12, 6)) ],
+                                new_main_osc(UIPos::center(8, 9).top()),
+                                UIInput::container(UIPos::center(4, 9), 1.0, "", vec![
+                                    vec![ new_mixer_section(     UIPos::center(12, 7)) ],
+                                    vec![ new_distortion_section(UIPos::center(12, 5)) ],
                                 ]),
                             ],
-                            vec![ new_filter_section(UIPos::center(6, 2)), ],
+                            vec![ new_filter_section(UIPos::center(12, 3)), ],
                         ])]],
                         vec![ vec![ new_help_tabs(UIPos::center(12, 12)) ] ],
                     ]
