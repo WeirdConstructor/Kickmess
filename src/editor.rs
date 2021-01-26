@@ -787,9 +787,11 @@ impl Editor for KickmessEditor {
     }
 
     fn idle(&mut self) {
+//        println!("IDLE!!!!!");
     }
 
     fn close(&mut self) {
+//        println!("CLOSE!");
         self.controller.request_close();
     }
 

@@ -77,6 +77,7 @@ For Megamess:
 | Win 10                 | Intel     | NVidia                  | Win 10         | Renoise 3.3        | ok                    | 2021-01-06 |
 | Win 10                 | Intel     | NVidia                  | Win 10         | Zrythm Alpha 7.1.1 | ok, clicks on looping | 2021-01-06 |
 | Win 10                 | Intel     | NVidia                  | Win 10         | Ardour 6.5         | ok                    | 2021-01-06 |
+| ?                      | ?         | NVidia (propr. drivers) | ?              | Ardour ?           | sluggish Ardour UI    | 2021-01-26 |
 
 ## Support Development
 

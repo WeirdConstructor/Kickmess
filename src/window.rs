@@ -85,6 +85,8 @@ pub struct GUIWindowHandler {
     ui:         WValuePlugUI,
     scale:      f32,
     size:       (f64, f64),
+    focused:    bool,
+    counter:    usize,
 }
 
 struct MyPainter<'a> {
@@ -263,6 +265,12 @@ impl WindowHandler for GUIWindowHandler {
                     },
                 }
             },
+            Event::Window(WindowEvent::Focused) => {
+                self.focused = true;
+            },
+            Event::Window(WindowEvent::Unfocused) => {
+                self.focused = false;
+            },
             Event::Window(WindowEvent::Resized(info)) => {
                 let size = info.logical_size();
 
@@ -293,6 +301,12 @@ impl WindowHandler for GUIWindowHandler {
     }
 
     fn on_frame(&mut self) {
+        self.counter += 1;
+        if self.counter % 500 == 0 {
+//            println!("REDRAW.....");
+            self.counter = 0;
+        }
+
         self.ui.pre_frame();
         let redraw = self.ui.needs_redraw();
 
@@ -418,6 +432,8 @@ pub fn open_window(title: &str, window_width: i32, window_height: i32, parent: O
             ftm:        FrameTimeMeasurement::new("img"),
             ftm_redraw: FrameTimeMeasurement::new("redraw"),
             scale:      1.0,
+            focused:    false,
+            counter:    0,
         }
     };
 
