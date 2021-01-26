@@ -140,12 +140,12 @@ impl MoogFilter {
         self.b4 = self.b4.max(-1.5).min(1.5);
         self.b0 = input;
 
-        if input.abs() > 0.99 {
-            log.log(|bw: &mut std::io::BufWriter<&mut [u8]>| {
-                use std::io::Write;
-                write!(bw, "fil: b0={:6.3} b3={:6.3} b4={:6.3} in={:6.3}", self.b0, self.b3, self.b4, input).unwrap();
-            });
-        }
+//        if input.abs() > 0.99 {
+//            log.log(|bw: &mut std::io::BufWriter<&mut [u8]>| {
+//                use std::io::Write;
+//                write!(bw, "fil: b0={:6.3} b3={:6.3} b4={:6.3} in={:6.3}", self.b0, self.b3, self.b4, input).unwrap();
+//            });
+//        }
 
         let ftype = params.typ();
         if      ftype < 0.33 { self.b4 }                   // lowpass

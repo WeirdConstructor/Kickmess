@@ -265,6 +265,8 @@ impl WindowHandler for GUIWindowHandler {
                     },
                 }
             },
+            Event::Window(WindowEvent::WillClose) => {
+            },
             Event::Window(WindowEvent::Focused) => {
                 self.focused = true;
             },

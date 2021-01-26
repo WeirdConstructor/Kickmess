@@ -226,7 +226,7 @@ impl Plugin for Kickmess {
 
     fn get_editor(&mut self) -> Option<Box<dyn vst::editor::Editor>> {
         Some(Box::new(
-            editor::KickmessEditor::new(self.host, self.params.clone())))
+            editor::KickmessEditor::new(self.host, self.params.clone(), self.log.new_handle())))
     }
 }
 

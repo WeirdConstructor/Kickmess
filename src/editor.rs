@@ -33,6 +33,7 @@ pub(crate) struct KickmessEditorController {
     is_open:        std::sync::atomic::AtomicBool,
     close_request:  std::sync::atomic::AtomicBool,
     key_events:     RingBuf<VSTKeyEvent>,
+    log:            crate::log::LogHandle,
 }
 
 pub(crate) struct KickmessEditor {
@@ -41,8 +42,10 @@ pub(crate) struct KickmessEditor {
 
 impl KickmessEditorController {
     pub fn request_close(&self) {
+        if crate::DEBUG_LOGGING { self.log.log_str("request_close"); }
         self.close_request.store(true, std::sync::atomic::Ordering::Relaxed)
     }
+
     pub fn is_still_open(&self) -> bool {
         self.is_open.load(std::sync::atomic::Ordering::Relaxed)
     }
@@ -65,10 +68,20 @@ impl UIController for KickmessEditorController {
     }
 
     fn window_closed(&self, _ui: &mut dyn UI) {
+        if crate::DEBUG_LOGGING { self.log.log_str("window_closed"); }
         self.is_open.store(false, std::sync::atomic::Ordering::Relaxed);
     }
 
     fn pre_frame(&self, ui: &mut dyn UI) {
+        if !self.is_open.load(std::sync::atomic::Ordering::Relaxed) {
+            return;
+        }
+
+        if self.close_request.load(std::sync::atomic::Ordering::Relaxed) {
+            return;
+        }
+
+        if crate::DEBUG_LOGGING { self.log.log_str("pre_frame"); }
         use crate::proc::ParamProvider;
 
         while let Some(id) = self.params.dirty_params.pop() {
@@ -693,7 +706,7 @@ pub fn define_gui(ps: &crate::ParamSet, gui: &mut dyn ui::protocol::UI) {
 }
 
 impl KickmessEditor {
-    pub(crate) fn new(host: HostCallback, params: Arc<KickmessVSTParams>) -> Self {
+    pub(crate) fn new(host: HostCallback, params: Arc<KickmessVSTParams>, log: crate::log::LogHandle) -> Self {
         Self {
             controller: Arc::new(KickmessEditorController {
                 host,
@@ -701,6 +714,7 @@ impl KickmessEditor {
                 is_open: std::sync::atomic::AtomicBool::new(true),
                 close_request: std::sync::atomic::AtomicBool::new(false),
                 key_events: RingBuf::new(MAX_KEY_EVENTS_PER_FRAME),
+                log,
             }),
         }
     }
@@ -774,6 +788,7 @@ impl Editor for KickmessEditor {
     }
 
     fn open(&mut self, parent: *mut std::ffi::c_void) -> bool {
+        if crate::DEBUG_LOGGING { self.controller.log.log_str("open"); }
         crate::window::open_window(
             "Kickmess",
             WINDOW_WIDTH, WINDOW_HEIGHT,
@@ -787,11 +802,11 @@ impl Editor for KickmessEditor {
     }
 
     fn idle(&mut self) {
-//        println!("IDLE!!!!!");
+        if crate::DEBUG_LOGGING { self.controller.log.log_str("idle"); }
     }
 
     fn close(&mut self) {
-//        println!("CLOSE!");
+        if crate::DEBUG_LOGGING { self.controller.log.log_str("close"); }
         self.controller.request_close();
     }
 

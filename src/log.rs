@@ -10,6 +10,31 @@ pub struct Log {
     th: Option<std::thread::JoinHandle<()>>,
 }
 
+pub struct LogHandle {
+    rb: RingBuf<LogEntry>,
+}
+
+impl LogHandle {
+    pub fn log_str(&self, s: &str) {
+        let mut ent = LogEntry { buf: [0; 128] };
+        {
+            let mut bw = std::io::BufWriter::new(&mut ent.buf[..]);
+            use std::io::Write;
+            write!(bw, "{}", s).unwrap();
+        }
+        self.rb.push(ent);
+    }
+
+    pub fn log<F: Fn(&mut std::io::BufWriter<&mut [u8]>)>(&self, f: F) {
+        let mut ent = LogEntry { buf: [0; 128] };
+        {
+            let mut bw = std::io::BufWriter::new(&mut ent.buf[..]);
+            f(&mut bw);
+        }
+        self.rb.push(ent);
+    }
+}
+
 impl Log {
     pub fn new() -> Self {
         Self {
@@ -25,6 +50,10 @@ impl Log {
             f(&mut bw);
         }
         self.rb.push(ent);
+    }
+
+    pub fn new_handle(&self) -> LogHandle {
+        LogHandle { rb: self.rb.clone() }
     }
 
     pub fn collect(&self) -> Option<String> {
