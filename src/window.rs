@@ -266,6 +266,7 @@ impl WindowHandler for GUIWindowHandler {
                 }
             },
             Event::Window(WindowEvent::WillClose) => {
+                self.ui.handle_ui_event(UIEvent::WindowClose);
             },
             Event::Window(WindowEvent::Focused) => {
                 self.focused = true;
@@ -309,6 +310,11 @@ impl WindowHandler for GUIWindowHandler {
             self.counter = 0;
         }
 
+        // some hosts only stop calling idle(), so we stop the UI redraw here:
+        if !self.ui.window_is_active() {
+            return;
+        }
+
         self.ui.pre_frame();
         let redraw = self.ui.needs_redraw();
 
@@ -338,7 +344,6 @@ impl WindowHandler for GUIWindowHandler {
             self.canvas.restore();
             self.ftm_redraw.end_measure();
         }
-
 
         let img_paint =
             femtovg::Paint::image(
@@ -376,6 +381,7 @@ unsafe impl raw_window_handle::HasRawWindowHandle for StupidWindowHandleHolder {
 }
 
 pub fn open_window(title: &str, window_width: i32, window_height: i32, parent: Option<*mut ::std::ffi::c_void>, controller: std::sync::Arc<dyn UIController>) {
+    println!("*** OPEN WINDOW ***");
     let options =
         WindowOpenOptions {
             title:  title.to_string(),
@@ -400,7 +406,7 @@ pub fn open_window(title: &str, window_width: i32, window_height: i32, parent: O
                     srgb:          true,
                     double_buffer: true,
                     vsync:         true,
-                }).unwrap();
+                }).expect("GL context to be creatable");
         context.make_current();
         gl::load_with(|symbol| context.get_proc_address(symbol) as *const _);
 

@@ -1307,6 +1307,11 @@ impl WValuePlugUI {
         }
     }
 
+    pub fn window_is_active(&self) -> bool {
+        let ctrl = self.controller.clone();
+        ctrl.is_active()
+    }
+
     pub fn pre_frame(&mut self) {
         let ctrl = self.controller.clone();
         ctrl.pre_frame(self);

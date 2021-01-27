@@ -530,4 +530,5 @@ pub trait UIController : Send + Sync {
     fn window_closed(&self, ui: &mut dyn UI) {}
     fn pre_frame(&self, ui: &mut dyn UI) {}
     fn post_frame(&self, ui: &mut dyn UI) {}
+    fn is_active(&self) -> bool { true }
 }

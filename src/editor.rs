@@ -18,6 +18,8 @@ use crate::ui;
 
 const MAX_KEY_EVENTS_PER_FRAME : usize = 128;
 
+const MAX_MS_SINCE_IDLE_TO_BE_INACTIVE : u64 = 1000;
+
 #[cfg(not(feature="mega"))]
 macro_rules! define_window_size {
     () => {
@@ -47,6 +49,7 @@ pub(crate) struct KickmessEditorController {
     params:         Arc<KickmessVSTParams>,
     is_open:        std::sync::atomic::AtomicBool,
     close_request:  std::sync::atomic::AtomicBool,
+    heart_beat:     std::sync::atomic::AtomicU64,
     key_events:     RingBuf<VSTKeyEvent>,
     log:            crate::log::LogHandle,
 }
@@ -63,6 +66,17 @@ impl KickmessEditorController {
 
     pub fn is_still_open(&self) -> bool {
         self.is_open.load(std::sync::atomic::Ordering::Relaxed)
+    }
+
+    pub fn drive_heart_beat(&self) {
+        use std::time::{SystemTime, UNIX_EPOCH};
+        let now = SystemTime::now();
+
+        self.heart_beat.store(
+            now.duration_since(UNIX_EPOCH)
+                .expect("to be able to get a timestamp")
+                .as_millis() as u64,
+            std::sync::atomic::Ordering::Relaxed);
     }
 }
 
@@ -82,12 +96,28 @@ impl UIController for KickmessEditorController {
         }
     }
 
+    fn is_active(&self) -> bool {
+        let last_heart_beat =
+            self.heart_beat.load(std::sync::atomic::Ordering::Relaxed);
+
+        use std::time::{SystemTime, UNIX_EPOCH};
+        let now = SystemTime::now();
+        let now_as_ms =
+            now.duration_since(UNIX_EPOCH)
+                .expect("to be able to get a timestamp")
+                .as_millis() as u64;
+
+        (now_as_ms - last_heart_beat) < MAX_MS_SINCE_IDLE_TO_BE_INACTIVE
+    }
+
     fn window_closed(&self, _ui: &mut dyn UI) {
         if crate::DEBUG_LOGGING { self.log.log_str("window_closed"); }
         self.is_open.store(false, std::sync::atomic::Ordering::Relaxed);
     }
 
     fn pre_frame(&self, ui: &mut dyn UI) {
+        if crate::DEBUG_LOGGING { self.log.log_str("pre_frame1"); }
+
         if !self.is_open.load(std::sync::atomic::Ordering::Relaxed) {
             return;
         }
@@ -96,7 +126,8 @@ impl UIController for KickmessEditorController {
             return;
         }
 
-        if crate::DEBUG_LOGGING { self.log.log_str("pre_frame"); }
+        if crate::DEBUG_LOGGING { self.log.log_str("pre_frame2"); }
+
         use crate::proc::ParamProvider;
 
         while let Some(id) = self.params.dirty_params.pop() {
@@ -726,9 +757,10 @@ impl KickmessEditor {
             controller: Arc::new(KickmessEditorController {
                 host,
                 params,
-                is_open: std::sync::atomic::AtomicBool::new(true),
-                close_request: std::sync::atomic::AtomicBool::new(false),
-                key_events: RingBuf::new(MAX_KEY_EVENTS_PER_FRAME),
+                is_open:        std::sync::atomic::AtomicBool::new(true),
+                close_request:  std::sync::atomic::AtomicBool::new(false),
+                heart_beat:     std::sync::atomic::AtomicU64::new(0),
+                key_events:     RingBuf::new(MAX_KEY_EVENTS_PER_FRAME),
                 log,
             }),
         }
@@ -818,6 +850,7 @@ impl Editor for KickmessEditor {
 
     fn idle(&mut self) {
         if crate::DEBUG_LOGGING { self.controller.log.log_str("idle"); }
+        self.controller.drive_heart_beat();
     }
 
     fn close(&mut self) {

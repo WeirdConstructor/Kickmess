@@ -21,6 +21,8 @@ only enable but not disable fine drag mode).
 * Feature: Added a filter implementation for filtering the output.
 * Feature: Added saw/tri/square oscillator with unison/detune.
 * Feature: Added FM oscillator.
+* Bugfix: Added workaround for Carla to stop redrawing the GUI when
+Carla stops calling idle().
 * Bugfix: Keys did not work in Ardour/Zrythm and other DAWs.
 * Bugfix: The string min/max represenation for the VST parameters were fixed.
 * Bugfix: The frequency envelope view in the UI was inverted
