@@ -34,26 +34,33 @@ impl DrawCache {
     }
 
     pub fn size_of(&self, idx: usize) -> (f64, f64) {
-        self.elements.get(idx).unwrap().size()
+        if let Some(el) = self.elements.get(idx) {
+            el.size()
+        } else {
+            (42.0, 42.0)
+        }
     }
 
     pub fn draw_data(&mut self, p: &mut dyn Painter, x: f64, y: f64,
                      idx: usize, highlight: HLStyle,
                      data: &dyn UIElementData, value: f64, val_s: &str) {
-        self.elements.get(idx)
-            .unwrap()
-            .draw_value(p, x, y, highlight, data, value, val_s);
+        if let Some(el) = self.elements.get(idx) {
+            el.draw_value(p, x, y, highlight, data, value, val_s);
+        }
     }
 
     pub fn define_active_zones(&self, x: f64, y: f64, elem_data: &dyn UIElementData,
                                idx: usize, f: &mut dyn FnMut(ActiveZone)) {
 
-        self.elements.get(idx).unwrap().define_active_zones(x, y, elem_data, f);
+        if let Some(el) = self.elements.get(idx) {
+            el.define_active_zones(x, y, elem_data, f);
+        }
     }
 
     pub fn draw_bg(&mut self, p: &mut dyn Painter, x: f64, y: f64, idx: usize) {
-        let element = self.elements.get(idx).unwrap();
-        element.draw_bg(p, x, y);
+        if let Some(el) = self.elements.get(idx) {
+            el.draw_bg(p, x, y);
+        }
     }
 }
 

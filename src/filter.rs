@@ -136,7 +136,6 @@ impl MoogFilter {
         // clipping
         self.b4 = self.b4 - self.b4 * self.b4 * self.b4 * 0.166667;
         // clamp to keep feedback run-aways in check!
-//        self.b4 = f_distort(1.0, 1.0, self.b4); // .max(-1.0).min(1.0);
         self.b4 = self.b4.max(-1.5).min(1.5);
         self.b0 = input;
 

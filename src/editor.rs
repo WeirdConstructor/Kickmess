@@ -24,7 +24,7 @@ const MAX_MS_SINCE_IDLE_TO_BE_INACTIVE : u64 = 1000;
 macro_rules! define_window_size {
     () => {
         pub const WINDOW_WIDTH:  i32 = 650;
-        pub const WINDOW_HEIGHT: i32 = 550;
+        pub const WINDOW_HEIGHT: i32 = 560;
     }
 }
 
@@ -640,7 +640,7 @@ fn new_distortion_section(pos: UIPos) -> UIInput {
             UIInput::btn_toggle(
                 pid::dist_on,
                 String::from("Distortion"),
-                UIPos::left(12, 4).top()),
+                UIPos::center(12, 4).top()),
         ],
         vec![
             UIInput::knob(
