@@ -207,6 +207,13 @@ fn prepare_values(values: &mut [UIValueSpec]) {
             "1-a(1-x)",
         ]).help(ht.0, ht.1);
 
+    let ht = crate::param_model::help_texts[pid::m1_dest_id];
+    let mod_params = crate::param_model::create_mod_params();
+    values[pid::m1_dest_id] =
+        UIValueSpec::new_mod_target_list(
+            &mod_params,
+            "-").help(ht.0, ht.1);
+
     values[pid::midi_chan]= UIValueSpec::new_toggle(&[
         "1", "2", "3", "4", "5", "6", "7", "8", "9",
         "10", "11", "12", "13", "14", "15", "16"
@@ -552,7 +559,7 @@ fn new_fm1_section(pos: UIPos) -> UIInput {
                                 pid::m1_src_id,
                                 String::from("M1 Src"),
                                 UIPos::center(6, 12).middle()),
-                            UIInput::knob_small(
+                            UIInput::btn_mod_target(
                                 pid::m1_dest_id,
                                 String::from("M1 Dest"),
                                 UIPos::center(6, 12).middle()),

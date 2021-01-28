@@ -83,6 +83,11 @@ macro_rules! define_constants {
     () => {
         pub const PUB_PARAM_COUNT : usize = 18;
         pub const PARAM_COUNT     : usize = 21;
+        macro_rules! ppc {
+            ($x: expr) => {
+                ($x + 18)
+            },
+        }
     }
 }
 
@@ -91,10 +96,16 @@ macro_rules! define_constants {
     () => {
         pub const PUB_PARAM_COUNT : usize = 36;
         pub const PARAM_COUNT     : usize = 43;
+        macro_rules! ppc {
+            ($x: expr) => {
+                ($x + 36)
+            }
+        }
     }
 }
 
 define_constants!{}
+
 
 macro_rules! mega_params {
     ($x: ident) => {
@@ -112,7 +123,7 @@ macro_rules! mega_params {
         $x!{public  o2fm_freq       exp smooth         26,  0.0,30000.0,    500.0,    4,    2, "OP2 Freq Hz"}
         $x!{public  o2fm_self       exp smooth         27,  0.0,30000.0,      0.0,    4,    2, "OP2 Self Hz"}
         $x!{public  o2fm_gain       lin smooth         28,  0.0,   2.0,       0.0,    5,    3, "OP2 Gain"}
-        $x!{private o2fm_mode       lin no_smooth (PPC+3),  0.0,   1.0,       0.0,    3,    1, "OP2 Mode"}
+        $x!{private o2fm_mode       lin no_smooth ppc!(3),  0.0,   1.0,       0.0,    3,    1, "OP2 Mode"}
 
         $x!{public  lfo1_freq       lin smooth         29,  0.0,1000.0,       5.0,    3,    1, "LFO1 Freq"}
         $x!{public  lfo1_wave       lin no_smooth      30,  0.0,   1.0,       0.0,    3,    1, "LFO1 Wave"}
@@ -122,15 +133,15 @@ macro_rules! mega_params {
         $x!{public   m1_amount      lin smooth         33,  0.0,   1.0,       1.0,    4,    2, "Mod1 Amt"}
         $x!{public   m1_slope       lin smooth         34,  0.0,   1.0,       0.0,    5,    3, "Mod1 Slope"}
 
-        $x!{private  m1_src_id      lin no_smooth (PPC+4),  0.0,1000.0,       0.0,    1,    0, "Mod1 Src"}
-        $x!{private  m1_dest_id     lin no_smooth (PPC+5),  0.0,1000.0,       0.0,    1,    0, "Mod1 Dest"}
-        $x!{private  m1_fun         lin no_smooth (PPC+6),  0.0,   1.0,       0.0,    3,    1, "Mod1 Fun"}
+        $x!{private  m1_src_id      lin no_smooth ppc!(4),  0.0,1000.0,       0.0,    1,    0, "Mod1 Src"}
+        $x!{private  m1_dest_id     lin no_smooth ppc!(5),  0.0,1000.0,       0.0,    1,    0, "Mod1 Dest"}
+        $x!{private  m1_fun         lin no_smooth ppc!(6),  0.0,   1.0,       0.0,    3,    1, "Mod1 Fun"}
     }
 }
 
 macro_rules! param_model {
     ($x: ident) => {
-        use crate::param_model::PUB_PARAM_COUNT as PPC;
+//        use crate::param_model::PUB_PARAM_COUNT as PPC;
 
         //  scope   name         exp/lin smooth        idx  min    max     def    width  prec  label
         $x!{public  freq_start      exp no_smooth      0,   5.0,   3000.0, 150.0,     4,    2, "Start Freq."}
@@ -152,9 +163,9 @@ macro_rules! param_model {
         $x!{public  f1_res          lin smooth         15,  0.0,   1.0,      0.0,     4,    2, "F1 Res"}
         $x!{public  f1_drive        lin smooth         16,  0.0,   5.0,      1.0,     4,    2, "F1 Drive"}
         $x!{public  main_gain       exp smooth         17,  0.0,   2.0,       1.0,    5,    3, "Main Gain"}
-        $x!{private f1_type         lin no_smooth (PPC+0),  0.0,   1.0,      0.0,     3,    1, "F1 Type"}
-        $x!{private f1_on           lin no_smooth (PPC+1),  0.0,   1.0,      0.0,     3,    1, "F1 On"}
-        $x!{private midi_chan       lin no_smooth (PPC+2),  0.0,  15.9,       0.0,    2,    0, "Midi Chan"}
+        $x!{private f1_type         lin no_smooth ppc!(0),  0.0,   1.0,      0.0,     3,    1, "F1 Type"}
+        $x!{private f1_on           lin no_smooth ppc!(1),  0.0,   1.0,      0.0,     3,    1, "F1 On"}
+        $x!{private midi_chan       lin no_smooth ppc!(2),  0.0,  15.9,       0.0,    2,    0, "Midi Chan"}
 
         #[cfg(feature="mega")]
         mega_params!{$x}
@@ -191,6 +202,22 @@ pub mod pid {
     param_model!{param_ids}
 }
 
+pub fn create_mod_params() -> Vec<(usize, &'static str)> {
+    let mut ret = vec![];
+
+    macro_rules! param_deserialize {
+        ($_:ident $name:ident $e:ident smooth $idx:expr, $min:expr, $max:expr, $def:expr, $width:expr, $prec:expr, $lbl:expr) => {
+            ret.push(($idx, $lbl));
+        };
+        ($_:ident $name:ident $e:ident no_smooth $idx:expr, $min:expr, $max:expr, $def:expr, $width:expr, $prec:expr, $lbl:expr) => {
+            {}
+        };
+    }
+
+    param_model!{param_deserialize}
+
+    ret
+}
 
 pub fn deserialize_preset<F: Fn(usize, f32)>(preset: &[u8], out: F) {
     let mut preset_data : Vec<(String, f32)> = vec![];
