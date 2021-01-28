@@ -293,8 +293,8 @@ impl WValuePlugUI {
         // ElementType::GraphHuge
         self.cache.push_element(
             Box::new(Graph::new(
-                (UI_GRPH_W * 1.5).round(),
-                (UI_GRPH_H * 1.5).round(),
+                (UI_GRPH_W * 2.0).round(),
+                (UI_GRPH_H * 1.8).round(),
                 UI_GRPH_FONT_SIZE + 1.0)));
 
         // ElementType::GraphSmall
