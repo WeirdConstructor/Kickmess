@@ -119,7 +119,7 @@ macro_rules! mega_params {
         $x!{public  lfo1_pw         lin smooth         31,  0.0,   1.0,       0.0,    3,    1, "LFO1 PW"}
         $x!{public  lfo1_phase      lin smooth         32,  0.0,   1.0,       0.0,    3,    1, "LFO1 Phase"}
 
-        $x!{public   m1_amount      lin smooth         33,  0.0,   1.0,       0.0,    4,    2, "Mod1 Amt"}
+        $x!{public   m1_amount      lin smooth         33,  0.0,   1.0,       1.0,    4,    2, "Mod1 Amt"}
         $x!{public   m1_slope       lin smooth         34,  0.0,   1.0,       0.0,    5,    3, "Mod1 Slope"}
 
         $x!{private  m1_src_id      lin no_smooth (PPC+4),  0.0,1000.0,       0.0,    1,    0, "Mod1 Src"}

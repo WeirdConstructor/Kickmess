@@ -198,9 +198,18 @@ fn prepare_values(values: &mut [UIValueSpec]) {
     values[pid::dist_on]  = UIValueSpec::new_toggle(&[ "Off", "On" ]).help(ht.0, ht.1);
     let ht = crate::param_model::help_texts[pid::f1_on];
     values[pid::f1_on]    = UIValueSpec::new_toggle(&[ "Off", "On" ]).help(ht.0, ht.1);
+    let ht = crate::param_model::help_texts[pid::m1_fun];
+    values[pid::m1_fun] =
+        UIValueSpec::new_toggle(&[
+            "ax",
+            "a(1-x)",
+            "1-ax",
+            "1-a(1-x)",
+        ]).help(ht.0, ht.1);
 
     values[pid::midi_chan]= UIValueSpec::new_toggle(&[
-        "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16"
+        "1", "2", "3", "4", "5", "6", "7", "8", "9",
+        "10", "11", "12", "13", "14", "15", "16"
     ]).help(ht.0, ht.1);
 
     // TODO: Make LFO display Hz above 1Hz and Seconds below 1Hz
@@ -483,7 +492,7 @@ fn new_mod_graph(pos: UIPos) -> UIInput {
             }
         });
 
-    UIInput::graph(
+    UIInput::graph_small(
         0,
         String::from("Mod"),
         pos,
@@ -516,44 +525,37 @@ fn new_fm1_section(pos: UIPos) -> UIInput {
     let mod1_params =
         UIInput::container_border(UIPos::center(12, 4), 1.0, "Mod1",
             vec![vec![
-                UIInput::container(UIPos::center(4, 12), 1.0, "",
+                UIInput::container(UIPos::center(12, 6), 1.0, "",
                     vec![
                         vec![
-                            UIInput::knob(
+                            UIInput::btn_toggle_small(
+                                pid::m1_fun,
+                                String::from("Fun."),
+                                UIPos::center(3, 12).middle()),
+                            UIInput::knob_small(
                                 pid::m1_amount,
                                 String::from("M1 Amt"),
-                                UIPos::center(12, 6).middle()),
-                        ], vec![
-                            UIInput::knob(
+                                UIPos::center(3, 12).middle()),
+                            UIInput::knob_small(
                                 pid::m1_slope,
                                 String::from("M1 Slope"),
-                                UIPos::center(12, 6).middle()),
+                                UIPos::center(3, 12).middle()),
+                            new_mod_graph(
+                                UIPos::center(3, 12).middle()),
                         ]
                     ]),
-                UIInput::container(UIPos::center(4, 12), 1.0, "",
+            ], vec![
+                UIInput::container(UIPos::center(12, 6), 1.0, "",
                     vec![
                         vec![
                             UIInput::knob_small(
                                 pid::m1_src_id,
                                 String::from("M1 Src"),
-                                UIPos::center(12, 6).middle()),
-                        ], vec![
+                                UIPos::center(6, 12).middle()),
                             UIInput::knob_small(
                                 pid::m1_dest_id,
                                 String::from("M1 Dest"),
-                                UIPos::center(12, 6).middle()),
-                        ]
-                    ]),
-                UIInput::container(UIPos::center(4, 12), 1.0, "",
-                    vec![
-                        vec![
-                            UIInput::knob(
-                                pid::m1_fun,
-                                String::from("M1 Fun"),
-                                UIPos::center(12, 6).middle()),
-                        ], vec![
-                            new_mod_graph(
-                                UIPos::center(12, 6).middle()),
+                                UIPos::center(6, 12).middle()),
                         ]
                     ]),
             ]]);
