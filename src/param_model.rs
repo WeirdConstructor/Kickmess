@@ -300,6 +300,26 @@ impl<'a> ParamModel<'a> {
     }
 }
 
+#[inline]
+pub fn mod_function(mod_val: f32, fun_select: f32, mod_amount: f32, mod_slope: f32) -> f32 {
+    let mod_val =
+        if mod_slope < 0.5 {
+            mod_val.powf((0.5 - mod_slope) * 2.0)
+        } else {
+            (1.0 - mod_val).powf((mod_slope - 0.5) * 2.0)
+        };
+
+    if fun_select < 0.25 {         // a * x            [0, a]
+        mod_amount * mod_val
+    } else if fun_select < 0.5 {   // a * (1 - x)      [a, 0]
+        mod_amount * (1.0 - mod_val)
+    } else if fun_select < 0.75 {  // 1 - a * x        [1, 1 - a]
+        1.0 - (mod_amount * mod_val)
+    } else {                       // 1 - a * (1 - x)  [1 - a, 1]
+        1.0 - mod_amount * (1.0 - mod_val)
+    }
+}
+
 impl ParamModelMut {
     pub fn new() -> Self {
         let mut v = [[0.0; PARAM_COUNT]; 2];
@@ -328,18 +348,8 @@ impl ParamModelMut {
     }
 
     pub fn mod_idx_with_fun(&mut self, id: f32, mod_val: f32, fun_select: f32, mod_amount: f32, mod_slope: f32) {
-        let mod_val = mod_val.powf(mod_slope);
-        let modulation =
-            if fun_select < 0.25 {         // a * x            [0, a]
-                mod_amount * mod_val
-            } else if fun_select < 0.5 {   // a * (1 - x)      [a, 0]
-                mod_amount * (1.0 - mod_val)
-            } else if fun_select < 0.75 {  // 1 - a * x        [1, 1 - a]
-                1.0 - (mod_amount * mod_val)
-            } else {                       // 1 - a * (1 - x)  [1 - a, 1]
-                1.0 - mod_amount * (1.0 - mod_val)
-            };
-        self.v[self.idx][(id + 0.1).floor() as usize] *= modulation;
+        self.v[self.idx][(id + 0.1).floor() as usize] *=
+            mod_function(mod_val, fun_select, mod_amount, mod_slope);
     }
 }
 

@@ -464,6 +464,32 @@ fn new_osc1_section(pos: UIPos) -> UIInput {
     ]])
 }
 
+fn new_mod_graph(pos: UIPos) -> UIInput {
+
+    let f_graph =
+        Arc::new(move |_id: usize, src: &mut dyn UIValueSource, out: &mut Vec<(f64, f64)>| {
+            let mod_amount = src.param_value(pid::m1_amount) as f32;
+            let mod_slope  = src.param_value(pid::m1_slope) as f32;
+            let fun_select = src.param_value(pid::m1_fun) as f32;
+
+            let samples = 80;
+
+            for x in 0..(samples + 1) {
+                let x = x as f32 / (samples as f32);
+                out.push(
+                    (x as f64,
+                     crate::param_model::mod_function(
+                        x, fun_select, mod_amount, mod_slope) as f64));
+            }
+        });
+
+    UIInput::graph(
+        0,
+        String::from("Mod"),
+        pos,
+        f_graph.clone())
+}
+
 #[cfg(feature="mega")]
 fn new_fm1_section(pos: UIPos) -> UIInput {
     let lfo1_params =
@@ -490,15 +516,21 @@ fn new_fm1_section(pos: UIPos) -> UIInput {
     let mod1_params =
         UIInput::container_border(UIPos::center(12, 4), 1.0, "Mod1",
             vec![vec![
-                UIInput::knob(
-                    pid::m1_amount,
-                    String::from("M1 Amt"),
-                    UIPos::center(3, 12).middle()),
-                UIInput::knob(
-                    pid::m1_slope,
-                    String::from("M1 Slope"),
-                    UIPos::center(3, 12).middle()),
-                UIInput::container(UIPos::center(3, 12), 1.0, "",
+                UIInput::container(UIPos::center(4, 12), 1.0, "",
+                    vec![
+                        vec![
+                            UIInput::knob(
+                                pid::m1_amount,
+                                String::from("M1 Amt"),
+                                UIPos::center(12, 6).middle()),
+                        ], vec![
+                            UIInput::knob(
+                                pid::m1_slope,
+                                String::from("M1 Slope"),
+                                UIPos::center(12, 6).middle()),
+                        ]
+                    ]),
+                UIInput::container(UIPos::center(4, 12), 1.0, "",
                     vec![
                         vec![
                             UIInput::knob_small(
@@ -512,10 +544,18 @@ fn new_fm1_section(pos: UIPos) -> UIInput {
                                 UIPos::center(12, 6).middle()),
                         ]
                     ]),
-                UIInput::knob(
-                    pid::m1_fun,
-                    String::from("M1 Fun"),
-                    UIPos::center(3, 12).middle()),
+                UIInput::container(UIPos::center(4, 12), 1.0, "",
+                    vec![
+                        vec![
+                            UIInput::knob(
+                                pid::m1_fun,
+                                String::from("M1 Fun"),
+                                UIPos::center(12, 6).middle()),
+                        ], vec![
+                            new_mod_graph(
+                                UIPos::center(12, 6).middle()),
+                        ]
+                    ]),
             ]]);
 
 
