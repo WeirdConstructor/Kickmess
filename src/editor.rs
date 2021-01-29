@@ -890,7 +890,11 @@ impl Editor for KickmessEditor {
     fn open(&mut self, parent: *mut std::ffi::c_void) -> bool {
         if crate::DEBUG_LOGGING { self.controller.log.log_str("open"); }
         crate::window::open_window(
-            "Kickmess",
+            if cfg!(feature="mega") {
+                "Megamess"
+            } else {
+                "Kickmess"
+            },
             WINDOW_WIDTH, WINDOW_HEIGHT,
             Some(parent), self.controller.clone());
 

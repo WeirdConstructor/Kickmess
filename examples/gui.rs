@@ -41,7 +41,11 @@ fn main() {
 //    });
 
     kickmessvst::window::open_window(
-        "Kickmess Test GUI",
+        if cfg!(feature="mega") {
+            "Megamess Test GUI"
+        } else {
+            "Kickmess Test GUI"
+        },
         kickmessvst::editor::WINDOW_WIDTH,
         kickmessvst::editor::WINDOW_HEIGHT,
         None, ctrl);
