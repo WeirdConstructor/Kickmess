@@ -198,6 +198,13 @@ impl SvfSimperFilter {
         self.ic1eq = (2.0 * v1) - self.ic1eq;
         self.ic2eq = (2.0 * v2) - self.ic2eq;
 
+        // low   = v2
+        // band  = v1
+        // high  = v0 - k * v1 - v2
+        // notch = low + high            = v0 - k * v1
+        // peak  = low - high            = 2 * v2 - v0 + k * v1
+        // all   = low + high - k * band = v0 - 2 * k * v1
+
         v2
     }
 }

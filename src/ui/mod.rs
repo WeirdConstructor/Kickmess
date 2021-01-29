@@ -25,6 +25,34 @@ use crate::ui::protocol::{UIPos, UIKnobData,
 use crate::ui::constants::*;
 use keyboard_types::{Key, KeyboardEvent};
 
+/*
+
+   UI Redesign:
+
+   - UI Struct Responsibilities:
+     - holding the parameter values
+     - holding / managing edit modes
+     - accepting widget implementations, with an associated UIInput type
+     - initiation of draw actions
+
+   - Something to Map UIInput => Implementation Struct Widget
+
+   - A way to factor out the edit modes => Make an EditMode Trait?
+
+   - Widget Type
+     - knows how to draw itself
+         - depending on it's UIElementData
+         - depending on the Highlight State
+     - needs to receive a reference to the UI, for
+         - drawing child widgets
+         - changing edit modes
+     - defines it's size, dependent on the UIElementData
+     - receives mouse input events
+     - receives keyboard input events, with hint which Input mode is set?!
+
+
+ */
+
 const IMAGINARY_MAX_ID : usize = 9999999999;
 
 fn clamp01(x: f32) -> f32 {
