@@ -86,7 +86,7 @@ macro_rules! define_constants {
         macro_rules! ppc {
             ($x: expr) => {
                 ($x + 18)
-            },
+            }
         }
     }
 }

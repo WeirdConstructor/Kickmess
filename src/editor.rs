@@ -198,24 +198,6 @@ fn prepare_values(values: &mut [UIValueSpec]) {
     values[pid::dist_on]  = UIValueSpec::new_toggle(&[ "Off", "On" ]).help(ht.0, ht.1);
     let ht = crate::param_model::help_texts[pid::f1_on];
     values[pid::f1_on]    = UIValueSpec::new_toggle(&[ "Off", "On" ]).help(ht.0, ht.1);
-    let ht = crate::param_model::help_texts[pid::m1_fun];
-    values[pid::m1_fun] =
-        UIValueSpec::new_toggle(&[
-            "ax",
-            "a(1-x)",
-            "1-ax",
-            "1-a(1-x)",
-        ]).help(ht.0, ht.1);
-
-    let ht = crate::param_model::help_texts[pid::m1_dest_id];
-    let mod_params = crate::param_model::create_mod_params();
-    values[pid::m1_dest_id] =
-        UIValueSpec::new_mod_target_list(
-            &mod_params,
-            "-").help(ht.0, ht.1);
-    let ht = crate::param_model::help_texts[pid::m1_src_id];
-    values[pid::m1_src_id] =
-        UIValueSpec::new_toggle(&[ "-", "LFO 1" ]).help(ht.0, ht.1);
 
     values[pid::midi_chan]= UIValueSpec::new_toggle(&[
         "1", "2", "3", "4", "5", "6", "7", "8", "9",
@@ -251,6 +233,25 @@ fn prepare_values(values: &mut [UIValueSpec]) {
         values[pid::o2fm_self]  .set_active_when_gt0(pid::o2fm_gain);
 
         values[pid::o2fm_freq]  .set_active_when_gt05(pid::o2fm_mode);
+
+        let ht = crate::param_model::help_texts[pid::m1_fun];
+        values[pid::m1_fun] =
+            UIValueSpec::new_toggle(&[
+                "ax",
+                "a(1-x)",
+                "1-ax",
+                "1-a(1-x)",
+            ]).help(ht.0, ht.1);
+
+        let ht = crate::param_model::help_texts[pid::m1_dest_id];
+        let mod_params = crate::param_model::create_mod_params();
+        values[pid::m1_dest_id] =
+            UIValueSpec::new_mod_target_list(
+                &mod_params,
+                "-").help(ht.0, ht.1);
+        let ht = crate::param_model::help_texts[pid::m1_src_id];
+        values[pid::m1_src_id] =
+            UIValueSpec::new_toggle(&[ "-", "LFO 1" ]).help(ht.0, ht.1);
     }
 }
 
@@ -483,6 +484,7 @@ fn new_osc1_section(pos: UIPos) -> UIInput {
     ]])
 }
 
+#[cfg(feature="mega")]
 fn new_mod_graph(pos: UIPos) -> UIInput {
     let f_graph =
         Arc::new(move |_id: usize, src: &mut dyn UIValueSource, out: &mut Vec<(f64, f64)>| {
