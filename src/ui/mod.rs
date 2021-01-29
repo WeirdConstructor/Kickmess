@@ -1112,7 +1112,7 @@ impl WValuePlugUI {
                     crect.h + 2.0 * UI_BORDER_WIDTH);
 
                 p.rect_fill(
-                    if depth % 2 == 0 { UI_GUI_BG_CLR } else { UI_GUI_BG2_CLR },
+                    lighten_clr(depth, UI_GUI_BG_CLR),
                     crect.x,
                     crect.y,
                     crect.w,

@@ -1,8 +1,15 @@
 // Copyright (c) 2020-2021 Weird Constructor <weirdconstructor@gmail.com>
 // This is a part of Kickmess. See README.md and COPYING for details.
 
+pub fn lighten_clr(depth: u32, clr: (f64, f64, f64)) -> (f64, f64, f64) {
+    (clr.0 * (1.2_f64).powf(depth as f64),
+     clr.1 * (1.2_f64).powf(depth as f64),
+     clr.2 * (1.2_f64).powf(depth as f64))
+}
 pub const UI_BG_CLR               : (f64, f64, f64) = ( 71.0 / 255.0,   63.0 / 255.0,   73.0 / 255.0);
-pub const UI_BG2_CLR              : (f64, f64, f64) = ( 89.0 / 255.0,   79.0 / 255.0,   93.0 / 255.0);
+//pub const UI_BG2_CLR              : (f64, f64, f64) = ( 89.0 / 255.0,   79.0 / 255.0,   93.0 / 255.0);
+//pub const UI_BG3_CLR              : (f64, f64, f64) = ( 98.0 / 255.0,   87.0 / 255.0,  102.0 / 255.0);
+pub const UI_BG3_CLR              : (f64, f64, f64) = (100.0 / 255.0,   88.0 / 255.0,  104.0 / 255.0);
 pub const UI_TXT_CLR              : (f64, f64, f64) = (220.0 / 255.0,  220.0 / 255.0,  240.0 / 255.0);
 //pub const UI_LBL_BG_CLR           : (f64, f64, f64) = ( 31.0 / 255.0,   27.0 / 255.0,   33.0 / 255.0);
 //pub const UI_LBL_BG_CLR           : (f64, f64, f64) = ( 63.0 / 255.0,   18.0 / 255.0,   61.0 / 255.0);
@@ -40,7 +47,8 @@ pub const UI_TXT_KNOB_HOVER_CLR   : (f64, f64, f64) = UI_HLIGHT_CLR;
 pub const UI_TXT_KNOB_HLIGHT_CLR  : (f64, f64, f64) = UI_HLIGHT_CLR;
 pub const UI_TXT_KNOB_HLHOVR_CLR  : (f64, f64, f64) = UI_HLIGHT2_CLR;
 pub const UI_GUI_BG_CLR           : (f64, f64, f64) = UI_BG_CLR;
-pub const UI_GUI_BG2_CLR          : (f64, f64, f64) = UI_BG2_CLR;
+//pub const UI_GUI_BG2_CLR          : (f64, f64, f64) = UI_BG2_CLR;
+//pub const UI_GUI_BG3_CLR          : (f64, f64, f64) = UI_BG3_CLR;
 pub const UI_GUI_CLEAR_CLR        : (f64, f64, f64) = UI_LBL_BG_CLR;
 pub const UI_BORDER_WIDTH         : f64 = 2.0;
 pub const UI_KNOB_RADIUS          : f64 = 25.0;
