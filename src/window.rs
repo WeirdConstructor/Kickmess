@@ -151,6 +151,7 @@ impl<'a> Painter for MyPainter<'a> {
     fn path_stroke(&mut self, width: f64, color: (f64, f64, f64), segments: &mut dyn std::iter::Iterator<Item = (f64, f64)>, closed: bool) {
         let mut p = femtovg::Path::new();
         let mut paint = color_paint(color);
+        paint.set_line_join(femtovg::LineJoin::Bevel);
         paint.set_line_width(width as f32);
 
         let mut first = true;
