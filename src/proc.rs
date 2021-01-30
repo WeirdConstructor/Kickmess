@@ -19,34 +19,53 @@ impl ParamProvider for std::vec::Vec<f32> {
 }
 
 #[derive(Debug, Clone, Copy)]
-pub struct ParamDefinition(usize, f32, f32, f32, &'static str, bool, bool, usize, usize);
+pub enum ParamRMode {
+    Lin,
+    Exp,
+    Exp4,
+}
+
+#[derive(Debug, Clone, Copy)]
+pub struct ParamDefinition(usize, f32, f32, f32, &'static str, ParamRMode, bool, usize, usize);
 
 impl ParamDefinition {
     pub fn new() -> Self {
-        Self(0, 0.0, 0.0, 0.0, "", false, false, 5, 2)
+        Self(0, 0.0, 0.0, 0.0, "", ParamRMode::Lin, false, 5, 2)
     }
 
     pub fn to_ui_value_spec(&self) -> UIValueSpec {
-        if self.5 {
-            let def = crate::helpers::range2p_exp(self.3, self.1, self.2) as f64;
-            UIValueSpec::new_min_max_exp(self.1 as f64, self.2 as f64, self.7, self.8).default(def)
-        } else {
-            let def = crate::helpers::range2p(self.3, self.1, self.2) as f64;
-            UIValueSpec::new_min_max(self.1 as f64, self.2 as f64, self.7, self.8).default(def)
+        match self.5 {
+            ParamRMode::Lin => {
+                let def = crate::helpers::range2p(self.3, self.1, self.2) as f64;
+                UIValueSpec::new_min_max(self.1 as f64, self.2 as f64, self.7, self.8).default(def)
+            }
+            ParamRMode::Exp => {
+                let def = crate::helpers::range2p_exp(self.3, self.1, self.2) as f64;
+                UIValueSpec::new_min_max_exp(self.1 as f64, self.2 as f64, self.7, self.8).default(def)
+            }
+            ParamRMode::Exp4 => {
+                let def = crate::helpers::range2p_exp4(self.3, self.1, self.2) as f64;
+                UIValueSpec::new_min_max_exp4(self.1 as f64, self.2 as f64, self.7, self.8).default(def)
+            }
         }
     }
 
     pub fn from(idx: usize, min: f32, max: f32, def: f32, width: usize, prec: usize, desc: &'static str) -> Self {
-        Self(idx, min, max, def, desc, false, true, width, prec)
+        Self(idx, min, max, def, desc, ParamRMode::Lin, true, width, prec)
     }
 
     pub fn lin(mut self) -> Self {
-        self.5 = false;
+        self.5 = ParamRMode::Lin;
         self
     }
 
     pub fn exp(mut self) -> Self {
-        self.5 = true;
+        self.5 = ParamRMode::Exp;
+        self
+    }
+
+    pub fn exp4(mut self) -> Self {
+        self.5 = ParamRMode::Exp4;
         self
     }
 
@@ -68,20 +87,20 @@ impl ParamDefinition {
     pub fn max(&self)       -> f32 { self.2 }
 
     pub fn default_p(&self) -> f32 {
-        if self.5 {
-            crate::helpers::range2p_exp(self.3, self.1, self.2)
-        } else {
-            crate::helpers::range2p(self.3, self.1, self.2)
+        match self.5 {
+            ParamRMode::Lin  => crate::helpers::range2p(self.3, self.1, self.2),
+            ParamRMode::Exp  => crate::helpers::range2p_exp(self.3, self.1, self.2),
+            ParamRMode::Exp4 => crate::helpers::range2p_exp4(self.3, self.1, self.2),
         }
     }
 
     pub fn is_smooth(&self) -> bool { self.6 }
 
     pub fn map(&self, p: f32) -> f32 {
-        if self.5 {
-            crate::helpers::p2range_exp(p, self.1, self.2)
-        } else {
-            crate::helpers::p2range(p, self.1, self.2)
+        match self.5 {
+            ParamRMode::Lin  => crate::helpers::p2range(p, self.1, self.2),
+            ParamRMode::Exp  => crate::helpers::p2range_exp(p, self.1, self.2),
+            ParamRMode::Exp4 => crate::helpers::p2range_exp4(p, self.1, self.2),
         }
     }
 }

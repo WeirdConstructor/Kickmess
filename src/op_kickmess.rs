@@ -68,7 +68,7 @@ impl<'a, 'b> OscillatorInputParams for O1Params<'a, 'b> {
 }
 
 impl<'a> LFOInputParams for LFO1Params<'a> {
-    fn freq(&self)          -> f32 { self.0.lfo1_freq() }
+    fn freq(&self)          -> f32 { self.0.lfo1_freq() * self.0.lfo1_fmul() }
     fn waveform(&self)      -> f32 { self.0.lfo1_wave() }
     fn pulse_width(&self)   -> f32 { self.0.lfo1_pw() }
     fn phase_offs(&self)    -> f32 { self.0.lfo1_phase() }
@@ -141,11 +141,11 @@ impl MonoProcessor for OpKickmess {
 
             let lfo1_val = self.lfo1.next(&LFO1Params(&params));
 
-            crate::log::log(|bw: &mut std::io::BufWriter<&mut [u8]>| {
-                use std::io::Write;
-                write!(bw, "LFO1={}", lfo1_val);
-            });
-
+//            crate::log::log(|bw: &mut std::io::BufWriter<&mut [u8]>| {
+//                use std::io::Write;
+//                write!(bw, "LFO1={}, freq: {}", lfo1_val, params.lfo1_freq() * params.lfo1_fmul());
+//            });
+//
             let m1_fun = params.m1_fun();
             let m1_amt = params.m1_amount();
             let m1_slp = params.m1_slope();

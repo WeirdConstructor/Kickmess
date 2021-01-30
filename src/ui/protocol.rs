@@ -187,6 +187,31 @@ impl UIValueSpec {
         }
     }
 
+    pub fn new_min_max_exp4(min: f64, max: f64, width: usize, prec: usize) -> Self {
+        let (min_p, max_p) = (min, max);
+
+        Self {
+            fun: Arc::new(move |x| min * (1.0 - (x * x * x * x)) + max * (x * x * x * x)),
+            fmt: Arc::new(move |_, x, writer| write!(writer, "{2:0$.1$}", width, prec, x).is_ok()),
+            active: Arc::new(|_, _| true),
+            parse: Arc::new(move |s| {
+                match s.parse::<f64>() {
+                    Ok(v) => {
+                        let v = if v > max_p { max_p } else { v };
+                        let v = if v < min_p { min_p } else { v };
+                        Some(clamp01((((v - min_p) / (max_p - min_p)).abs()).sqrt().sqrt()))
+                    },
+                    Err(_) => None,
+                }
+            }),
+            coarse_step: DEFAULT_COARSE_STEP,
+            fine_step:   DEFAULT_FINE_STEP,
+            default:     0.0,
+            help_name:   "".to_string(),
+            help_text:   "".to_string(),
+        }
+    }
+
     pub fn new_min_max_exp(min: f64, max: f64, width: usize, prec: usize) -> Self {
         let (min_p, max_p) = (min, max);
 

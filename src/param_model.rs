@@ -85,7 +85,7 @@ macro_rules! define_constants {
         pub const PARAM_COUNT     : usize = 21;
         macro_rules! ppc {
             ($x: expr) => {
-                ($x + 18)
+                ($x + crate::param_model::PUB_PARAM_COUNT)
             }
         }
     }
@@ -94,11 +94,11 @@ macro_rules! define_constants {
 #[cfg(feature="mega")]
 macro_rules! define_constants {
     () => {
-        pub const PUB_PARAM_COUNT : usize = 36;
-        pub const PARAM_COUNT     : usize = 43;
+        pub const PUB_PARAM_COUNT : usize = 37;
+        pub const PARAM_COUNT     : usize = 44;
         macro_rules! ppc {
             ($x: expr) => {
-                ($x + 36)
+                ($x + crate::param_model::PUB_PARAM_COUNT)
             }
         }
     }
@@ -110,28 +110,29 @@ define_constants!{}
 macro_rules! mega_params {
     ($x: ident) => {
         //  scope   name         exp/lin smooth        idx  min    max     def    width  prec  label
-        $x!{public  o1_gain         exp smooth         17,  0.0,   2.0,      0.0,     4,    2, "O1 Gain"}
-        $x!{public  o1_waveform     lin no_smooth      18,  0.0,   1.0,      0.0,     4,    2, "O1 Wave"}
-        $x!{public  o1_pw           lin smooth         19,  0.0,   1.0,      1.0,     4,    2, "O1 PW"}
-        $x!{public  o1_unison       lin no_smooth      20,  0.0,  10.5,      0.0,     1,    0, "O1 Unison"}
-        $x!{public  o1_detune       lin smooth         21,  0.0,   1.0,      0.01,    5,    3, "O1 Detune"}
+        $x!{public  o1_gain         exp smooth         18,  0.0,   2.0,      0.0,     4,    2, "O1 Gain"}
+        $x!{public  o1_waveform     lin no_smooth      19,  0.0,   1.0,      0.0,     4,    2, "O1 Wave"}
+        $x!{public  o1_pw           lin smooth         20,  0.0,   1.0,      1.0,     4,    2, "O1 PW"}
+        $x!{public  o1_unison       lin no_smooth      21,  0.0,  10.5,      0.0,     1,    0, "O1 Unison"}
+        $x!{public  o1_detune       lin smooth         22,  0.0,   1.0,      0.01,    5,    3, "O1 Detune"}
 
-        $x!{public  o1fm_ratio      exp smooth         22,  0.0,  30.0,       2.0,    5,    3, "OP1 Ratio"}
-        $x!{public  o1fm_self       exp smooth         23,  0.0,30000.0,      0.0,    4,    2, "OP1 Self Hz"}
-        $x!{public  o1fm_o2_mod     exp smooth         24,  0.0,30000.0,    100.0,    4,    2, "OP1>OP2 Hz"}
-        $x!{public  o2fm_o1_mod     exp smooth         25,  0.0,30000.0,      0.0,    4,    2, "OP2>OP1 Hz"}
-        $x!{public  o2fm_freq       exp smooth         26,  0.0,30000.0,    500.0,    4,    2, "OP2 Freq Hz"}
-        $x!{public  o2fm_self       exp smooth         27,  0.0,30000.0,      0.0,    4,    2, "OP2 Self Hz"}
-        $x!{public  o2fm_gain       lin smooth         28,  0.0,   2.0,       0.0,    5,    3, "OP2 Gain"}
+        $x!{public  o1fm_ratio      exp smooth         23,  0.0,  30.0,       2.0,    5,    3, "OP1 Ratio"}
+        $x!{public  o1fm_self       exp smooth         24,  0.0,30000.0,      0.0,    4,    2, "OP1 Self Hz"}
+        $x!{public  o1fm_o2_mod     exp smooth         25,  0.0,30000.0,    100.0,    4,    2, "OP1>OP2 Hz"}
+        $x!{public  o2fm_o1_mod     exp smooth         26,  0.0,30000.0,      0.0,    4,    2, "OP2>OP1 Hz"}
+        $x!{public  o2fm_freq       exp smooth         27,  0.0,30000.0,    500.0,    4,    2, "OP2 Freq Hz"}
+        $x!{public  o2fm_self       exp smooth         28,  0.0,30000.0,      0.0,    4,    2, "OP2 Self Hz"}
+        $x!{public  o2fm_gain       lin smooth         29,  0.0,   2.0,       0.0,    5,    3, "OP2 Gain"}
         $x!{private o2fm_mode       lin no_smooth ppc!(3),  0.0,   1.0,       0.0,    3,    1, "OP2 Mode"}
 
-        $x!{public  lfo1_freq       exp smooth         29,  0.0,5000.0,       5.0,    3,    1, "LFO1 Freq"}
-        $x!{public  lfo1_wave       lin no_smooth      30,  0.0,   1.0,       0.0,    3,    1, "LFO1 Wave"}
-        $x!{public  lfo1_pw         lin smooth         31,  0.0,   1.0,       0.0,    3,    1, "LFO1 PW"}
-        $x!{public  lfo1_phase      lin smooth         32,  0.0,   1.0,       0.0,    3,    1, "LFO1 Phase"}
+        $x!{public  lfo1_freq      exp4 smooth         30,  0.0, 100.0,       1.0,    5,    3, "LFO1 Freq"}
+        $x!{public  lfo1_fmul       lin smooth         31,  0.1, 100.0,       1.0,    5,    3, "LFO1 FMul"}
+        $x!{public  lfo1_wave       lin no_smooth      32,  0.0,   1.0,       0.0,    3,    1, "LFO1 Wave"}
+        $x!{public  lfo1_pw         lin smooth         33,  0.0,   1.0,       0.0,    3,    1, "LFO1 PW"}
+        $x!{public  lfo1_phase      lin smooth         34,  0.0,   1.0,       0.0,    3,    1, "LFO1 Phase"}
 
-        $x!{public   m1_amount      lin smooth         33,  0.0,   1.0,       1.0,    4,    2, "Mod1 Amt"}
-        $x!{public   m1_slope       lin smooth         34,  0.0,   1.0,       0.0,    5,    3, "Mod1 Slope"}
+        $x!{public   m1_amount      lin smooth         35,  0.0,   1.0,       1.0,    4,    2, "Mod1 Amt"}
+        $x!{public   m1_slope       lin smooth         36,  0.0,   1.0,       0.0,    5,    3, "Mod1 Slope"}
 
         $x!{private  m1_src_id      lin no_smooth ppc!(4),  0.0,1000.0,       0.0,    1,    0, "Mod1 Src"}
         $x!{private  m1_dest_id     lin no_smooth ppc!(5),  0.0,   1.0,       0.0,    1,    0, "Mod1 Dest"}
@@ -336,11 +337,11 @@ pub fn mod_function(mod_val: f32, fun_select: f32, mod_amount: f32, mod_slope: f
             (1.0 - mod_val).powf((mod_slope - 0.5) * 2.0)
         };
 
-    crate::log::log(|bw: &mut std::io::BufWriter<&mut [u8]>| {
-        use std::io::Write;
-        write!(bw, "MF1 mv={}, ms={}, ma={}",
-               mod_val, mod_slope, mod_amount);
-    });
+//    crate::log::log(|bw: &mut std::io::BufWriter<&mut [u8]>| {
+//        use std::io::Write;
+//        write!(bw, "MF1 mv={}, ms={}, ma={}",
+//               mod_val, mod_slope, mod_amount);
+//    });
 
     if fun_select < 0.25 {         // a * x            [0, a]
         mod_amount * mod_val
@@ -389,12 +390,12 @@ impl ModulatorFun {
 
         self.mod_val = mod_function(mod_val, mod_fun, mod_amount, mod_slope);
         if self.param_id >= 0.0 {
-            crate::log::log(|bw: &mut std::io::BufWriter<&mut [u8]>| {
-                use std::io::Write;
-                write!(bw, "MF1 modval={}, paramval={}, res={}",
-                       self.mod_val, self.param_val,
-                       self.param_val * self.mod_val);
-            });
+//            crate::log::log(|bw: &mut std::io::BufWriter<&mut [u8]>| {
+//                use std::io::Write;
+//                write!(bw, "MF1 modval={}, paramval={}, res={}",
+//                       self.mod_val, self.param_val,
+//                       self.param_val * self.mod_val);
+//            });
             pm.setf(self.param_id, self.param_val * self.mod_val);
         }
     }

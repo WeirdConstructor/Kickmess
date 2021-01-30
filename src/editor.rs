@@ -513,12 +513,21 @@ fn new_mod_graph(pos: UIPos) -> UIInput {
 #[cfg(feature="mega")]
 fn new_fm1_section(pos: UIPos) -> UIInput {
     let lfo1_params =
-        UIInput::container_border(UIPos::center(12, 3), 1.0, "LFO 1",
+        UIInput::container_border(UIPos::center(12, 4), 1.0, "LFO 1",
             vec![vec![
-                UIInput::knob(
-                    pid::lfo1_freq,
-                    String::from("LFO1 Hz"),
-                    UIPos::center(3, 12).middle()),
+                UIInput::container(UIPos::center(3, 12), 1.0, "", vec![
+                    vec![
+                        UIInput::knob(
+                            pid::lfo1_freq,
+                            String::from("LFO1 Hz"),
+                            UIPos::center(12, 7).middle()),
+                    ], vec![
+                        UIInput::knob_small(
+                            pid::lfo1_fmul,
+                            String::from("LFO1 X*Hz"),
+                            UIPos::center(12, 5).middle()),
+                    ]
+                ]),
                 UIInput::knob(
                     pid::lfo1_wave,
                     String::from("LFO1 Wave"),
