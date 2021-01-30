@@ -38,20 +38,20 @@ impl LFO {
     }
 
     pub fn next_sin(&mut self) -> f64 {
-        fast_sin((self.phase + self.phase_offs) * 2.0 * std::f64::consts::PI)
+        fast_sin((self.phase + self.phase_offs).fract() * 2.0 * std::f64::consts::PI)
     }
 
     pub fn next_tri(&mut self) -> f64 {
-        let value = -1.0 + (2.0 * (self.phase + self.phase_offs));
+        let value = -1.0 + (2.0 * (self.phase + self.phase_offs).fract());
         2.0 * (value.abs() - 0.5)
     }
 
     pub fn next_saw(&mut self) -> f64 {
-        (2.0 * (self.phase + self.phase_offs)) - 1.0
+        (2.0 * (self.phase + self.phase_offs).fract()) - 1.0
     }
 
     pub fn next_sqr(&mut self, pw: f64) -> f64 {
-        if (self.phase + self.phase_offs) < pw { 1.0 }
+        if (self.phase + self.phase_offs).fract() < pw { 1.0 }
         else { -1.0 }
     }
 
