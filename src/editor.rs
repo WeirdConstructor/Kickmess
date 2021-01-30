@@ -252,6 +252,11 @@ fn prepare_values(values: &mut [UIValueSpec]) {
         let ht = crate::param_model::help_texts[pid::m1_src_id];
         values[pid::m1_src_id] =
             UIValueSpec::new_toggle(&[ "-", "LFO 1" ]).help(ht.0, ht.1);
+
+
+        let ht = crate::param_model::help_texts[pid::lfo1_wave];
+        values[pid::lfo1_wave] =
+            UIValueSpec::new_toggle(&[ "Sine", "Tri", "Saw", "Pulse" ]).help(ht.0, ht.1);
     }
 }
 
@@ -563,7 +568,7 @@ fn new_fm1_section(pos: UIPos) -> UIInput {
                 ]),
                 UIInput::container(UIPos::center(3, 12), 1.0, "", vec![
                     vec![
-                        UIInput::knob(
+                        UIInput::btn_toggle(
                             pid::lfo1_wave,
                             String::from("LFO1 Wave"),
                             UIPos::center(12, 6).middle()),
