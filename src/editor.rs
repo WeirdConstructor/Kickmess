@@ -485,6 +485,39 @@ fn new_osc1_section(pos: UIPos) -> UIInput {
 }
 
 #[cfg(feature="mega")]
+fn new_lfo1_graph(pos: UIPos) -> UIInput {
+    let f_graph =
+        Arc::new(move |_id: usize, src: &mut dyn UIValueSource, out: &mut Vec<(f64, f64)>| {
+            let mut lfo = crate::lfo::LFO::new();
+            lfo.set_sample_rate(160.0);
+
+            let x1 = src.param_value(pid::lfo1_freq).powf(4.0);
+            let x2 = src.param_value(pid::lfo1_fmul);
+            let freq = (0.0 * (1.0 - x1)) + x1 * 100.0;
+            let freq = freq * (0.1 * (1.0 - x2) + x2 * 100.0);
+
+            let samples = 80;
+
+            for x in 0..(samples + 1) {
+                let n = lfo.next(
+                    &(freq as f32,
+                      src.param_value(pid::lfo1_wave)  as f32,
+                      crate::helpers::p2range(
+                        src.param_value(pid::lfo1_pw) as f32, 0.01, 0.99),
+                      src.param_value(pid::lfo1_phase) as f32)) as f64;
+                let x = x as f32 / (samples as f32);
+                out.push((x as f64, (n * 0.7) + 0.15));
+            }
+        });
+
+    UIInput::graph(
+        0,
+        String::from("LFO1"),
+        pos,
+        f_graph.clone())
+}
+
+#[cfg(feature="mega")]
 fn new_mod_graph(pos: UIPos) -> UIInput {
     let f_graph =
         Arc::new(move |_id: usize, src: &mut dyn UIValueSource, out: &mut Vec<(f64, f64)>| {
@@ -528,10 +561,16 @@ fn new_fm1_section(pos: UIPos) -> UIInput {
                             UIPos::center(12, 5).middle()),
                     ]
                 ]),
-                UIInput::knob(
-                    pid::lfo1_wave,
-                    String::from("LFO1 Wave"),
-                    UIPos::center(3, 12).middle()),
+                UIInput::container(UIPos::center(3, 12), 1.0, "", vec![
+                    vec![
+                        UIInput::knob(
+                            pid::lfo1_wave,
+                            String::from("LFO1 Wave"),
+                            UIPos::center(12, 6).middle()),
+                    ], vec![
+                        new_lfo1_graph(UIPos::center(12, 6)),
+                    ]
+                ]),
                 UIInput::knob(
                     pid::lfo1_pw,
                     String::from("LFO1 PW"),

@@ -128,7 +128,7 @@ macro_rules! mega_params {
         $x!{public  lfo1_freq      exp4 smooth         30,  0.0, 100.0,       1.0,    5,    3, "LFO1 Freq"}
         $x!{public  lfo1_fmul       lin smooth         31,  0.1, 100.0,       1.0,    5,    3, "LFO1 FMul"}
         $x!{public  lfo1_wave       lin no_smooth      32,  0.0,   1.0,       0.0,    3,    1, "LFO1 Wave"}
-        $x!{public  lfo1_pw         lin smooth         33,  0.0,   1.0,       0.0,    3,    1, "LFO1 PW"}
+        $x!{public  lfo1_pw         lin smooth         33,  0.01, 0.99,       0.5,    3,    1, "LFO1 PW"}
         $x!{public  lfo1_phase      lin smooth         34,  0.0,   1.0,       0.0,    3,    1, "LFO1 Phase"}
 
         $x!{public   m1_amount      lin smooth         35,  0.0,   1.0,       1.0,    4,    2, "Mod1 Amt"}

@@ -66,7 +66,7 @@ impl LFO {
                  if wave < 0.25 { self.next_sin() }
             else if wave < 0.5  { self.next_tri() }
             else if wave < 0.75 { self.next_saw() }
-            else                { self.next_sqr(params.pulse_width() as f64 * 0.5) };
+            else                { self.next_sqr(params.pulse_width() as f64) };
 
         self.phase += phase_inc;
         self.phase = self.phase.fract();

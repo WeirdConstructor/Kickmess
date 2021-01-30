@@ -3,6 +3,7 @@
 
 use kickmessvst;
 use kickmessvst::ui::protocol::*;
+use kickmessvst::helpers::*;
 use std::sync::Arc;
 
 
@@ -27,6 +28,8 @@ impl UIController for TestController {
 
 fn main() {
     let ctrl = Arc::new(TestController { });
+
+    init_cos_tab();
 
 //    std::thread::spawn(move || {
 //        let mut closed = false;
