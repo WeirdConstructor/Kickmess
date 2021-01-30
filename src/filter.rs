@@ -1,5 +1,4 @@
 use crate::helpers::*;
-use crate::log::Log;
 
 // Digital approx. of Chamberlin two-pole low pass.
 // From: Author or source: Effect Deisgn Part 1, Jon Dattorro, J. Audio Eng. Soc.,
@@ -116,7 +115,7 @@ impl MoogFilter {
         self.srate = srate;
     }
 
-    pub fn next<P: FilterInputParams>(&mut self, mut input: f32, params: &P, log: &Log) -> f32 {
+    pub fn next<P: FilterInputParams>(&mut self, mut input: f32, params: &P) -> f32 {
         self.cnt += 1;
         let freq = (params.freq()) / (self.srate * 0.5);
 

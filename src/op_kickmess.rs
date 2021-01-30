@@ -125,7 +125,7 @@ impl MonoProcessor for OpKickmess {
         self.lfo1.set_sample_rate(sr);
     }
 
-    fn process(&mut self, smth_params: &SmoothParameters, proc_offs: usize, out: &mut [f32], log: &mut Log) {
+    fn process(&mut self, smth_params: &SmoothParameters, proc_offs: usize, out: &mut [f32]) {
         let block_params = ParamModel::new(smth_params.get_frame(0));
         self.f_env.set_release(block_params.f_env_release());
         self.release.set_release(block_params.env_release());
@@ -211,8 +211,7 @@ impl MonoProcessor for OpKickmess {
 
                 if params.f1_on() > 0.5 {
                     kick_sample =
-                        self.filter1.next(kick_sample as f32, &F1Params(&params), log)
-                        as f64;
+                        self.filter1.next(kick_sample as f32, &F1Params(&params)) as f64;
                 }
 
                 if params.dist_on() > 0.5 {

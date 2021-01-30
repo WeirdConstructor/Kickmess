@@ -189,7 +189,7 @@ impl Plugin for Kickmess {
             self.voices.process(
                 offs,
                 &mut out_buf[offs..(offs + advance_frames)],
-                &self.smooth_param, &mut self.log);
+                &self.smooth_param);
 
             offs      += advance_frames;
             remaining -= advance_frames;
@@ -230,7 +230,10 @@ impl Plugin for Kickmess {
 
     fn get_editor(&mut self) -> Option<Box<dyn vst::editor::Editor>> {
         Some(Box::new(
-            editor::KickmessEditor::new(self.host, self.params.clone(), self.log.new_handle())))
+            editor::KickmessEditor::new(
+                self.host,
+                self.params.clone(),
+                self.log.new_handle())))
     }
 }
 

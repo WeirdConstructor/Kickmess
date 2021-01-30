@@ -2,7 +2,6 @@
 // This is a part of Kickmess. See README.md and COPYING for details.
 
 use crate::ui::protocol::UIValueSpec;
-use crate::log::Log;
 
 pub trait ParamProvider {
     fn param(&self, p: usize) -> f32;
@@ -157,7 +156,7 @@ impl ParamSet {
 
 pub trait MonoProcessor {
     fn init_params(ps: &mut ParamSet, public_ps: &mut ParamSet);
-    fn process(&mut self, params: &SmoothParameters, offs: usize, out: &mut [f32], log: &mut Log);
+    fn process(&mut self, params: &SmoothParameters, offs: usize, out: &mut [f32]);
     fn set_sample_rate(&mut self, srate: f32);
 }
 
@@ -364,12 +363,12 @@ impl<T: MonoVoice> VoiceManager<T> {
         }
     }
 
-    pub fn process(&mut self, nframe_offs: usize, out: &mut [f32], smooth_param: &SmoothParameters, log: &mut Log) {
+    pub fn process(&mut self, nframe_offs: usize, out: &mut [f32], smooth_param: &SmoothParameters) {
         self.process_voice_events();
 
         for voice in self.voices.iter_mut() {
             if voice.is_playing() {
-                voice.process(smooth_param, nframe_offs, out, log);
+                voice.process(smooth_param, nframe_offs, out);
             }
         }
     }
