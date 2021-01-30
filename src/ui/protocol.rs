@@ -156,28 +156,32 @@ impl UIValueSpec {
 
         Self {
             fun: Arc::new(move |x| {
-                for id in possible_ids.iter() {
-                    if *id == (x.round() as usize) {
-                        return 1.0;
+                if x >= 0.0 {
+                    for id in possible_ids.iter() {
+                        if *id == ((x + 0.1).floor() as usize) {
+                            return 1.0;
+                        }
                     }
                 }
 
                 0.0
             }),
             fmt: Arc::new(move |v, _, writer| {
-                for (id, s) in id_2_str_map.iter() {
-                    if *id == (v.round() as usize) {
-                        return write!(writer, "{}", s).is_ok();
+                if v >= 0.0 {
+                    for (id, s) in id_2_str_map.iter() {
+                        if *id == ((v + 0.1).floor() as usize) {
+                            return write!(writer, "{}", s).is_ok();
+                        }
                     }
                 }
 
                 write!(writer, "{}", empty_label).is_ok()
             }),
-            active: Arc::new(|_, _| true),
-            parse: Arc::new(|_| None),
+            active:      Arc::new(|_, _| true),
+            parse:       Arc::new(|_| None),
             coarse_step: 0.0,
             fine_step:   0.0,
-            default:     0.0,
+            default:    -1.0,
             help_name:   "".to_string(),
             help_text:   "".to_string(),
         }

@@ -1,5 +1,28 @@
 use crate::ringbuf_shared::*;
 use std::io::Write;
+use std::cell::RefCell;
+
+thread_local! {
+    pub static LOG: RefCell<Option<LogHandle>> = RefCell::new(None);
+}
+
+pub fn global_set_log(l: &mut Log) {
+    let hdl = l.new_handle();
+    LOG.with(move |f| {
+        *f.borrow_mut() = Some(hdl);
+    });
+}
+
+pub fn log<F: Fn(&mut std::io::BufWriter<&mut [u8]>)>(f: F) {
+    use std::borrow::Borrow;
+
+    LOG.with(|l| {
+        let lh = l.borrow_mut();
+        if let Some(lh) = (*(*lh.borrow())).as_ref() {
+            lh.log(f);
+        }
+    });
+}
 
 struct LogEntry {
     buf: [u8; 128],

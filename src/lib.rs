@@ -119,6 +119,10 @@ impl Plugin for Kickmess {
         let mut remaining = out_buf.len();
         let mut offs      = 0;
 
+        if DEBUG_LOGGING {
+            crate::log::global_set_log(&mut self.log);
+        }
+
         for os in out_buf.iter_mut() { *os = 0.0; }
 
 //        let tiflag = {

@@ -41,6 +41,7 @@ const PI2 : f64 = std::f64::consts::PI * 2.0;
 
 struct F1Params<'a>(&'a ParamModelMut);
 struct O1Params<'a, 'b>(&'a ParamModelMut, &'b f64);
+struct LFO1Params<'a>(&'a ParamModelMut);
 
 impl<'a> FilterInputParams for F1Params<'a> {
     fn freq(&self)  -> f32 { self.0.f1_cutoff() }
@@ -66,6 +67,13 @@ impl<'a, 'b> OscillatorInputParams for O1Params<'a, 'b> {
     fn op2_mode(&self)      -> f32 { self.0.o2fm_mode() }
 }
 
+impl<'a> LFOInputParams for LFO1Params<'a> {
+    fn freq(&self)          -> f32 { self.0.lfo1_freq() }
+    fn waveform(&self)      -> f32 { self.0.lfo1_wave() }
+    fn pulse_width(&self)   -> f32 { self.0.lfo1_pw() }
+    fn phase_offs(&self)    -> f32 { self.0.lfo1_phase() }
+}
+
 pub struct OpKickmess {
     id:              usize,
 
@@ -83,6 +91,8 @@ pub struct OpKickmess {
     filter1:         MoogFilter,
     oscillator1:     UnisonBlep,
     fm_oscillator:   FMOscillator,
+    lfo1:            LFO,
+    mf1:             ModulatorFun,
     params:          ParamModelMut,
 }
 
@@ -112,6 +122,7 @@ impl MonoProcessor for OpKickmess {
         self.filter1.set_sample_rate(sr);
         self.oscillator1.set_sample_rate(sr);
         self.fm_oscillator.set_sample_rate(sr);
+        self.lfo1.set_sample_rate(sr);
     }
 
     fn process(&mut self, smth_params: &SmoothParameters, proc_offs: usize, out: &mut [f32], log: &mut Log) {
@@ -125,6 +136,21 @@ impl MonoProcessor for OpKickmess {
             let prev = ParamModel::new(params.get_prev_frame());
             params.swap(smth_params.get_frame(offs));
 
+            self.mf1.set_param(params.m1_dest_id());
+            self.mf1.feedback_run(&mut params);
+
+            let lfo1_val = self.lfo1.next(&LFO1Params(&params));
+
+            crate::log::log(|bw: &mut std::io::BufWriter<&mut [u8]>| {
+                use std::io::Write;
+                write!(bw, "LFO1={}", lfo1_val);
+            });
+
+            let m1_fun = params.m1_fun();
+            let m1_amt = params.m1_amount();
+            let m1_slp = params.m1_slope();
+            self.mf1.run_mod_fun(&mut params, lfo1_val, m1_fun, m1_amt, m1_slp);
+
             let block_offs = offs + proc_offs;
 
             let mut kick_sample : f64 = 0.0;
@@ -135,6 +161,7 @@ impl MonoProcessor for OpKickmess {
                     self.filter1.reset();
                     self.oscillator1.reset();
                     self.fm_oscillator.reset();
+                    self.lfo1.reset();
 
                     self.cur_phase = 0.0;
 
@@ -247,6 +274,8 @@ impl MonoVoice for OpKickmess {
             oscillator1:     UnisonBlep::new(10),
             fm_oscillator:   FMOscillator::new(),
             params:          ParamModelMut::new(),
+            lfo1:            LFO::new(),
+            mf1:             ModulatorFun::new(),
         }
     }
 

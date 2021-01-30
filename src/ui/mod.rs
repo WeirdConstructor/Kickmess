@@ -628,13 +628,13 @@ impl WValuePlugUI {
                                 self.set_element_value(zone.id, 0.0);
 
                                 self.controller.clone().value_change(
-                                    self, zone.id, 0.0, true);
+                                    self, zone.id, -1.0, true);
                                 self.queue_redraw();
 
                             } else if self.is_mod_target_value(zone.id, hover_zone.id) {
-                                //d// println!("****** MOD TARGET FOR {} FOUND: {}",
-                                //d//          zone.id,
-                                //d//          hover_zone.id);
+                                println!("****** MOD TARGET FOR {} FOUND: {}",
+                                         zone.id,
+                                         hover_zone.id);
                                 self.set_element_value(zone.id, hover_zone.id as f32);
                                 self.controller.clone().value_change(
                                     self, zone.id, hover_zone.id as f32, true);

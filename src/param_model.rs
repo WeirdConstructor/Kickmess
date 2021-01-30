@@ -125,7 +125,7 @@ macro_rules! mega_params {
         $x!{public  o2fm_gain       lin smooth         28,  0.0,   2.0,       0.0,    5,    3, "OP2 Gain"}
         $x!{private o2fm_mode       lin no_smooth ppc!(3),  0.0,   1.0,       0.0,    3,    1, "OP2 Mode"}
 
-        $x!{public  lfo1_freq       lin smooth         29,  0.0,1000.0,       5.0,    3,    1, "LFO1 Freq"}
+        $x!{public  lfo1_freq       exp smooth         29,  0.0,5000.0,       5.0,    3,    1, "LFO1 Freq"}
         $x!{public  lfo1_wave       lin no_smooth      30,  0.0,   1.0,       0.0,    3,    1, "LFO1 Wave"}
         $x!{public  lfo1_pw         lin smooth         31,  0.0,   1.0,       0.0,    3,    1, "LFO1 PW"}
         $x!{public  lfo1_phase      lin smooth         32,  0.0,   1.0,       0.0,    3,    1, "LFO1 Phase"}
@@ -134,7 +134,7 @@ macro_rules! mega_params {
         $x!{public   m1_slope       lin smooth         34,  0.0,   1.0,       0.0,    5,    3, "Mod1 Slope"}
 
         $x!{private  m1_src_id      lin no_smooth ppc!(4),  0.0,1000.0,       0.0,    1,    0, "Mod1 Src"}
-        $x!{private  m1_dest_id     lin no_smooth ppc!(5),  0.0,1000.0,       0.0,    1,    0, "Mod1 Dest"}
+        $x!{private  m1_dest_id     lin no_smooth ppc!(5),  0.0,   1.0,       0.0,    1,    0, "Mod1 Dest"}
         $x!{private  m1_fun         lin no_smooth ppc!(6),  0.0,   1.0,       0.0,    3,    1, "Mod1 Fun"}
     }
 }
@@ -336,6 +336,12 @@ pub fn mod_function(mod_val: f32, fun_select: f32, mod_amount: f32, mod_slope: f
             (1.0 - mod_val).powf((mod_slope - 0.5) * 2.0)
         };
 
+    crate::log::log(|bw: &mut std::io::BufWriter<&mut [u8]>| {
+        use std::io::Write;
+        write!(bw, "MF1 mv={}, ms={}, ma={}",
+               mod_val, mod_slope, mod_amount);
+    });
+
     if fun_select < 0.25 {         // a * x            [0, a]
         mod_amount * mod_val
     } else if fun_select < 0.5 {   // a * (1 - x)      [a, 0]
@@ -347,6 +353,64 @@ pub fn mod_function(mod_val: f32, fun_select: f32, mod_amount: f32, mod_slope: f
     }
 }
 
+pub struct ModulatorFun {
+    param_id:  f32,
+    param_val: f32,
+    mod_val:   f32,
+}
+
+impl ModulatorFun {
+    pub fn new() -> Self {
+        Self {
+            param_id:  0.0,
+            param_val: 0.0,
+            mod_val:   0.0,
+        }
+    }
+
+    #[inline]
+    pub fn set_param(&mut self, p: f32) {
+        self.param_id = p;
+    }
+
+    #[inline]
+    pub fn feedback_run(&mut self, pm: &mut ParamModelMut) {
+        if self.param_id >= 0.0 {
+            self.param_val = pm.getf(self.param_id);
+            pm.setf(self.param_id, self.param_val * self.mod_val);
+        } else {
+            self.param_val = 0.0;
+        }
+    }
+
+    #[inline]
+    pub fn run_mod_fun(&mut self, pm: &mut ParamModelMut, mod_val: f32,
+               mod_fun: f32, mod_amount: f32, mod_slope: f32) {
+
+        self.mod_val = mod_function(mod_val, mod_fun, mod_amount, mod_slope);
+        if self.param_id >= 0.0 {
+            crate::log::log(|bw: &mut std::io::BufWriter<&mut [u8]>| {
+                use std::io::Write;
+                write!(bw, "MF1 modval={}, paramval={}, res={}",
+                       self.mod_val, self.param_val,
+                       self.param_val * self.mod_val);
+            });
+            pm.setf(self.param_id, self.param_val * self.mod_val);
+        }
+    }
+}
+
+// self.modfun1.set_param_id(pid::m1_dest_id);
+// self.modfun1.apply(params); // saves param value in param_val, applies prev mod_val
+//
+// let mod_val = self.lfo1.next();
+// --- map mod_val to pid::m1_src_id ---
+//
+// self.modfun1.run(mod_val, mod_amount, mod_slope);
+//
+// // takes param_val from earlier, applies new mod_val to it, stores in params
+// self.modfun1.post_apply(params);
+
 impl ParamModelMut {
     pub fn new() -> Self {
         let mut v = [[0.0; PARAM_COUNT]; 2];
@@ -356,6 +420,7 @@ impl ParamModelMut {
         }
     }
 
+    #[inline]
     pub fn reset(&mut self) {
         self.idx = 0;
         for v in self.v[self.idx].iter_mut() {
@@ -363,10 +428,12 @@ impl ParamModelMut {
         }
     }
 
+    #[inline]
     pub fn get_prev_frame(&mut self) -> &[f32] {
         &self.v[(self.idx + 1) % 2][..]
     }
 
+    #[inline]
     pub fn swap(&mut self, i: &[f32]) {
         self.idx = (self.idx + 1) % 2;
         for (i, v) in i.iter().zip(self.v[self.idx].iter_mut()) {
@@ -374,9 +441,14 @@ impl ParamModelMut {
         }
     }
 
-    pub fn mod_idx_with_fun(&mut self, id: f32, mod_val: f32, fun_select: f32, mod_amount: f32, mod_slope: f32) {
-        self.v[self.idx][(id + 0.1).floor() as usize] *=
-            mod_function(mod_val, fun_select, mod_amount, mod_slope);
+    #[inline]
+    pub fn getf(&mut self, id: f32) -> f32 {
+        self.v[self.idx][(id + 0.1).floor() as usize]
+    }
+
+    #[inline]
+    pub fn setf(&mut self, id: f32, v: f32) {
+        self.v[self.idx][(id + 0.1).floor() as usize] = v;
     }
 }
 

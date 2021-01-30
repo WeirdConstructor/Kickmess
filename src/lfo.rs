@@ -7,6 +7,13 @@ pub trait LFOInputParams {
     fn phase_offs(&self)    -> f32;
 }
 
+impl LFOInputParams for (f32, f32, f32, f32) {
+    fn freq(&self)          -> f32 { self.0 }
+    fn waveform(&self)      -> f32 { self.1 }
+    fn pulse_width(&self)   -> f32 { self.2 }
+    fn phase_offs(&self)    -> f32 { self.3 }
+}
+
 pub struct LFO {
     srate:       f64,
     phase:       f64,
@@ -64,6 +71,6 @@ impl LFO {
         self.phase += phase_inc;
         self.phase = self.phase.fract();
 
-        sample as f32
+        ((sample + 1.0) * 0.5) as f32
     }
 }
