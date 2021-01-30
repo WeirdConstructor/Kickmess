@@ -498,7 +498,7 @@ fn new_lfo1_graph(pos: UIPos) -> UIInput {
 
             let x1 = src.param_value(pid::lfo1_freq).powf(4.0);
             let x2 = src.param_value(pid::lfo1_fmul);
-            let freq = (0.0 * (1.0 - x1)) + x1 * 100.0;
+            let freq = (0.0 * (1.0 - x1)) + x1 * 160.0;
             let freq = freq * (0.1 * (1.0 - x2) + x2 * 100.0);
 
             let samples = 80;
@@ -568,9 +568,9 @@ fn new_fm1_section(pos: UIPos) -> UIInput {
                 ]),
                 UIInput::container(UIPos::center(3, 12), 1.0, "", vec![
                     vec![
-                        UIInput::btn_toggle(
+                        UIInput::btn_toggle_small(
                             pid::lfo1_wave,
-                            String::from("LFO1 Wave"),
+                            String::from("Wave"),
                             UIPos::center(12, 6).middle()),
                     ], vec![
                         new_lfo1_graph(UIPos::center(12, 6)),
