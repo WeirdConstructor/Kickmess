@@ -19,6 +19,7 @@ impl UIController for TestController {
         kickmessvst::OpKickmess::init_params(&mut ps, &mut public_ps);
         kickmessvst::editor::define_gui(&ps, ui);
         ui.set_version(kickmessvst::VERSION);
+        ui.set_default_values();
     }
 
     fn window_closed(&self, _ui: &mut dyn UI) {

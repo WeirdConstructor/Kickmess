@@ -187,7 +187,6 @@ impl UIController for KickmessEditorController {
 const ID_MAIN_TAB : usize = PARAM_COUNT;
 const ID_LIC_TAB  : usize = PARAM_COUNT + 1;
 
-
 fn prepare_values(values: &mut [UIValueSpec]) {
 
     let ht = crate::param_model::help_texts[pid::freq_note_start];
@@ -199,17 +198,19 @@ fn prepare_values(values: &mut [UIValueSpec]) {
     let ht = crate::param_model::help_texts[pid::f1_on];
     values[pid::f1_on]    = UIValueSpec::new_toggle(&[ "Off", "On" ]).help(ht.0, ht.1);
 
+    let ht = crate::param_model::help_texts[pid::midi_chan];
     values[pid::midi_chan]= UIValueSpec::new_toggle(&[
         "1", "2", "3", "4", "5", "6", "7", "8", "9",
         "10", "11", "12", "13", "14", "15", "16"
     ]).help(ht.0, ht.1);
 
-    // TODO: Make LFO display Hz above 1Hz and Seconds below 1Hz
-
     values[pid::dist_start] .set_active_when_gt05(pid::dist_on);
     values[pid::dist_end]   .set_active_when_gt05(pid::dist_on);
 
-    values[pid::f1_type]  = UIValueSpec::new_toggle(&[ "LP", "HP", "BP" ]).help(ht.0, ht.1);
+    let ht = crate::param_model::help_texts[pid::f1_type];
+    values[pid::f1_type] =
+        UIValueSpec::new_toggle(&[ "LP", "HP", "BP" ])
+        .help(ht.0, ht.1);
     values[pid::f1_cutoff]  .set_active_when_gt05(pid::f1_on);
     values[pid::f1_res]     .set_active_when_gt05(pid::f1_on);
     values[pid::f1_type]    .set_active_when_gt05(pid::f1_on);
@@ -237,10 +238,10 @@ fn prepare_values(values: &mut [UIValueSpec]) {
         let ht = crate::param_model::help_texts[pid::m1_fun];
         values[pid::m1_fun] =
             UIValueSpec::new_toggle(&[
-                "ax",
-                "a(1-x)",
-                "1-ax",
-                "1-a(1-x)",
+                "a * x",
+                "a * (1 - x)",
+                "1 - a * x",
+                "1 - a * (1 - x)",
             ]).help(ht.0, ht.1);
 
         let ht = crate::param_model::help_texts[pid::m1_dest_id];
@@ -249,10 +250,10 @@ fn prepare_values(values: &mut [UIValueSpec]) {
             UIValueSpec::new_mod_target_list(
                 &mod_params,
                 "-").help(ht.0, ht.1);
+
         let ht = crate::param_model::help_texts[pid::m1_src_id];
         values[pid::m1_src_id] =
             UIValueSpec::new_toggle(&[ "-", "LFO 1" ]).help(ht.0, ht.1);
-
 
         let ht = crate::param_model::help_texts[pid::lfo1_wave];
         values[pid::lfo1_wave] =
@@ -489,29 +490,43 @@ fn new_osc1_section(pos: UIPos) -> UIInput {
     ]])
 }
 
+fn lfo_param_factory(lfo: &mut crate::lfo::LFO, src: &mut dyn UIValueSource, one_cycle: bool) -> (f32, f32, f32, f32) {
+    lfo.set_sample_rate(160.0);
+
+    let x1 = src.param_value(pid::lfo1_freq).powf(4.0);
+    let x2 = src.param_value(pid::lfo1_fmul);
+    let freq = (0.0 * (1.0 - x1)) + x1 * 160.0;
+    let freq = freq * (0.1 * (1.0 - x2) + x2 * 100.0);
+
+    let freq =
+        if one_cycle {
+            1.0
+        } else {
+            freq
+        };
+
+    let wave = src.param_value(pid::lfo1_wave) as f32;
+    let pw   =
+        crate::helpers::p2range(
+            src.param_value(pid::lfo1_pw) as f32, 0.05, 0.95);
+    let phase = src.param_value(pid::lfo1_phase) as f32;
+
+    (freq as f32, wave, pw, phase)
+}
+
 #[cfg(feature="mega")]
 fn new_lfo1_graph(pos: UIPos) -> UIInput {
     let f_graph =
         Arc::new(move |_id: usize, src: &mut dyn UIValueSource, out: &mut Vec<(f64, f64)>| {
             let mut lfo = crate::lfo::LFO::new();
-            lfo.set_sample_rate(160.0);
-
-            let x1 = src.param_value(pid::lfo1_freq).powf(4.0);
-            let x2 = src.param_value(pid::lfo1_fmul);
-            let freq = (0.0 * (1.0 - x1)) + x1 * 160.0;
-            let freq = freq * (0.1 * (1.0 - x2) + x2 * 100.0);
+            let lfo_params = lfo_param_factory(&mut lfo, src, false);
 
             let samples = 80;
 
             for x in 0..(samples + 1) {
-                let n = lfo.next(
-                    &(freq as f32,
-                      src.param_value(pid::lfo1_wave)  as f32,
-                      crate::helpers::p2range(
-                        src.param_value(pid::lfo1_pw) as f32, 0.01, 0.99),
-                      src.param_value(pid::lfo1_phase) as f32)) as f64;
+                let n = lfo.next(&lfo_params) as f64;
                 let x = x as f32 / (samples as f32);
-                out.push((x as f64, (n * 0.7) + 0.15));
+                out.push((x as f64, n));
             }
         });
 
@@ -530,18 +545,35 @@ fn new_mod_graph(pos: UIPos) -> UIInput {
             let mod_slope  = src.param_value(pid::m1_slope) as f32;
             let fun_select = src.param_value(pid::m1_fun) as f32;
 
-            let samples = 80;
+            let mod_src = src.param_value(pid::m1_src_id) as f32;
 
-            for x in 0..(samples + 1) {
-                let x = x as f32 / (samples as f32);
-                out.push(
-                    (x as f64,
-                     crate::param_model::mod_function(
-                        x, fun_select, mod_amount, mod_slope) as f64));
+            if mod_src > 0.5 {
+                let mut lfo = crate::lfo::LFO::new();
+                let lfo_params = lfo_param_factory(&mut lfo, src, true);
+
+                let samples = 200;
+
+                for x in 0..(samples + 1) {
+                    let x = x as f32 / (samples as f32);
+                    let n = lfo.next(&lfo_params) as f64;
+                    out.push(
+                        (x as f64,
+                         crate::param_model::mod_function(
+                            n as f32, fun_select, mod_amount, mod_slope) as f64));
+                }
+            } else {
+                let samples = 80;
+                for x in 0..(samples + 1) {
+                    let x = x as f32 / (samples as f32);
+                    out.push(
+                        (x as f64,
+                         crate::param_model::mod_function(
+                            x as f32, fun_select, mod_amount, mod_slope) as f64));
+                }
             }
         });
 
-    UIInput::graph(
+    UIInput::graph_huge(
         0,
         String::from("Mod"),
         pos,
@@ -589,37 +621,46 @@ fn new_fm1_section(pos: UIPos) -> UIInput {
     let mod1_params =
         UIInput::container_border(UIPos::center(12, 4), 1.0, "Mod1",
             vec![vec![
-                UIInput::container(UIPos::center(12, 6), 1.0, "",
+                UIInput::container(UIPos::center(12, 7), 1.0, "",
                     vec![
                         vec![
-                            UIInput::btn_toggle_small(
-                                pid::m1_fun,
-                                String::from("Fun."),
-                                UIPos::center(3, 12).middle()),
-                            UIInput::knob(
-                                pid::m1_amount,
-                                String::from("M1 Amt"),
-                                UIPos::center(3, 12).middle()),
-                            UIInput::knob(
-                                pid::m1_slope,
-                                String::from("M1 Slope"),
-                                UIPos::center(3, 12).middle()),
+                            UIInput::container(UIPos::center(5, 12), 1.0, "",
+                                vec![vec![
+                                    UIInput::btn_toggle(
+                                        pid::m1_src_id,
+                                        String::from("M1 Src"),
+                                        UIPos::center(12, 6).middle()),
+                                ], vec![
+                                    UIInput::btn_mod_target(
+                                        pid::m1_dest_id,
+                                        String::from("M1 Dest"),
+                                        UIPos::center(12, 6).middle()),
+                                ]]),
                             new_mod_graph(
-                                UIPos::center(3, 12).middle()),
+                                UIPos::center(7, 12).middle()),
                         ]
                     ]),
+
             ], vec![
-                UIInput::container(UIPos::center(12, 6), 1.0, "",
+                UIInput::container(UIPos::center(12, 5), 1.0, "",
                     vec![
                         vec![
-                            UIInput::btn_toggle(
-                                pid::m1_src_id,
-                                String::from("M1 Src"),
-                                UIPos::center(6, 12).middle()),
-                            UIInput::btn_mod_target(
-                                pid::m1_dest_id,
-                                String::from("M1 Dest"),
-                                UIPos::center(6, 12).middle()),
+                            UIInput::container(UIPos::center(5, 12), 1.0, "",
+                                vec![vec![UIInput::btn_toggle(
+                                    pid::m1_fun,
+                                    String::from("Fun."),
+                                    UIPos::center(12, 12).middle())]]),
+                            UIInput::container(UIPos::center(7, 12), 1.0, "",
+                                vec![vec![
+                                    UIInput::knob(
+                                        pid::m1_amount,
+                                        String::from("M1 Amt"),
+                                        UIPos::center(6, 12).middle()),
+                                    UIInput::knob(
+                                        pid::m1_slope,
+                                        String::from("M1 Slope"),
+                                        UIPos::center(6, 12).middle()),
+                                ]]),
                         ]
                     ]),
             ]]);

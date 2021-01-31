@@ -231,6 +231,13 @@ impl UI for WValuePlugUI {
         self.queue_redraw();
     }
 
+    fn set_default_values(&mut self) {
+        for id in 0..self.value_specs.len() {
+            let new_val = self.get_element_default_value(id);
+            self.set_element_value(id, new_val);
+        }
+    }
+
     fn set_values(&mut self, vals: &[UIInputValue]) {
         for v in vals.iter() {
             self.set_element_value(v.id, v.value);
@@ -765,13 +772,11 @@ impl WValuePlugUI {
     }
 
     fn set_value_specs(&mut self, valspecs: Vec<UIValueSpec>) {
+        if self.help_texts.len() < valspecs.len() {
+            self.help_texts.resize(valspecs.len(), None);
+        }
         for (i, vspec) in valspecs.iter().enumerate() {
-            if i >= self.help_texts.len() {
-                self.help_texts.resize(i + 1, None);
-            }
-
             self.help_texts[i] = vspec.get_help_tuple();
-
             self.touch_element_value(i);
         }
 

@@ -44,38 +44,42 @@ pub const help_texts : [(&str, &str); 44] = [
          envelope."),
     ("Filter 1 Cutoff Frequency", ""),
     ("Filter 1 Resonance", ""),
+    ("Filter 1 Overdrive", ""),
+    ("Main Gain", ""),
+
+    // Megamess Parameters
+    ("Oscillator 1 Gain", ""),
+    ("Oscillator 1 Wave", ""),
+    ("Oscillator 1 Pulsewidth", ""),
+    ("Oscillator 1 Unison", ""),
+    ("Oscillator 1 Detune", ""),
+    ("FM OP1 Frequency Ratio", ""),
+    ("FM OP1 Self Modulation", ""),
+    ("FM OP1 -> OP2 Modulation", ""),
+    ("FM OP2 -> OP1 Modulation", ""),
+    ("FM OP2 Fixed Frequency", ""),
+    ("FM OP2 Self Modulation", ""),
+    ("FM OP2 Gain", ""),
+    ("LFO 1 - Frequency", ""),
+    ("LFO 1 - Frequency Multiplier", ""),
+    ("LFO 1 - Waveform", ""),
+    ("LFO 1 - Pulsewidth", ""),
+    ("LFO 1 - Phase Offset", ""),
+    ("Modulator 1 - Amount", ""),
+    ("Modulator 1 - Slope", ""),
+
+    // Private Parameters
     ("Filter 1 Type",
         "low pass:  0.0  - 0.33\n\
          high pass: 0.33 - 0.66\n\
          band pass: 0.66 - 1.0 \n\
         "),
-    ("Filter 1 Overdrive", ""),
     ("Filter 1 On/Off", ""),
-    ("", ""),
-    ("", ""),
-    ("", ""),
-    ("", ""),
-    ("", ""),
-    ("", ""),
-    ("", ""),
-    ("", ""),
-    ("", ""),
-    ("", ""),
-    ("", ""),
-    ("", ""),
-    ("", ""),
-    ("", ""),
-    ("", ""),
-    ("", ""),
-    ("", ""),
-    ("", ""),
-    ("", ""),
-    ("", ""),
-    ("", ""),
-    ("", ""),
-    ("", ""),
-    ("", ""),
-    ("", ""),
+    ("MIDI Channel", ""),
+    ("FM OP2 Frequency Mode", ""),
+    ("Modulator 1 - Modulation Source", ""),
+    ("Modulator 1 - Modulation Destination", ""),
+    ("Modulator 1 - Modulation Function", ""),
 ];
 
 #[cfg(not(feature="mega"))]
@@ -134,7 +138,7 @@ macro_rules! mega_params {
         $x!{public   m1_amount      lin smooth         35,  0.0,   1.0,       1.0,    4,    2, "Mod1 Amt"}
         $x!{public   m1_slope       lin smooth         36,  0.0,   1.0,       0.0,    5,    3, "Mod1 Slope"}
 
-        $x!{private  m1_src_id      lin no_smooth ppc!(4),  0.0,1000.0,       0.0,    1,    0, "Mod1 Src"}
+        $x!{private  m1_src_id      lin no_smooth ppc!(4),  0.0,1000.0,      -1.0,    1,    0, "Mod1 Src"}
         $x!{private  m1_dest_id     lin no_smooth ppc!(5),  0.0,   1.0,       0.0,    1,    0, "Mod1 Dest"}
         $x!{private  m1_fun         lin no_smooth ppc!(6),  0.0,   1.0,       0.0,    3,    1, "Mod1 Fun"}
     }
@@ -144,7 +148,7 @@ macro_rules! param_model {
     ($x: ident) => {
 //        use crate::param_model::PUB_PARAM_COUNT as PPC;
 
-        //  scope   name         exp/lin smooth        idx  min    max     def    width  prec  label
+        //  scope   name         exp/lin smooth        idx  min    max     def    width  prec  "mod./vst label"
         $x!{public  freq_start      exp no_smooth      0,   5.0,   3000.0, 150.0,     4,    2, "Start Freq."}
         $x!{public  freq_end        exp no_smooth      1,   5.0,   2000.0,  40.0,     4,    2, "End Freq."}
         $x!{public  f_env_release   exp no_smooth      2,   5.0,   5000.0, 440.0,     3,    1, "Length"}

@@ -123,7 +123,7 @@ impl UIValueSpec {
             parse: Arc::new(|_| None),
             coarse_step: 0.0,
             fine_step:   0.0,
-            default:     increment,
+            default:     increment * 0.5,
             help_name:   "".to_string(),
             help_text:   "".to_string(),
         }
@@ -546,6 +546,7 @@ pub trait UI {
     fn define_layout(&mut self, layout: Vec<UILayout>);
     fn define_value_spec(&mut self, spec: Vec<UIValueSpec>);
     fn set_values(&mut self, vals: &[UIInputValue]);
+    fn set_default_values(&mut self);
     fn set_version(&mut self, version_label: &'static str);
     fn key_pressed(&mut self, kev: KeyboardEvent);
     fn key_released(&mut self, kev: KeyboardEvent);
