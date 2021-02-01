@@ -106,26 +106,30 @@ impl REnv {
     }
 }
 
-mod dahdsr {
+mod generic {
+
+    pub const MAX_STAGES : usize = 5;
+
     // Values in ms and sustain 0.0-1.0
     pub trait EnvParams {
-        fn delay(&self)     -> f32;
-        fn attack(&self)    -> f32;
-        fn hold(&self)      -> f32;
-        fn decay(&self)     -> f32;
-        fn sustain(&self)   -> f32;
-        fn release(&self)   -> f32;
+        fn pre(&self, idx: usize)  -> (f32, f32);
+        fn sustain(&self)          -> f32;
+        fn post(&self, idx: usize) -> (f32, f32);
     }
 
     #[derive(Debug, Clone, Copy)]
     pub struct Env {
-        sample_phase:   usize,
+        /// The current stage phase, from 0.0 to 1.0
+        phase:   f32,
+        /// Samples per millisecond
         srate_d1k:      f32,
 
         /// Stores, whether we already signalled that the loop just started.
         is_start:       bool,
+        /// The most recently output value
         last_value:     f32,
-        release_value:  f32,
+        /// The start value of the current phase
+        phase_value:    f32,
 
         state:          EnvState,
     }
@@ -143,30 +147,50 @@ mod dahdsr {
     enum EnvState {
         Wait,
         StartOnOffs(usize),
-        Delay(usize),
-        Attack(usize),
-        Hold(usize),
-        Decay(usize),
+        Stage { inc: f32, value: f32, idx: usize, pre: bool },
         Sustain,
         ReleaseOnOffs(usize),
-        Release(usize),
         End,
     }
 
     impl Env {
         pub fn new() -> Self {
             Self {
-                sample_phase:   0,
+                phase:          0.0,
                 srate_d1k:      0.0,
                 is_start:       false,
                 last_value:     0.0,
-                release_value:  0.0,
+                phase_value:    0.0,
                 state:          EnvState::Wait,
             }
         }
 
         pub fn set_sample_rate(&mut self, sr: f32) {
             self.srate_d1k = sr / 1000.0;
+        }
+
+        #[inline]
+        pub fn next_pre<P: EnvParams>(&mut self, p: &P, start: usize) -> (f32, f32, usize) {
+            for i in start..MAX_STAGES {
+                let (time, dest) = p.pre(i);
+                if time > std::f32::EPSILON {
+                    return (time, dest, i + 1);
+                }
+            }
+
+            (-1.0, 0.0, 0)
+        }
+
+        #[inline]
+        pub fn next_post<P: EnvParams>(&mut self, p: &P, start: usize) -> (f32, f32, usize) {
+            for i in start..MAX_STAGES {
+                let (time, dest) = p.post(i);
+                if time > std::f32::EPSILON {
+                    return (time, dest, i + 1);
+                }
+            }
+
+            (-1.0, 0.0, 0)
         }
 
         pub fn next<P: EnvParams>(&mut self, offs: usize, p: &P) -> EnvPos {
@@ -176,147 +200,91 @@ mod dahdsr {
                 EnvState::StartOnOffs(s_offs) => {
                     if s_offs != offs { return EnvPos::Off; }
 
+                    let (time, value, idx) = self.next_pre(p, 0);
+
                     self.state =
-                        if p.delay() > std::f32::EPSILON {
-                            EnvState::Delay(
-                                (p.delay() * self.srate_d1k) as usize)
-
-                        } else if p.attack() > std::f32::EPSILON {
-                            EnvState::Attack(
-                                (p.attack() * self.srate_d1k) as usize)
-
-                        } else if p.hold() > std::f32::EPSILON {
-                            EnvState::Hold(
-                                (p.hold() * self.srate_d1k) as usize)
-
-                        } else if p.decay() > std::f32::EPSILON {
-                            EnvState::Decay(
-                                (p.decay() * self.srate_d1k) as usize)
-
-                        } else {
+                        if time < 0.0 {
                             EnvState::Sustain
+                        } else {
+                            EnvState::Stage {
+                                inc: 1.0 / (time * self.srate_d1k),
+                                value,
+                                idx,
+                                pre: true,
+                            }
                         };
 
-                    self.sample_phase  = 0;
+                    self.phase         = 0.0;
                     self.last_value    = 0.0;
-                    self.release_value = 0.0;
+                    self.phase_value   = 0.0;
                     self.is_start      = true;
                 },
                 EnvState::ReleaseOnOffs(s_offs) => {
                     if s_offs != offs { return EnvPos::Off; }
 
-                    self.state =
-                        EnvState::Release((p.release() * self.srate_d1k) as usize);
+                    let (time, value, idx) = self.next_post(p, 0);
 
-                    self.release_value = self.last_value;
-                    self.sample_phase = 0;
-                    self.is_start = false;
+                    self.state =
+                        if time < 0.0 {
+                            EnvState::End
+                        } else {
+                            EnvState::Stage {
+                                inc: 1.0 / (time * self.srate_d1k),
+                                value,
+                                idx,
+                                pre: false
+                            }
+                        };
+
+                    self.phase        = 0.0;
+                    self.phase_value  = self.last_value;
+                    self.is_start     = false;
                 },
                 _ => {},
             }
 
             let value =
                 match self.state {
-                    EnvState::Delay(delay_samples) => {
-                        if self.sample_phase == delay_samples {
+                    EnvState::Stage { inc, value, idx, pre } => {
+                        let value =
+                            if value > 10.0 { p.sustain() }
+                            else            { value };
+
+                        if self.phase < 1.0 {
+                            self.phase += inc;
+
+                            let x = self.phase;
+                            self.phase_value * (1.0 - x) + x * value
+
+                        } else {
+                            let (time, next_value, next_idx) =
+                                if pre { self.next_pre(p, idx) }
+                                else   { self.next_post(p, idx) };
+
+                            self.phase = 0.0;
+
                             self.state =
-                                if p.attack() > std::f32::EPSILON {
-                                    EnvState::Attack(
-                                        (p.attack() * self.srate_d1k) as usize)
+                                if time < 0.0 {
 
-                                } else if p.hold() > std::f32::EPSILON {
-                                    EnvState::Hold(
-                                        (p.hold() * self.srate_d1k) as usize)
-
-                                } else if p.decay() > std::f32::EPSILON {
-                                    EnvState::Decay(
-                                        (p.decay() * self.srate_d1k) as usize)
+                                    if pre { EnvState::Sustain }
+                                    else   { EnvState::End }
 
                                 } else {
-                                    EnvState::Sustain
+                                    self.phase_value = value;
+
+                                    EnvState::Stage {
+                                        inc:    1.0 / (time * self.srate_d1k),
+                                        value:  next_value,
+                                        idx:    next_idx,
+                                        pre:    pre,
+                                    }
                                 };
 
-                            self.sample_phase = 0;
-
-                            0.0
-                        } else {
-                            self.sample_phase += 1;
-
-                            0.0
-                        }
-                    },
-                    EnvState::Attack(attack_samples) => {
-                        if self.sample_phase == attack_samples {
-                            self.state =
-                                if p.hold() > std::f32::EPSILON {
-                                    EnvState::Hold(
-                                        (p.hold() * self.srate_d1k) as usize)
-
-                                } else if p.decay() > std::f32::EPSILON {
-                                    EnvState::Decay(
-                                        (p.decay() * self.srate_d1k) as usize)
-
-                                } else {
-                                    EnvState::Sustain
-                                };
-
-                            self.sample_phase = 0;
-
-                            1.0
-                        } else {
-                            self.sample_phase += 1;
-
-                            attack_samples as f32 / self.sample_phase as f32
-                        }
-                    },
-                    EnvState::Hold(hold_samples) => {
-                        if self.sample_phase == hold_samples {
-                            self.state =
-                                if p.decay() > std::f32::EPSILON {
-                                    EnvState::Decay(
-                                        (p.decay() * self.srate_d1k) as usize)
-
-                                } else {
-                                    EnvState::Sustain
-                                };
-
-                            self.sample_phase = 0;
-
-                            1.0
-                        } else {
-                            self.sample_phase += 1;
-
-                            1.0
-                        }
-                    },
-                    EnvState::Decay(decay_samples) => {
-                        if self.sample_phase == decay_samples {
-                            self.state = EnvState::Sustain;
-
-                            self.sample_phase = 0;
-
-                            p.sustain()
-                        } else {
-                            self.sample_phase += 1;
-
-                            let x = decay_samples as f32 / self.sample_phase as f32;
-                            ((1.0 - x) + x * p.sustain()) as f32
+                            value
                         }
                     },
                     EnvState::Sustain => {
                         p.sustain()
-                    },
-                    EnvState::Release(release_samples) => {
-                        if self.sample_phase == release_samples {
-                            self.state = EnvState::End;
-
-                            0.0
-                        } else {
-                            self.sample_phase += 1;
-
-                            let x = release_samples as f32 / self.sample_phase as f32;
-                            (1.0 - x) * self.release_value
-                        }
                     },
                     _ => {
                         return EnvPos::End;
@@ -342,10 +310,7 @@ mod dahdsr {
         pub fn release(&mut self, offs: usize) {
             match self.state {
                   EnvState::StartOnOffs(_)
-                | EnvState::Delay(_)
-                | EnvState::Attack(_)
-                | EnvState::Hold(_)
-                | EnvState::Decay(_)
+                | EnvState::Stage { .. }
                 | EnvState::Sustain => {
                     self.state = EnvState::ReleaseOnOffs(offs)
                 },
@@ -357,7 +322,7 @@ mod dahdsr {
             match self.state {
                 EnvState::Wait => false,
                 EnvState::End  => false,
-                _                 => true,
+                _              => true,
             }
         }
     }
