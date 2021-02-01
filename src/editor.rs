@@ -253,7 +253,7 @@ fn prepare_values(values: &mut [UIValueSpec]) {
 
         let ht = crate::param_model::help_texts[pid::m1_src_id];
         values[pid::m1_src_id] =
-            UIValueSpec::new_toggle(&[ "-", "LFO 1" ]).help(ht.0, ht.1);
+            UIValueSpec::new_toggle(&[ "-", "LFO 1", "Env 1" ]).help(ht.0, ht.1);
 
         let ht = crate::param_model::help_texts[pid::lfo1_wave];
         values[pid::lfo1_wave] =
@@ -547,7 +547,17 @@ fn new_mod_graph(pos: UIPos) -> UIInput {
 
             let mod_src = src.param_value(pid::m1_src_id) as f32;
 
-            if mod_src > 0.5 {
+            if mod_src < 0.33 {
+                let samples = 80;
+                for x in 0..(samples + 1) {
+                    let x = x as f32 / (samples as f32);
+                    out.push(
+                        (x as f64,
+                         crate::param_model::mod_function(
+                            x as f32, fun_select, mod_amount, mod_slope) as f64));
+                }
+
+            } else if mod_src < 0.66 {
                 let mut lfo = crate::lfo::LFO::new();
                 let lfo_params = lfo_param_factory(&mut lfo, src, true);
 
@@ -561,14 +571,36 @@ fn new_mod_graph(pos: UIPos) -> UIInput {
                          crate::param_model::mod_function(
                             n as f32, fun_select, mod_amount, mod_slope) as f64));
                 }
+
             } else {
-                let samples = 80;
+                use crate::env::generic::*;
+                use crate::env::generic::Env;
+
+                let mut env = Env::new();
+                env.set_sample_rate(80.0);
+                let env_par = ((150.0, 1.0), (200.0, 0.90), 0.90, (200.0, 0.0));
+
+                env.trigger(0);
+
+                let samples = 100;
+
+                let mut release : i32 = 70;
                 for x in 0..(samples + 1) {
                     let x = x as f32 / (samples as f32);
-                    out.push(
-                        (x as f64,
-                         crate::param_model::mod_function(
-                            x as f32, fun_select, mod_amount, mod_slope) as f64));
+
+                    release -= 1;
+                    if release == 0 { env.release(0); }
+
+                    match env.next(0, &env_par) {
+                        EnvPos::Running(_, v) => {
+                            println!("{:6.3} : {:6.3}", x, v);
+                            out.push(
+                                (x as f64,
+                                 crate::param_model::mod_function(
+                                    v, fun_select, mod_amount, mod_slope) as f64));
+                        },
+                        _ => {},
+                    }
                 }
             }
         });

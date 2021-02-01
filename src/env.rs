@@ -106,7 +106,7 @@ impl REnv {
     }
 }
 
-mod generic {
+pub mod generic {
 
     pub const MAX_STAGES : usize = 5;
 
@@ -117,12 +117,34 @@ mod generic {
         fn post(&self, idx: usize) -> (f32, f32);
     }
 
+    impl EnvParams for ((f32, f32), (f32, f32), f32, (f32, f32)) {
+        fn pre(&self, idx: usize) -> (f32, f32) {
+            if idx == 0 {
+                self.0
+            } else if idx == 1 {
+                self.1
+            } else {
+                (-1.0, 0.0)
+            }
+        }
+
+        fn sustain(&self) -> f32 { self.2 }
+
+        fn post(&self, idx: usize) -> (f32, f32) {
+            if idx == 0 {
+                self.3
+            } else {
+                (-1.0, 0.0)
+            }
+        }
+    }
+
     #[derive(Debug, Clone, Copy)]
     pub struct Env {
         /// The current stage phase, from 0.0 to 1.0
         phase:   f32,
         /// Samples per millisecond
-        srate_d1k:      f32,
+        srate_ms:       f32,
 
         /// Stores, whether we already signalled that the loop just started.
         is_start:       bool,
@@ -157,7 +179,7 @@ mod generic {
         pub fn new() -> Self {
             Self {
                 phase:          0.0,
-                srate_d1k:      0.0,
+                srate_ms:       0.0,
                 is_start:       false,
                 last_value:     0.0,
                 phase_value:    0.0,
@@ -166,7 +188,7 @@ mod generic {
         }
 
         pub fn set_sample_rate(&mut self, sr: f32) {
-            self.srate_d1k = sr / 1000.0;
+            self.srate_ms = sr / 1000.0;
         }
 
         #[inline]
@@ -207,12 +229,13 @@ mod generic {
                             EnvState::Sustain
                         } else {
                             EnvState::Stage {
-                                inc: 1.0 / (time * self.srate_d1k),
+                                inc: 1.0 / (time * self.srate_ms),
                                 value,
                                 idx,
                                 pre: true,
                             }
                         };
+                    println!("start");
 
                     self.phase         = 0.0;
                     self.last_value    = 0.0;
@@ -229,12 +252,13 @@ mod generic {
                             EnvState::End
                         } else {
                             EnvState::Stage {
-                                inc: 1.0 / (time * self.srate_d1k),
+                                inc: 1.0 / (time * self.srate_ms),
                                 value,
                                 idx,
                                 pre: false
                             }
                         };
+                    println!("release");
 
                     self.phase        = 0.0;
                     self.phase_value  = self.last_value;
@@ -246,42 +270,49 @@ mod generic {
             let value =
                 match self.state {
                     EnvState::Stage { inc, value, idx, pre } => {
-                        let value =
-                            if value > 10.0 { p.sustain() }
-                            else            { value };
+                        if self.phase > 1.0 {
+                            println!("phase reached");
 
-                        if self.phase < 1.0 {
-                            self.phase += inc;
-
-                            let x = self.phase;
-                            self.phase_value * (1.0 - x) + x * value
-
-                        } else {
                             let (time, next_value, next_idx) =
                                 if pre { self.next_pre(p, idx) }
                                 else   { self.next_post(p, idx) };
 
-                            self.phase = 0.0;
-
-                            self.state =
+                            let (state, value) =
                                 if time < 0.0 {
 
-                                    if pre { EnvState::Sustain }
-                                    else   { EnvState::End }
+                                    self.phase = 0.0;
+                                    if pre { (EnvState::Sustain, p.sustain()) }
+                                    else   { (EnvState::End, 0.0) }
 
                                 } else {
-                                    self.phase_value = value;
+                                    let inc = 1.0 / (time * self.srate_ms);
 
-                                    EnvState::Stage {
-                                        inc:    1.0 / (time * self.srate_d1k),
+                                    self.phase_value = value;
+                                    self.phase       = inc + inc;
+
+                                    let value =
+                                        self.phase_value * (1.0 - inc)
+                                        + inc * next_value;
+
+                                    (EnvState::Stage {
+                                        inc,
                                         value:  next_value,
                                         idx:    next_idx,
                                         pre:    pre,
-                                    }
+                                    }, value)
+//                                    println!("pv: {:6.3}, x={:6.3}, nv={:6.3}",
+//                                             self.phase_value, 
                                 };
 
+                            self.state = state;
+                            value
+                        } else {
+                            let x     = self.phase;
+                            let value = self.phase_value * (1.0 - x) + x * value;
+                            self.phase += inc;
                             value
                         }
+
                     },
                     EnvState::Sustain => {
                         p.sustain()
