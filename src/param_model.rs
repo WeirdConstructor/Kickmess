@@ -85,8 +85,8 @@ pub const help_texts : [(&str, &str); 44] = [
 #[cfg(not(feature="mega"))]
 macro_rules! define_constants {
     () => {
-        pub const PUB_PARAM_COUNT : usize = 18;
-        pub const PARAM_COUNT     : usize = 21;
+        pub const PUB_PARAM_COUNT : usize = 22;
+        pub const PARAM_COUNT     : usize = 25;
         macro_rules! ppc {
             ($x: expr) => {
                 ($x + crate::param_model::PUB_PARAM_COUNT)
@@ -167,7 +167,13 @@ macro_rules! param_model {
         $x!{public  f1_cutoff       exp smooth         14, 20.0,   22050.0,  5000.0,  3,    1, "F1 Cutoff"}
         $x!{public  f1_res          lin smooth         15,  0.0,   1.0,      0.0,     4,    2, "F1 Res"}
         $x!{public  f1_drive        lin smooth         16,  0.0,   5.0,      1.0,     4,    2, "F1 Drive"}
-        $x!{public  main_gain       exp smooth         17,  0.0,   2.0,       1.0,    5,    3, "Main Gain"}
+        $x!{public  main_gain       exp smooth         17,  0.0,   2.0,      1.0,     5,    3, "Main Gain"}
+
+        $x!{public  e1_attack       exp smooth         18,  0.0,5000.0,     50.0,     5,    3, "E1 Attack"}
+        $x!{public  e1_decay        exp smooth         19,  0.0,5000.0,    100.0,     5,    3, "E1 Decay"}
+        $x!{public  e1_sustain      lin smooth         20,  0.0,   1.0,     0.75,     4,    2, "E1 Sustain"}
+        $x!{public  e1_release      exp smooth         21,  0.0,5000.0,     50.0,     5,    3, "E1 Decay"}
+
         $x!{private f1_type         lin no_smooth ppc!(0),  0.0,   1.0,      0.0,     3,    1, "F1 Type"}
         $x!{private f1_on           lin no_smooth ppc!(1),  0.0,   1.0,      0.0,     3,    1, "F1 On"}
         $x!{private midi_chan       lin no_smooth ppc!(2),  0.0,  15.9,       0.0,    2,    0, "Midi Chan"}

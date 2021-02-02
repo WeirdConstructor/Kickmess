@@ -112,27 +112,46 @@ pub mod generic {
 
     // Values in ms and sustain 0.0-1.0
     pub trait EnvParams {
+        fn start(&self)            -> f32;
         fn pre(&self, idx: usize)  -> (f32, f32);
         fn sustain(&self)          -> f32;
         fn post(&self, idx: usize) -> (f32, f32);
     }
 
-    impl EnvParams for ((f32, f32), (f32, f32), f32, (f32, f32)) {
+    impl EnvParams for (f32, (f32, f32), f32) {
+        fn start(&self) -> f32 { self.0 }
         fn pre(&self, idx: usize) -> (f32, f32) {
             if idx == 0 {
-                self.0
-            } else if idx == 1 {
                 self.1
             } else {
                 (-1.0, 0.0)
             }
         }
 
-        fn sustain(&self) -> f32 { self.2 }
+        fn sustain(&self) -> f32 { 0.0 }
+
+        fn post(&self, idx: usize) -> (f32, f32) {
+            (-1.0, 0.0)
+        }
+    }
+
+    impl EnvParams for (f32, (f32, f32), (f32, f32), f32, (f32, f32)) {
+        fn start(&self) -> f32 { self.0 }
+        fn pre(&self, idx: usize) -> (f32, f32) {
+            if idx == 0 {
+                self.1
+            } else if idx == 1 {
+                self.2
+            } else {
+                (-1.0, 0.0)
+            }
+        }
+
+        fn sustain(&self) -> f32 { self.3 }
 
         fn post(&self, idx: usize) -> (f32, f32) {
             if idx == 0 {
-                self.3
+                self.4
             } else {
                 (-1.0, 0.0)
             }
@@ -239,7 +258,7 @@ pub mod generic {
 
                     self.phase         = 0.0;
                     self.last_value    = 0.0;
-                    self.phase_value   = 0.0;
+                    self.phase_value   = p.start();
                     self.is_start      = true;
                 },
                 EnvState::ReleaseOnOffs(s_offs) => {
@@ -270,19 +289,29 @@ pub mod generic {
             let value =
                 match self.state {
                     EnvState::Stage { inc, value, idx, pre } => {
+                        let x     = self.phase;
+                        let value = self.phase_value * (1.0 - x) + x * value;
+                        self.phase += inc;
+
                         if self.phase > 1.0 {
                             println!("phase reached");
 
+                            // TODO: In the "pre phase" interpret
+                            //       new values as "starting" values
+                            //       for the next non zero time phase.
+                            //     - In the "post phase" interpret the
+                            //       next_value as the value to be reached
+                            //       after the current timeout.
                             let (time, next_value, next_idx) =
                                 if pre { self.next_pre(p, idx) }
                                 else   { self.next_post(p, idx) };
 
-                            let (state, value) =
+                            self.state =
                                 if time < 0.0 {
 
                                     self.phase = 0.0;
-                                    if pre { (EnvState::Sustain, p.sustain()) }
-                                    else   { (EnvState::End, 0.0) }
+                                    if pre { EnvState::Sustain }
+                                    else   { EnvState::End }
 
                                 } else {
                                     let inc = 1.0 / (time * self.srate_ms);
@@ -294,25 +323,16 @@ pub mod generic {
                                         self.phase_value * (1.0 - inc)
                                         + inc * next_value;
 
-                                    (EnvState::Stage {
+                                    EnvState::Stage {
                                         inc,
                                         value:  next_value,
                                         idx:    next_idx,
                                         pre:    pre,
-                                    }, value)
-//                                    println!("pv: {:6.3}, x={:6.3}, nv={:6.3}",
-//                                             self.phase_value, 
+                                    }
                                 };
-
-                            self.state = state;
-                            value
-                        } else {
-                            let x     = self.phase;
-                            let value = self.phase_value * (1.0 - x) + x * value;
-                            self.phase += inc;
-                            value
                         }
 
+                        value
                     },
                     EnvState::Sustain => {
                         p.sustain()

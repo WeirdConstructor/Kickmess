@@ -67,6 +67,7 @@ impl<'a, 'b> OscillatorInputParams for O1Params<'a, 'b> {
     fn op2_mode(&self)      -> f32 { self.0.o2fm_mode() }
 }
 
+#[cfg(feature="mega")]
 impl<'a> LFOInputParams for LFO1Params<'a> {
     fn freq(&self)          -> f32 { self.0.lfo1_freq() * self.0.lfo1_fmul() }
     fn waveform(&self)      -> f32 { self.0.lfo1_wave() }
@@ -136,6 +137,8 @@ impl MonoProcessor for OpKickmess {
             let prev = ParamModel::new(params.get_prev_frame());
             params.swap(smth_params.get_frame(offs));
 
+            #[cfg(feature="mega")]
+            {
             self.mf1.set_param(params.m1_dest_id());
             self.mf1.feedback_run(&mut params);
 
@@ -150,6 +153,7 @@ impl MonoProcessor for OpKickmess {
             let m1_amt = params.m1_amount();
             let m1_slp = params.m1_slope();
             self.mf1.run_mod_fun(&mut params, lfo1_val, m1_fun, m1_amt, m1_slp);
+            }
 
             let block_offs = offs + proc_offs;
 

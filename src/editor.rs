@@ -490,6 +490,7 @@ fn new_osc1_section(pos: UIPos) -> UIInput {
     ]])
 }
 
+#[cfg(feature="mega")]
 fn lfo_param_factory(lfo: &mut crate::lfo::LFO, src: &mut dyn UIValueSource, one_cycle: bool) -> (f32, f32, f32, f32) {
     lfo.set_sample_rate(160.0);
 
@@ -530,7 +531,7 @@ fn new_lfo1_graph(pos: UIPos) -> UIInput {
             }
         });
 
-    UIInput::graph(
+    UIInput::graph_huge(
         0,
         String::from("LFO1"),
         pos,
@@ -578,7 +579,8 @@ fn new_mod_graph(pos: UIPos) -> UIInput {
 
                 let mut env = Env::new();
                 env.set_sample_rate(80.0);
-                let env_par = ((150.0, 1.0), (200.0, 0.90), 0.90, (200.0, 0.0));
+//                let env_par = (0.0, (150.0, 1.0), (200.0, 0.90), 0.90, (200.0, 0.0));
+                let env_par = (1.0, (150.0, 0.0), 0.0);
 
                 env.trigger(0);
 
@@ -613,130 +615,122 @@ fn new_mod_graph(pos: UIPos) -> UIInput {
 }
 
 #[cfg(feature="mega")]
+fn new_lfo1_section(pos: UIPos) -> UIInput {
+    UIInput::container_border(pos, 1.0, "LFO 1", vec![vec![
+        UIInput::btn_toggle_small(
+            pid::lfo1_wave,
+            String::from("Wave"),
+            UIPos::center(2, 12).middle()),
+        UIInput::knob(
+            pid::lfo1_freq,
+            String::from("LFO1 Hz"),
+            UIPos::center(2, 12).middle()),
+        UIInput::container(UIPos::center(5, 12), 0.95, "", vec![vec![
+            UIInput::knob_small(
+                pid::lfo1_fmul,
+                String::from("LFO1 X*Hz"),
+                UIPos::center(4, 12).middle()),
+            UIInput::knob_small(
+                pid::lfo1_pw,
+                String::from("LFO1 PW"),
+                UIPos::center(4, 12).middle()),
+            UIInput::knob_small(
+                pid::lfo1_phase,
+                String::from("LFO1 Phase"),
+                UIPos::center(4, 12).middle()),
+        ]]),
+        new_lfo1_graph(UIPos::center(3, 12)),
+    ]])
+}
+
+#[cfg(feature="mega")]
+fn new_mod1_section(pos: UIPos) -> UIInput {
+    UIInput::container_border(pos, 1.0, "Mod1",
+        vec![vec![
+            UIInput::container(UIPos::center(12, 7), 1.0, "",
+                vec![
+                    vec![
+                        UIInput::container(UIPos::center(5, 12), 1.0, "",
+                            vec![vec![
+                                UIInput::btn_toggle(
+                                    pid::m1_src_id,
+                                    String::from("M1 Src"),
+                                    UIPos::center(12, 6).middle()),
+                            ], vec![
+                                UIInput::btn_mod_target(
+                                    pid::m1_dest_id,
+                                    String::from("M1 Dest"),
+                                    UIPos::center(12, 6).middle()),
+                            ]]),
+                        new_mod_graph(
+                            UIPos::center(7, 12).middle()),
+                    ]
+                ]),
+
+        ], vec![
+            UIInput::container(UIPos::center(12, 5), 1.0, "",
+                vec![
+                    vec![
+                        UIInput::container(UIPos::center(5, 12), 1.0, "",
+                            vec![vec![UIInput::btn_toggle(
+                                pid::m1_fun,
+                                String::from("Fun."),
+                                UIPos::center(12, 12).middle())]]),
+                        UIInput::container(UIPos::center(7, 12), 1.0, "",
+                            vec![vec![
+                                UIInput::knob(
+                                    pid::m1_amount,
+                                    String::from("M1 Amt"),
+                                    UIPos::center(6, 12).middle()),
+                                UIInput::knob(
+                                    pid::m1_slope,
+                                    String::from("M1 Slope"),
+                                    UIPos::center(6, 12).middle()),
+                            ]]),
+                    ]
+                ]),
+        ]])
+}
+
+#[cfg(feature="mega")]
 fn new_fm1_section(pos: UIPos) -> UIInput {
-    let lfo1_params =
-        UIInput::container_border(UIPos::center(12, 4), 1.0, "LFO 1",
-            vec![vec![
-                UIInput::container(UIPos::center(3, 12), 1.0, "", vec![
-                    vec![
-                        UIInput::knob(
-                            pid::lfo1_freq,
-                            String::from("LFO1 Hz"),
-                            UIPos::center(12, 7).middle()),
-                    ], vec![
-                        UIInput::knob_small(
-                            pid::lfo1_fmul,
-                            String::from("LFO1 X*Hz"),
-                            UIPos::center(12, 5).middle()),
-                    ]
-                ]),
-                UIInput::container(UIPos::center(3, 12), 1.0, "", vec![
-                    vec![
-                        UIInput::btn_toggle_small(
-                            pid::lfo1_wave,
-                            String::from("Wave"),
-                            UIPos::center(12, 6).middle()),
-                    ], vec![
-                        new_lfo1_graph(UIPos::center(12, 6)),
-                    ]
-                ]),
-                UIInput::knob(
-                    pid::lfo1_pw,
-                    String::from("LFO1 PW"),
-                    UIPos::center(3, 12).middle()),
-                UIInput::knob(
-                    pid::lfo1_phase,
-                    String::from("LFO1 Phase"),
-                    UIPos::center(3, 12).middle()),
-            ]]);
-
-    let mod1_params =
-        UIInput::container_border(UIPos::center(12, 4), 1.0, "Mod1",
-            vec![vec![
-                UIInput::container(UIPos::center(12, 7), 1.0, "",
-                    vec![
-                        vec![
-                            UIInput::container(UIPos::center(5, 12), 1.0, "",
-                                vec![vec![
-                                    UIInput::btn_toggle(
-                                        pid::m1_src_id,
-                                        String::from("M1 Src"),
-                                        UIPos::center(12, 6).middle()),
-                                ], vec![
-                                    UIInput::btn_mod_target(
-                                        pid::m1_dest_id,
-                                        String::from("M1 Dest"),
-                                        UIPos::center(12, 6).middle()),
-                                ]]),
-                            new_mod_graph(
-                                UIPos::center(7, 12).middle()),
-                        ]
-                    ]),
-
-            ], vec![
-                UIInput::container(UIPos::center(12, 5), 1.0, "",
-                    vec![
-                        vec![
-                            UIInput::container(UIPos::center(5, 12), 1.0, "",
-                                vec![vec![UIInput::btn_toggle(
-                                    pid::m1_fun,
-                                    String::from("Fun."),
-                                    UIPos::center(12, 12).middle())]]),
-                            UIInput::container(UIPos::center(7, 12), 1.0, "",
-                                vec![vec![
-                                    UIInput::knob(
-                                        pid::m1_amount,
-                                        String::from("M1 Amt"),
-                                        UIPos::center(6, 12).middle()),
-                                    UIInput::knob(
-                                        pid::m1_slope,
-                                        String::from("M1 Slope"),
-                                        UIPos::center(6, 12).middle()),
-                                ]]),
-                        ]
-                    ]),
-            ]]);
-
-
     UIInput::container_border(pos, 1.0, "FM Oscillator", vec![
         vec![
             UIInput::knob(
                 pid::o1fm_ratio,
                 String::from("Op1 Hz"),
-                UIPos::center(3, 2).middle()),
+                UIPos::center(3, 6).middle()),
             UIInput::knob(
                 pid::o2fm_freq,
                 String::from("Op2 Hz"),
-                UIPos::center(3, 2).middle()),
+                UIPos::center(3, 6).middle()),
             UIInput::btn_toggle(
                 pid::o2fm_mode,
                 String::from("Op2 Pitch"),
-                UIPos::center(3, 2).middle()),
+                UIPos::center(3, 6).middle()),
             UIInput::knob(
                 pid::o2fm_gain,
                 String::from("Gain"),
-                UIPos::center(3, 2).middle()),
+                UIPos::center(3, 6).middle()),
         ],
         vec![
             UIInput::knob(
                 pid::o1fm_self,
                 String::from("Op1<o Hz"),
-                UIPos::center(3, 2).middle()),
+                UIPos::center(3, 6).middle()),
             UIInput::knob(
                 pid::o2fm_self,
                 String::from("Op2<o Hz"),
-                UIPos::center(3, 2).middle()),
+                UIPos::center(3, 6).middle()),
             UIInput::knob(
                 pid::o1fm_o2_mod,
                 String::from("Op1>2 Hz"),
-                UIPos::center(3, 2).middle()),
+                UIPos::center(3, 6).middle()),
             UIInput::knob(
                 pid::o2fm_o1_mod,
                 String::from("Op2>1 Hz"),
-                UIPos::center(3, 2).middle()),
+                UIPos::center(3, 6).middle()),
         ],
-        vec![ lfo1_params ],
-        vec![ mod1_params ],
     ])
 }
 
@@ -889,12 +883,16 @@ fn new_megamess_layout() -> UILayout {
                                 new_main_osc(UIPos::center(6, 6).top()),
                                 UIInput::container(UIPos::center(2, 12), 1.0, "", vec![
                                     vec![ new_mixer_section(UIPos::center(12, 4)) ],
-                                    vec![ new_distortion_section(UIPos::center(12, 6)) ],
+                                    vec![ new_distortion_section(UIPos::center(12, 4)) ],
                                 ]),
-                                new_fm1_section(UIPos::center(4, 12)),
+                                UIInput::container(UIPos::center(4, 12), 1.0, "", vec![
+                                    vec![ new_fm1_section(UIPos::center(12, 4)) ],
+                                    vec![ new_mod1_section(UIPos::center(12, 4)) ],
+                                ]),
                             ],
                             vec![ new_filter_section(UIPos::center(6, 2)), ],
                             vec![ new_osc1_section(UIPos::center(6, 2)), ],
+                            vec![ new_lfo1_section(UIPos::center(6, 2)), ],
                         ])]],
                         vec![ vec![ new_help_tabs(UIPos::center(12, 12)) ] ],
                     ]
