@@ -549,11 +549,11 @@ fn new_env1_graph(pos: UIPos) -> UIInput {
             env.set_sample_rate(200.0);
             let env_par = (
                 0.0,
-                ((src.param_value(pid::e1_attack).powf(2.0) * 250.0) as f32, 1.0),
-                ((src.param_value(pid::e1_decay).powf(2.0) * 250.0) as f32,
+                ((src.param_value(pid::e1_attack).sqrt() * 250.0) as f32, 1.0),
+                ((src.param_value(pid::e1_decay).sqrt() * 250.0) as f32,
                  src.param_value_denorm(pid::e1_sustain) as f32),
                 src.param_value_denorm(pid::e1_sustain) as f32,
-                ((src.param_value(pid::e1_release).powf(2.0) * 250.0) as f32, 0.0)
+                ((src.param_value(pid::e1_release).sqrt() * 250.0) as f32, 0.0)
             );
             //d// let env_par = (
             //d//     0.0,
