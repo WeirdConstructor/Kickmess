@@ -211,27 +211,35 @@ pub mod generic {
         }
 
         #[inline]
-        pub fn next_pre<P: EnvParams>(&mut self, p: &P, start: usize) -> (f32, f32, usize) {
+        pub fn next_pre<P: EnvParams>(&mut self, p: &P, start: usize) -> (f32, f32, f32, usize) {
+            let mut last_dest =
+                if start > 0 { p.pre(start - 1).1 } else { 0.0 };
+
             for i in start..MAX_STAGES {
                 let (time, dest) = p.pre(i);
-                if time > std::f32::EPSILON {
-                    return (time * self.srate_ms, dest, i + 1);
+                if (time * self.srate_ms) >= 1.0 {
+                    println!(
+                        "NEXT PRE: t={:6.3}, dest={:6.3}, last_dest={:6.3}",
+                        time * self.srate_ms, dest, last_dest);
+                    return (time * self.srate_ms, dest, last_dest, i + 1);
                 }
+
+                last_dest = dest;
             }
 
-            (-1.0, 0.0, 0)
+            (-1.0, 0.0, last_dest, 0)
         }
 
         #[inline]
-        pub fn next_post<P: EnvParams>(&mut self, p: &P, start: usize) -> (f32, f32, usize) {
+        pub fn next_post<P: EnvParams>(&mut self, p: &P, start: usize) -> (f32, f32, f32, usize) {
             for i in start..MAX_STAGES {
                 let (time, dest) = p.post(i);
-                if time > std::f32::EPSILON {
-                    return (time * self.srate_ms, dest, i + 1);
+                if (time * self.srate_ms) >= 1.0 {
+                    return (time * self.srate_ms, dest, self.last_value, i + 1);
                 }
             }
 
-            (-1.0, 0.0, 0)
+            (-1.0, 0.0, self.last_value, 0)
         }
 
         pub fn next<P: EnvParams>(&mut self, offs: usize, p: &P) -> EnvPos {
@@ -241,7 +249,7 @@ pub mod generic {
                 EnvState::StartOnOffs(s_offs) => {
                     if s_offs != offs { return EnvPos::Off; }
 
-                    let (time, value, idx) = self.next_pre(p, 0);
+                    let (time, value, prev_phase_value, idx) = self.next_pre(p, 0);
 
                     self.state =
                         if time < 1.0 {
@@ -258,17 +266,17 @@ pub mod generic {
                                 pre: true,
                             }
                         };
-                    println!("start {:?} {} {}", self.state, time, self.srate_ms);
+                    //d// println!("start {:?} {} {}", self.state, time, self.srate_ms);
 
                     self.phase         = 0.0;
                     self.last_value    = 0.0;
-                    self.phase_value   = p.start();
+                    self.phase_value   = prev_phase_value;
                     self.is_start      = true;
                 },
                 EnvState::ReleaseOnOffs(s_offs) => {
                     if s_offs != offs { return EnvPos::Off; }
 
-                    let (time, value, idx) = self.next_post(p, 0);
+                    let (time, value, prev_phase_value, idx) = self.next_post(p, 0);
 
                     self.state =
                         if time < 1.0 {
@@ -281,7 +289,7 @@ pub mod generic {
                                 pre: false
                             }
                         };
-                    println!("release");
+                    //d// println!("release");
 
                     self.phase        = 0.0;
                     self.phase_value  = self.last_value;
@@ -295,20 +303,19 @@ pub mod generic {
                     EnvState::Stage { inc, value, idx, pre } => {
                         let x     = self.phase;
                         let value = self.phase_value * (1.0 - x) + x * value;
+
+                        println!("PHASE inc={:6.3} x={:6.3} v={:6.3}", inc, x, value);
+
                         self.phase += inc;
 
                         if self.phase > 1.0 {
                             println!("phase reached");
 
-                            // TODO: In the "pre phase" interpret
-                            //       new values as "starting" values
-                            //       for the next non zero time phase.
-                            //     - In the "post phase" interpret the
-                            //       next_value as the value to be reached
-                            //       after the current timeout.
-                            let (time, next_value, next_idx) =
+                            let (time, next_value, prev_phase_value, next_idx) =
                                 if pre { self.next_pre(p, idx) }
                                 else   { self.next_post(p, idx) };
+
+                            println!("  time={:6.3}", time);
 
                             self.state =
                                 if time < 1.0 {
@@ -323,12 +330,10 @@ pub mod generic {
                                 } else {
                                     let inc = 1.0 / time;
 
-                                    self.phase_value = value;
-                                    self.phase       = inc + inc;
+                                    self.phase_value = prev_phase_value;
+                                    self.phase       = 0.0;
 
-                                    let value =
-                                        self.phase_value * (1.0 - inc)
-                                        + inc * next_value;
+                                    println!("  inc={:6.3}, pv={:6.3}, p={:6.3}", inc, self.phase_value, self.phase);
 
                                     EnvState::Stage {
                                         inc,
@@ -496,22 +501,24 @@ mod tests {
         assert_float_tpl_eq!(out[2], (0.02, 0.4));
         assert_float_tpl_eq!(out[3], (0.03, 0.6));
         assert_float_tpl_eq!(out[4], (0.04, 0.8));
+        assert_float_tpl_eq!(out[5], (0.05, 1.0));
 
         // Decay 100ms
-        assert_float_tpl_eq!(out[5],  (0.05, 1.0));
-        assert_float_tpl_eq!(out[6],  (0.06, 0.950));
-        assert_float_tpl_eq!(out[7],  (0.07, 0.925));
-        assert_float_tpl_eq!(out[8],  (0.08, 0.900));
-        assert_float_tpl_eq!(out[9],  (0.09, 0.875));
+        assert_float_tpl_eq!(out[6],  (0.06, 1.0));
+        assert_float_tpl_eq!(out[7],  (0.07, 0.975));
+        assert_float_tpl_eq!(out[8],  (0.08, 0.950));
+        assert_float_tpl_eq!(out[9],  (0.09, 0.925));
+        assert_float_tpl_eq!(out[10], (0.10, 0.900));
+        assert_float_tpl_eq!(out[11], (0.11, 0.875));
 
-        assert_float_tpl_eq!(out[10], (0.10, 0.850));
-        assert_float_tpl_eq!(out[11], (0.11, 0.825));
-        assert_float_tpl_eq!(out[12], (0.12, 0.800));
-        assert_float_tpl_eq!(out[13], (0.13, 0.775));
-        assert_float_tpl_eq!(out[14], (0.14, 0.750));
+        assert_float_tpl_eq!(out[12], (0.12, 0.850));
+        assert_float_tpl_eq!(out[13], (0.13, 0.825));
+        assert_float_tpl_eq!(out[14], (0.14, 0.800));
+        assert_float_tpl_eq!(out[15], (0.15, 0.775));
+        assert_float_tpl_eq!(out[16], (0.16, 0.750));
 
         // Sustain
-        for i in 14..70 {
+        for i in 17..70 {
             assert_float_eq!(out[i].1, 0.75);
         }
 
@@ -531,10 +538,10 @@ mod tests {
         let env_par =
             (0.0, (50.0, 1.0), (100.0, 0.75), 0.75, (50.0, 0.0));
 
-        let out = gen_env_samples(&mut env, &env_par, 100.0, 100, 15);
+        let out = gen_env_samples(&mut env, &env_par, 100.0, 100, 17);
         debug_print_float_vec(&out[..]);
 
-        assert_eq!(out.len(), 21);
+        assert_eq!(out.len(), 23);
 
         // Attack 50ms
         assert_float_tpl_eq!(out[0], (0.00, 0.0));
@@ -542,27 +549,31 @@ mod tests {
         assert_float_tpl_eq!(out[2], (0.02, 0.4));
         assert_float_tpl_eq!(out[3], (0.03, 0.6));
         assert_float_tpl_eq!(out[4], (0.04, 0.8));
+        assert_float_tpl_eq!(out[5], (0.05, 1.0));
 
         // Decay 100ms
-        assert_float_tpl_eq!(out[5],  (0.05, 1.0));
-        assert_float_tpl_eq!(out[6],  (0.06, 0.950));
-        assert_float_tpl_eq!(out[7],  (0.07, 0.925));
-        assert_float_tpl_eq!(out[8],  (0.08, 0.900));
-        assert_float_tpl_eq!(out[9],  (0.09, 0.875));
+        assert_float_tpl_eq!(out[6],  (0.06, 1.000));
+        assert_float_tpl_eq!(out[7],  (0.07, 0.975));
+        assert_float_tpl_eq!(out[8],  (0.08, 0.950));
+        assert_float_tpl_eq!(out[9],  (0.09, 0.925));
+        assert_float_tpl_eq!(out[10], (0.10, 0.900));
+        assert_float_tpl_eq!(out[11], (0.11, 0.875));
 
-        assert_float_tpl_eq!(out[10], (0.10, 0.850));
-        assert_float_tpl_eq!(out[11], (0.11, 0.825));
-        assert_float_tpl_eq!(out[12], (0.12, 0.800));
-        assert_float_tpl_eq!(out[13], (0.13, 0.775));
-        assert_float_tpl_eq!(out[14], (0.14, 0.750));
+        assert_float_tpl_eq!(out[12], (0.12, 0.850));
+        assert_float_tpl_eq!(out[13], (0.13, 0.825));
+        assert_float_tpl_eq!(out[14], (0.14, 0.800));
+        assert_float_tpl_eq!(out[15], (0.15, 0.775));
+        assert_float_tpl_eq!(out[16], (0.16, 0.750));
+
+        // Sustain
+        assert_float_tpl_eq!(out[17], (0.17, 0.75));
 
         // Release 50 ms
-        assert_float_tpl_eq!(out[15], (0.15, 0.75));
-        assert_float_tpl_eq!(out[16], (0.16, 0.60));
-        assert_float_tpl_eq!(out[17], (0.17, 0.45));
-        assert_float_tpl_eq!(out[18], (0.18, 0.30));
-        assert_float_tpl_eq!(out[19], (0.19, 0.15));
-        assert_float_tpl_eq!(out[20], (0.20, 0.00));
+        assert_float_tpl_eq!(out[18], (0.18, 0.60));
+        assert_float_tpl_eq!(out[19], (0.19, 0.45));
+        assert_float_tpl_eq!(out[20], (0.20, 0.30));
+        assert_float_tpl_eq!(out[21], (0.21, 0.15));
+        assert_float_tpl_eq!(out[22], (0.22, 0.00));
     }
 
     #[test]
@@ -576,7 +587,7 @@ mod tests {
         let out = gen_env_samples(&mut env, &env_par, 100.0, 100, 30);
         debug_print_float_vec(&out[..]);
 
-        assert_eq!(out.len(), 14);
+        assert_eq!(out.len(), 16);
 
         // Attack 50ms
         assert_float_tpl_eq!(out[0], (0.00, 0.0));
@@ -584,21 +595,45 @@ mod tests {
         assert_float_tpl_eq!(out[2], (0.02, 0.4));
         assert_float_tpl_eq!(out[3], (0.03, 0.6));
         assert_float_tpl_eq!(out[4], (0.04, 0.8));
+        assert_float_tpl_eq!(out[5], (0.05, 1.0));
 
         // Decay 100ms, last sample is implicit
-        assert_float_tpl_eq!(out[5],  (0.05, 1.0));
-        assert_float_tpl_eq!(out[6],  (0.06, 0.8));
-        assert_float_tpl_eq!(out[7],  (0.07, 0.7));
-        assert_float_tpl_eq!(out[8],  (0.08, 0.6));
-        assert_float_tpl_eq!(out[9],  (0.09, 0.5));
+        assert_float_tpl_eq!(out[6],  (0.06, 1.0));
+        assert_float_tpl_eq!(out[7],  (0.07, 0.9));
+        assert_float_tpl_eq!(out[8],  (0.08, 0.8));
+        assert_float_tpl_eq!(out[9],  (0.09, 0.7));
+        assert_float_tpl_eq!(out[10], (0.10, 0.6));
 
-        assert_float_tpl_eq!(out[10], (0.10, 0.4));
-        assert_float_tpl_eq!(out[11], (0.11, 0.3));
-        assert_float_tpl_eq!(out[12], (0.12, 0.2));
-        assert_float_tpl_eq!(out[13], (0.13, 0.1));
-        // assert_float_tpl_eq!(out[14], (0.14, 0.0));
+        assert_float_tpl_eq!(out[11], (0.11, 0.5));
+        assert_float_tpl_eq!(out[12], (0.12, 0.4));
+        assert_float_tpl_eq!(out[13], (0.13, 0.3));
+        assert_float_tpl_eq!(out[14], (0.14, 0.2));
+        assert_float_tpl_eq!(out[15], (0.15, 0.1));
     }
 
+
+    #[test]
+    fn check_d0() {
+        use super::generic::*;
+
+        let mut env = Env::new();
+        let env_par =
+            (0.0, (20.0, 1.0), (15.0, 0.0), 0.0, (0.0, 0.0));
+
+        let out = gen_env_samples(&mut env, &env_par, 100.0, 100, 40);
+        debug_print_float_vec(&out[..]);
+
+        assert_eq!(out.len(), 5);
+
+        // Attack ~20ms
+        assert_float_tpl_eq!(out[0], (0.0,  0.0));
+        assert_float_tpl_eq!(out[1], (0.01, 0.5));
+        assert_float_tpl_eq!(out[2], (0.02, 1.0));
+
+        // Decay 15ms?!
+        assert_float_tpl_eq!(out[3], (0.03, 1.0));
+        assert_float_tpl_eq!(out[4], (0.04, 0.3333));
+    }
 
     #[test]
     fn check_s() {
@@ -632,5 +667,92 @@ mod tests {
         debug_print_float_vec(&out[..]);
 
         assert_eq!(out.len(), 0);
+    }
+
+
+//ENV PAR: (0.0, (61.605003, 1.0), (130.28427, 0.545), 0.545, (50.0, 0.0))
+
+    #[test]
+    fn check_dsr() {
+        use super::generic::*;
+
+        let mut env = Env::new();
+        let env_par =
+            (0.0, (0.0, 1.0), (130.0, 0.0), 0.0, (0.0, 0.0));
+
+        let out = gen_env_samples(&mut env, &env_par, 100.0, 100, 70);
+        debug_print_float_vec(&out[..]);
+
+        assert_eq!(out.len(), 14);
+
+        assert_float_tpl_eq!(out[0],  (0.00, 1.0));
+        assert_float_tpl_eq!(out[1],  (0.01, 0.9231));
+        assert_float_tpl_eq!(out[2],  (0.02, 0.8462));
+        assert_float_tpl_eq!(out[3],  (0.03, 0.7692));
+        assert_float_tpl_eq!(out[4],  (0.04, 0.6923));
+        assert_float_tpl_eq!(out[5],  (0.05, 0.6154));
+        assert_float_tpl_eq!(out[6],  (0.06, 0.5385));
+        assert_float_tpl_eq!(out[7],  (0.07, 0.4615));
+        assert_float_tpl_eq!(out[8],  (0.08, 0.3846));
+        assert_float_tpl_eq!(out[9],  (0.09, 0.3077));
+        assert_float_tpl_eq!(out[10], (0.10, 0.2308));
+        assert_float_tpl_eq!(out[11], (0.11, 0.1538));
+        assert_float_tpl_eq!(out[12], (0.12, 0.0769));
+        assert_float_tpl_eq!(out[13], (0.13, 0.0));
+    }
+
+    #[test]
+    fn check_adn() {
+        use super::generic::*;
+
+        let mut env = Env::new();
+        let env_par =
+            (0.0, (41.0, 1.0), (41.0, 0.50), 0.50, (0.0, 0.0));
+
+        let out = gen_env_samples(&mut env, &env_par, 100.0, 100, 20);
+        debug_print_float_vec(&out[..]);
+
+        assert_eq!(out.len(), 20);
+
+        // Attack ~41ms
+        assert_float_tpl_eq!(out[0], (0.00, 0.0));
+        assert_float_tpl_eq!(out[1], (0.01, 0.2439));
+        assert_float_tpl_eq!(out[2], (0.02, 0.4878));
+        assert_float_tpl_eq!(out[3], (0.03, 0.7317));
+        assert_float_tpl_eq!(out[4], (0.04, 0.9756));
+
+        // Decay ~41ms
+        assert_float_tpl_eq!(out[5],  (0.05, 1.0));
+        assert_float_tpl_eq!(out[6],  (0.06, 0.878));
+        assert_float_tpl_eq!(out[7],  (0.07, 0.7561));
+        assert_float_tpl_eq!(out[8],  (0.08, 0.6341));
+        assert_float_tpl_eq!(out[9],  (0.09, 0.5122));
+
+        // Sustain
+        for i in 10..20 {
+            assert_float_eq!(out[i].1, 0.5);
+        }
+    }
+
+    #[test]
+    fn check_ad2() {
+        use super::generic::*;
+
+        let mut env = Env::new();
+        let env_par =
+            (0.0, (0.02, 1.0), (50.0, 0.0), 0.0, (0.0, 0.0));
+
+        let out = gen_env_samples(&mut env, &env_par, 100.0, 100, 20);
+        debug_print_float_vec(&out[..]);
+
+        assert_eq!(out.len(), 6);
+
+        // Decay ~50ms
+        assert_float_tpl_eq!(out[0], (0.00, 1.0));
+        assert_float_tpl_eq!(out[1], (0.01, 0.8));
+        assert_float_tpl_eq!(out[2], (0.02, 0.6));
+        assert_float_tpl_eq!(out[3], (0.03, 0.4));
+        assert_float_tpl_eq!(out[4], (0.04, 0.2));
+        assert_float_tpl_eq!(out[5], (0.05, 0.0));
     }
 }

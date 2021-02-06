@@ -549,10 +549,11 @@ fn new_env1_graph(pos: UIPos) -> UIInput {
             env.set_sample_rate(80.0);
             let env_par = (
                 0.0,
-                (src.param_value(pid::e1_attack) as f32, 1.0),
-                (src.param_value(pid::e1_decay) as f32, src.param_value(pid::e1_sustain) as f32),
-                src.param_value(pid::e1_sustain) as f32,
-                (src.param_value(pid::e1_release) as f32, 0.0)
+                (src.param_value_denorm(pid::e1_attack) as f32, 1.0),
+                (src.param_value_denorm(pid::e1_decay) as f32,
+                 src.param_value_denorm(pid::e1_sustain) as f32),
+                src.param_value_denorm(pid::e1_sustain) as f32,
+                (src.param_value_denorm(pid::e1_release) as f32, 0.0)
             );
 
             println!("ENV PAR: {:?}", env_par);
@@ -562,7 +563,8 @@ fn new_env1_graph(pos: UIPos) -> UIInput {
             let samples = 100;
 
             let mut release : i32 = 70;
-            for x in 0..(samples + 1) {
+            let mut last_x = 1.0;
+            for x in 0..samples {
                 let x = x as f32 / (samples as f32);
 
                 release -= 1;
@@ -571,11 +573,14 @@ fn new_env1_graph(pos: UIPos) -> UIInput {
                 match env.next(0, &env_par) {
                     EnvPos::Running(_, v) => {
                         println!("{:6.3} : {:6.3}", x, v);
+                        last_x = x;
                         out.push((x as f64, v as f64));
                     },
                     _ => {},
                 }
             }
+
+            out.push((last_x as f64, 0.0));
         });
 
     UIInput::graph_huge(
