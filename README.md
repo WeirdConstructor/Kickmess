@@ -15,7 +15,7 @@ significant changes will come with a change in the major version number.
 
 Currently this crate generates a VST (Version 2.4) plugin. Eventually this will
 be changed to LV2, once rust-lv2 does not require the _inPlaceBroken_ feature
-anymore.
+anymore and provides UI support.
 
 Support for more platforms (MacOS) is currently out of scope, but depending on
 the amount of code I might maintain contributions.
