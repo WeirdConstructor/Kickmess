@@ -42,10 +42,13 @@ pub const help_texts : [(&str, &str); 48] = [
         "If the distortion is enabled, the 'Start' and 'End' amounts will\n\
          define the amount of distortion at the beginning and end of the\n\
          envelope."),
-    ("Filter 1 Cutoff Frequency", ""),
-    ("Filter 1 Resonance",        ""),
-    ("Filter 1 Overdrive",        ""),
-    ("Main Gain",                 ""),
+    ("Filter 1 Cutoff Frequency", "The cutoff frequency of the filter."),
+    ("Filter 1 Resonance",
+        "The resonance of the filter, be careful!\n\
+         this thing will self oscillate a lot!"),
+    ("Filter 1 Overdrive",
+        "A kind of pre-gain for the filter input.\n"),
+    ("Main Gain",                 "The main output gain."),
     ("Env 1 Attack",              ""),
     ("Env 1 Decay",               ""),
     ("Env 1 Sustain",             ""),
@@ -344,6 +347,7 @@ impl<'a> ParamModel<'a> {
 
 #[inline]
 pub fn mod_function(mod_val: f32, fun_select: f32, mod_amount: f32, mod_slope: f32) -> f32 {
+    let mod_val = mod_val.max(0.0).min(1.0);
     let mod_val =
         if mod_slope < 0.5 {
             mod_val.powf((0.5 - mod_slope) * 2.0)

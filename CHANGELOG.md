@@ -1,5 +1,7 @@
-0.2.2 (unreleased)
+0.2.2 (2021-02-06)
 ==================
+
+### Kickmess
 
 * Incompatible Change: Click value is limited to the first 1/4th of the
 sine phase. This makes a Click value of 1.0 more meaningful, as "full click".
@@ -18,9 +20,7 @@ only enable but not disable fine drag mode).
 * Change: Value labels are centered now.
 * Change: Hide parameters that are not useful to be automateable.
 * Feature: Added midi channel selection.
-* Feature: Added a filter implementation for filtering the output.
-* Feature: Added saw/tri/square oscillator with unison/detune.
-* Feature: Added FM oscillator.
+* Feature: Added a (moog) filter implementation.
 * Bugfix: Added workaround for Carla to stop redrawing the GUI when
 Carla stops calling idle().
 * Bugfix: Keys did not work in Ardour/Zrythm and other DAWs.
@@ -35,6 +35,11 @@ it also closes the window. So right mouse button also exits the input
 value mode.
 * Bugfix: UI container sizes were not correct.
 * Bugfix: Parameter smoothing did not work correctly!
+
+### Megamess
+
+* Feature: Added saw/tri/square oscillator with unison/detune.
+* Feature: Added FM oscillator.
 
 0.2.1 (2021-01-09)
 ==================

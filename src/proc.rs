@@ -341,7 +341,7 @@ impl<T: MonoVoice> VoiceManager<T> {
         let cmd  = (data[0] & 0xF0) >> 4;
         let chan = data[0] & 0x0F;
 
-        //d// println!("MIDI {} {}: {} DT: {}", chan, my_channel, cmd, delta_frames);
+        println!("MIDI {} {}: {} DT: {}", chan, my_channel, cmd, delta_frames);
 
         if my_channel != chan {
             return;

@@ -539,34 +539,43 @@ fn new_lfo1_graph(pos: UIPos) -> UIInput {
 }
 
 #[cfg(feature="mega")]
+fn new_env1(src: &dyn UIValueSource) -> (crate::env::generic::Env, (f32, (f32, f32), (f32, f32), f32, (f32, f32))) {
+    use crate::env::generic::Env;
+
+    let mut env = Env::new();
+    env.set_sample_rate(200.0);
+    env.trigger(0);
+    let env_par = (
+        0.0,
+        ((src.param_value(pid::e1_attack).sqrt() * 250.0) as f32, 1.0),
+        ((src.param_value(pid::e1_decay).sqrt() * 250.0) as f32,
+         src.param_value_denorm(pid::e1_sustain) as f32),
+        src.param_value_denorm(pid::e1_sustain) as f32,
+        ((src.param_value(pid::e1_release).sqrt() * 250.0) as f32, 0.0)
+    );
+
+    //d// let env_par = (
+    //d//     0.0,
+    //d//     (src.param_value_denorm(pid::e1_attack) as f32, 1.0),
+    //d//     (src.param_value_denorm(pid::e1_decay) as f32,
+    //d//      src.param_value_denorm(pid::e1_sustain) as f32),
+    //d//     src.param_value_denorm(pid::e1_sustain) as f32,
+    //d//     (src.param_value_denorm(pid::e1_release) as f32, 0.0)
+    //d// );
+
+    //d// println!("ENV PAR: {:?}", env_par);
+
+    (env, env_par)
+}
+
+#[cfg(feature="mega")]
 fn new_env1_graph(pos: UIPos) -> UIInput {
     let f_graph =
         Arc::new(move |_id: usize, src: &mut dyn UIValueSource, out: &mut Vec<(f64, f64)>| {
             use crate::env::generic::*;
             use crate::env::generic::Env;
 
-            let mut env = Env::new();
-            env.set_sample_rate(200.0);
-            let env_par = (
-                0.0,
-                ((src.param_value(pid::e1_attack).sqrt() * 250.0) as f32, 1.0),
-                ((src.param_value(pid::e1_decay).sqrt() * 250.0) as f32,
-                 src.param_value_denorm(pid::e1_sustain) as f32),
-                src.param_value_denorm(pid::e1_sustain) as f32,
-                ((src.param_value(pid::e1_release).sqrt() * 250.0) as f32, 0.0)
-            );
-            //d// let env_par = (
-            //d//     0.0,
-            //d//     (src.param_value_denorm(pid::e1_attack) as f32, 1.0),
-            //d//     (src.param_value_denorm(pid::e1_decay) as f32,
-            //d//      src.param_value_denorm(pid::e1_sustain) as f32),
-            //d//     src.param_value_denorm(pid::e1_sustain) as f32,
-            //d//     (src.param_value_denorm(pid::e1_release) as f32, 0.0)
-            //d// );
-
-            //d// println!("ENV PAR: {:?}", env_par);
-
-            env.trigger(0);
+            let (mut env, env_par) = new_env1(src);
 
             let samples = 200;
 
@@ -637,29 +646,25 @@ fn new_mod_graph(pos: UIPos) -> UIInput {
                 use crate::env::generic::*;
                 use crate::env::generic::Env;
 
-                let mut env = Env::new();
-                env.set_sample_rate(80.0);
-//                let env_par = (0.0, (150.0, 1.0), (200.0, 0.90), 0.90, (200.0, 0.0));
-                let env_par = (1.0, (150.0, 0.0), 0.0);
+                let (mut env, env_par) = new_env1(src);
 
-                env.trigger(0);
+                let samples = 200;
 
-                let samples = 100;
-
-                let mut release : i32 = 70;
+                let mut release : i32 = 150;
                 for x in 0..(samples + 1) {
                     let x = x as f32 / (samples as f32);
 
-                    release -= 1;
                     if release == 0 { env.release(0); }
+                    release -= 1;
 
                     match env.next(0, &env_par) {
                         EnvPos::Running(_, v) => {
-                            //d// println!("{:6.3} : {:6.3}", x, v);
-                            out.push(
-                                (x as f64,
-                                 crate::param_model::mod_function(
-                                    v, fun_select, mod_amount, mod_slope) as f64));
+                            //d// let prev = v;
+                            let v =
+                                crate::param_model::mod_function(
+                                    v, fun_select, mod_amount, mod_slope);
+                            //d// println!("{:6.3} : ({}=>) {}", x, prev, v);
+                            out.push((x as f64, v as f64));
                         },
                         _ => {},
                     }
