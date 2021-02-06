@@ -102,7 +102,7 @@ impl Plugin for Kickmess {
             midi_inputs:   1,
             midi_outputs:  0,
             parameters:    self.params.public_ps.param_count() as i32,
-            version:       0221,
+            version:       0222,
             category:      Category::Synth,
             preset_chunks: true,
             ..Default::default()

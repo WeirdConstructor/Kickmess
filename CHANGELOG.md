@@ -1,3 +1,12 @@
+0.3.0 (unreleased)
+==================
+
+### Kickmess
+
+* Feature: Added an LFO.
+* Feature: Added an additional envelope.
+* Feature: Added modulation module.
+
 0.2.2 (2021-02-06)
 ==================
 
