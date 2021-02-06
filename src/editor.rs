@@ -539,6 +539,53 @@ fn new_lfo1_graph(pos: UIPos) -> UIInput {
 }
 
 #[cfg(feature="mega")]
+fn new_env1_graph(pos: UIPos) -> UIInput {
+    let f_graph =
+        Arc::new(move |_id: usize, src: &mut dyn UIValueSource, out: &mut Vec<(f64, f64)>| {
+            use crate::env::generic::*;
+            use crate::env::generic::Env;
+
+            let mut env = Env::new();
+            env.set_sample_rate(80.0);
+            let env_par = (
+                0.0,
+                (src.param_value(pid::e1_attack) as f32, 1.0),
+                (src.param_value(pid::e1_decay) as f32, src.param_value(pid::e1_sustain) as f32),
+                src.param_value(pid::e1_sustain) as f32,
+                (src.param_value(pid::e1_release) as f32, 0.0)
+            );
+
+            println!("ENV PAR: {:?}", env_par);
+
+            env.trigger(0);
+
+            let samples = 100;
+
+            let mut release : i32 = 70;
+            for x in 0..(samples + 1) {
+                let x = x as f32 / (samples as f32);
+
+                release -= 1;
+                if release == 0 { env.release(0); }
+
+                match env.next(0, &env_par) {
+                    EnvPos::Running(_, v) => {
+                        println!("{:6.3} : {:6.3}", x, v);
+                        out.push((x as f64, v as f64));
+                    },
+                    _ => {},
+                }
+            }
+        });
+
+    UIInput::graph_huge(
+        0,
+        String::from("Env"),
+        pos,
+        f_graph.clone())
+}
+
+#[cfg(feature="mega")]
 fn new_mod_graph(pos: UIPos) -> UIInput {
     let f_graph =
         Arc::new(move |_id: usize, src: &mut dyn UIValueSource, out: &mut Vec<(f64, f64)>| {
@@ -595,7 +642,7 @@ fn new_mod_graph(pos: UIPos) -> UIInput {
 
                     match env.next(0, &env_par) {
                         EnvPos::Running(_, v) => {
-                            println!("{:6.3} : {:6.3}", x, v);
+                            //d// println!("{:6.3} : {:6.3}", x, v);
                             out.push(
                                 (x as f64,
                                  crate::param_model::mod_function(
@@ -640,6 +687,29 @@ fn new_lfo1_section(pos: UIPos) -> UIInput {
                 UIPos::center(4, 12).middle()),
         ]]),
         new_lfo1_graph(UIPos::center(3, 12)),
+    ]])
+}
+
+#[cfg(feature="mega")]
+fn new_env1_section(pos: UIPos) -> UIInput {
+    UIInput::container_border(pos, 1.0, "Env 1", vec![vec![
+        UIInput::knob(
+            pid::e1_attack,
+            String::from("Attack"),
+            UIPos::center(2, 12).middle()),
+        UIInput::knob(
+            pid::e1_decay,
+            String::from("Decay"),
+            UIPos::center(2, 12).middle()),
+        UIInput::knob(
+            pid::e1_sustain,
+            String::from("Sustain"),
+            UIPos::center(2, 12).middle()),
+        UIInput::knob(
+            pid::e1_release,
+            String::from("Release"),
+            UIPos::center(2, 12).middle()),
+        new_env1_graph(UIPos::center(4, 12)),
     ]])
 }
 
@@ -887,6 +957,7 @@ fn new_megamess_layout() -> UILayout {
                                 ]),
                                 UIInput::container(UIPos::center(4, 12), 1.0, "", vec![
                                     vec![ new_fm1_section(UIPos::center(12, 4)) ],
+                                    vec![ new_env1_section(UIPos::center(12, 4)) ],
                                     vec![ new_mod1_section(UIPos::center(12, 4)) ],
                                 ]),
                             ],

@@ -1,6 +1,6 @@
 use crate::proc::*;
 
-pub const help_texts : [(&str, &str); 44] = [
+pub const help_texts : [(&str, &str); 48] = [
     ("Start Frequency",
         "This is the starting frequency of the frequency envelope."),
     ("End Frequency",
@@ -43,30 +43,34 @@ pub const help_texts : [(&str, &str); 44] = [
          define the amount of distortion at the beginning and end of the\n\
          envelope."),
     ("Filter 1 Cutoff Frequency", ""),
-    ("Filter 1 Resonance", ""),
-    ("Filter 1 Overdrive", ""),
-    ("Main Gain", ""),
+    ("Filter 1 Resonance",        ""),
+    ("Filter 1 Overdrive",        ""),
+    ("Main Gain",                 ""),
+    ("Env 1 Attack",              ""),
+    ("Env 1 Decay",               ""),
+    ("Env 1 Sustain",             ""),
+    ("Env 1 Release",             ""),
 
     // Megamess Parameters
-    ("Oscillator 1 Gain", ""),
-    ("Oscillator 1 Wave", ""),
-    ("Oscillator 1 Pulsewidth", ""),
-    ("Oscillator 1 Unison", ""),
-    ("Oscillator 1 Detune", ""),
-    ("FM OP1 Frequency Ratio", ""),
-    ("FM OP1 Self Modulation", ""),
-    ("FM OP1 -> OP2 Modulation", ""),
-    ("FM OP2 -> OP1 Modulation", ""),
-    ("FM OP2 Fixed Frequency", ""),
-    ("FM OP2 Self Modulation", ""),
-    ("FM OP2 Gain", ""),
-    ("LFO 1 - Frequency", ""),
+    ("Oscillator 1 Gain",            ""),
+    ("Oscillator 1 Wave",            ""),
+    ("Oscillator 1 Pulsewidth",      ""),
+    ("Oscillator 1 Unison",          ""),
+    ("Oscillator 1 Detune",          ""),
+    ("FM OP1 Frequency Ratio",       ""),
+    ("FM OP1 Self Modulation",       ""),
+    ("FM OP1 -> OP2 Modulation",     ""),
+    ("FM OP2 -> OP1 Modulation",     ""),
+    ("FM OP2 Fixed Frequency",       ""),
+    ("FM OP2 Self Modulation",       ""),
+    ("FM OP2 Gain",                  ""),
+    ("LFO 1 - Frequency",            ""),
     ("LFO 1 - Frequency Multiplier", ""),
-    ("LFO 1 - Waveform", ""),
-    ("LFO 1 - Pulsewidth", ""),
-    ("LFO 1 - Phase Offset", ""),
-    ("Modulator 1 - Amount", ""),
-    ("Modulator 1 - Slope", ""),
+    ("LFO 1 - Waveform",             ""),
+    ("LFO 1 - Pulsewidth",           ""),
+    ("LFO 1 - Phase Offset",         ""),
+    ("Modulator 1 - Amount",         ""),
+    ("Modulator 1 - Slope",          ""),
 
     // Private Parameters
     ("Filter 1 Type",
@@ -74,12 +78,12 @@ pub const help_texts : [(&str, &str); 44] = [
          high pass: 0.33 - 0.66\n\
          band pass: 0.66 - 1.0 \n\
         "),
-    ("Filter 1 On/Off", ""),
-    ("MIDI Channel", ""),
-    ("FM OP2 Frequency Mode", ""),
-    ("Modulator 1 - Modulation Source", ""),
+    ("Filter 1 On/Off",                      ""),
+    ("MIDI Channel",                         ""),
+    ("FM OP2 Frequency Mode",                ""),
+    ("Modulator 1 - Modulation Source",      ""),
     ("Modulator 1 - Modulation Destination", ""),
-    ("Modulator 1 - Modulation Function", ""),
+    ("Modulator 1 - Modulation Function",    ""),
 ];
 
 #[cfg(not(feature="mega"))]
@@ -98,8 +102,8 @@ macro_rules! define_constants {
 #[cfg(feature="mega")]
 macro_rules! define_constants {
     () => {
-        pub const PUB_PARAM_COUNT : usize = 37;
-        pub const PARAM_COUNT     : usize = 44;
+        pub const PUB_PARAM_COUNT : usize = 41;
+        pub const PARAM_COUNT     : usize = 48;
         macro_rules! ppc {
             ($x: expr) => {
                 ($x + crate::param_model::PUB_PARAM_COUNT)
@@ -114,29 +118,29 @@ define_constants!{}
 macro_rules! mega_params {
     ($x: ident) => {
         //  scope   name         exp/lin smooth        idx  min    max     def    width  prec  label
-        $x!{public  o1_gain         exp smooth         18,  0.0,   2.0,      0.0,     4,    2, "O1 Gain"}
-        $x!{public  o1_waveform     lin no_smooth      19,  0.0,   1.0,      0.0,     4,    2, "O1 Wave"}
-        $x!{public  o1_pw           lin smooth         20,  0.0,   1.0,      1.0,     4,    2, "O1 PW"}
-        $x!{public  o1_unison       lin no_smooth      21,  0.0,  10.5,      0.0,     1,    0, "O1 Unison"}
-        $x!{public  o1_detune       lin smooth         22,  0.0,   1.0,      0.01,    5,    3, "O1 Detune"}
+        $x!{public  o1_gain         exp smooth         22,  0.0,   2.0,      0.0,     4,    2, "O1 Gain"}
+        $x!{public  o1_waveform     lin no_smooth      23,  0.0,   1.0,      0.0,     4,    2, "O1 Wave"}
+        $x!{public  o1_pw           lin smooth         24,  0.0,   1.0,      1.0,     4,    2, "O1 PW"}
+        $x!{public  o1_unison       lin no_smooth      25,  0.0,  10.5,      0.0,     1,    0, "O1 Unison"}
+        $x!{public  o1_detune       lin smooth         26,  0.0,   1.0,      0.01,    5,    3, "O1 Detune"}
 
-        $x!{public  o1fm_ratio      exp smooth         23,  0.0,  30.0,       2.0,    5,    3, "OP1 Ratio"}
-        $x!{public  o1fm_self       exp smooth         24,  0.0,30000.0,      0.0,    4,    2, "OP1 Self Hz"}
-        $x!{public  o1fm_o2_mod     exp smooth         25,  0.0,30000.0,    100.0,    4,    2, "OP1>OP2 Hz"}
-        $x!{public  o2fm_o1_mod     exp smooth         26,  0.0,30000.0,      0.0,    4,    2, "OP2>OP1 Hz"}
-        $x!{public  o2fm_freq       exp smooth         27,  0.0,30000.0,    500.0,    4,    2, "OP2 Freq Hz"}
-        $x!{public  o2fm_self       exp smooth         28,  0.0,30000.0,      0.0,    4,    2, "OP2 Self Hz"}
-        $x!{public  o2fm_gain       lin smooth         29,  0.0,   2.0,       0.0,    5,    3, "OP2 Gain"}
+        $x!{public  o1fm_ratio      exp smooth         27,  0.0,  30.0,       2.0,    5,    3, "OP1 Ratio"}
+        $x!{public  o1fm_self       exp smooth         28,  0.0,30000.0,      0.0,    4,    2, "OP1 Self Hz"}
+        $x!{public  o1fm_o2_mod     exp smooth         29,  0.0,30000.0,    100.0,    4,    2, "OP1>OP2 Hz"}
+        $x!{public  o2fm_o1_mod     exp smooth         30,  0.0,30000.0,      0.0,    4,    2, "OP2>OP1 Hz"}
+        $x!{public  o2fm_freq       exp smooth         31,  0.0,30000.0,    500.0,    4,    2, "OP2 Freq Hz"}
+        $x!{public  o2fm_self       exp smooth         32,  0.0,30000.0,      0.0,    4,    2, "OP2 Self Hz"}
+        $x!{public  o2fm_gain       lin smooth         33,  0.0,   2.0,       0.0,    5,    3, "OP2 Gain"}
         $x!{private o2fm_mode       lin no_smooth ppc!(3),  0.0,   1.0,       0.0,    3,    1, "OP2 Mode"}
 
-        $x!{public  lfo1_freq      exp4 smooth         30,  0.0, 100.0,       1.0,    5,    3, "LFO1 Freq"}
-        $x!{public  lfo1_fmul       lin smooth         31,  0.1, 100.0,       1.0,    5,    3, "LFO1 FMul"}
-        $x!{public  lfo1_wave       lin no_smooth      32,  0.0,   1.0,       0.0,    3,    1, "LFO1 Wave"}
-        $x!{public  lfo1_pw         lin smooth         33,  0.01, 0.99,       0.5,    3,    1, "LFO1 PW"}
-        $x!{public  lfo1_phase      lin smooth         34,  0.0,   1.0,       0.0,    3,    1, "LFO1 Phase"}
+        $x!{public  lfo1_freq      exp4 smooth         34,  0.0, 100.0,       1.0,    5,    3, "LFO1 Freq"}
+        $x!{public  lfo1_fmul       lin smooth         35,  0.1, 100.0,       1.0,    5,    3, "LFO1 FMul"}
+        $x!{public  lfo1_wave       lin no_smooth      36,  0.0,   1.0,       0.0,    3,    1, "LFO1 Wave"}
+        $x!{public  lfo1_pw         lin smooth         37,  0.01, 0.99,       0.5,    3,    1, "LFO1 PW"}
+        $x!{public  lfo1_phase      lin smooth         38,  0.0,   1.0,       0.0,    3,    1, "LFO1 Phase"}
 
-        $x!{public   m1_amount      lin smooth         35,  0.0,   1.0,       1.0,    4,    2, "Mod1 Amt"}
-        $x!{public   m1_slope       lin smooth         36,  0.0,   1.0,       0.0,    5,    3, "Mod1 Slope"}
+        $x!{public   m1_amount      lin smooth         39,  0.0,   1.0,       1.0,    4,    2, "Mod1 Amt"}
+        $x!{public   m1_slope       lin smooth         40,  0.0,   1.0,       0.0,    5,    3, "Mod1 Slope"}
 
         $x!{private  m1_src_id      lin no_smooth ppc!(4),  0.0,1000.0,      -1.0,    1,    0, "Mod1 Src"}
         $x!{private  m1_dest_id     lin no_smooth ppc!(5),  0.0,   1.0,       0.0,    1,    0, "Mod1 Dest"}
