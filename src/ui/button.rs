@@ -7,11 +7,15 @@ use crate::ui::element::{UIElement, UIElementData};
 use crate::ui::constants::*;
 
 pub struct Button {
+    width:      f64,
+    font_size:  f64,
 }
 
 impl Button {
-    pub fn new() -> Self {
+    pub fn new(width: f64, font_size: f64) -> Self {
         Self {
+            width,
+            font_size,
         }
     }
 }
@@ -37,9 +41,32 @@ impl Button {
     }
 }
 
+impl Button {
+    fn draw_divider(&self, p: &mut dyn Painter, width: f64, color: (f64, f64, f64), x: f64, y: f64) {
+        let (x, y) = (
+            x + (UI_BTN_BORDER_WIDTH / 2.0).round(),
+            y + (UI_BTN_BORDER_WIDTH / 2.0).round(),
+        );
+
+        let w = self.width;
+        let h = UI_ELEM_TXT_H * 2.0 + UI_BTN_BORDER_WIDTH;
+
+        // divider
+        p.path_stroke(
+            UI_BTN_BORDER2_WIDTH,
+            color,
+            &mut [
+                (x,     y + (h / 2.0).round()),
+                (x + w, y + (h / 2.0).round()),
+            ].iter().copied(),
+            false);
+    }
+
+}
+
 impl UIElement for Button {
     fn size(&self) -> (f64, f64) {
-        (UI_BTN_WIDTH
+        (self.width
          + UI_BTN_BORDER_WIDTH + UI_SAFETY_PAD,
          UI_ELEM_TXT_H + UI_BTN_BORDER_WIDTH + UI_ELEM_TXT_H
          + UI_BTN_BORDER_WIDTH + UI_SAFETY_PAD)
@@ -68,10 +95,10 @@ impl UIElement for Button {
             (UI_BTN_BORDER_WIDTH / 2.0).round(),
         );
 
-        let w = UI_BTN_WIDTH;
+        let w = self.width;
         let h = UI_ELEM_TXT_H * 2.0 + UI_BTN_BORDER_WIDTH;
 
-        p.label(UI_KNOB_FONT_SIZE, 0, UI_BTN_TXT_CLR,
+        p.label(self.font_size, 0, UI_BTN_TXT_CLR,
             x + xo,
             y + yo + UI_ELEM_TXT_H + UI_BTN_BORDER2_WIDTH,
             w, (h / 2.0).round(), name);
@@ -99,45 +126,40 @@ impl UIElement for Button {
                         x + xo, y + yo, w, h, false);
                     UI_BTN_TXT_HLIGHT_CLR
                 },
+                HLStyle::Inactive => {
+                    self.draw_border(
+                        p, UI_BTN_BORDER2_WIDTH, UI_INACTIVE_CLR,
+                        x + xo, y + yo, w, h, false);
+                    self.draw_divider(
+                        p, UI_BTN_BORDER2_WIDTH * 1.2, UI_INACTIVE_CLR, x, y);
+                    UI_INACTIVE2_CLR
+                },
                 _ => UI_BTN_TXT_CLR,
             };
 
-        p.label(UI_KNOB_FONT_SIZE, 0, color,
+        p.label(self.font_size, 0, color,
             x + xo, y + yo, w, (h / 2.0).round(), val_s);
     }
 
     fn draw_bg(&self, p: &mut dyn Painter, x: f64, y: f64) {
-        let (w, h) = self.size();
-
         let (xo, yo) = (
             x + (UI_BTN_BORDER_WIDTH / 2.0).round(),
             y + (UI_BTN_BORDER_WIDTH / 2.0).round(),
         );
 
-        let x = xo;
-        let y = yo;
-
-        let w = UI_BTN_WIDTH;
+        let w = self.width;
         let h = UI_ELEM_TXT_H * 2.0 + UI_BTN_BORDER_WIDTH;
 
         // border
         self.draw_border(
-            p, UI_BTN_BORDER_WIDTH, UI_BTN_BORDER_CLR, x, y, w, h, false);
+            p, UI_BTN_BORDER_WIDTH, UI_BTN_BORDER_CLR, xo, yo, w, h, false);
 
         self.draw_border(
-            p, UI_BTN_BORDER2_WIDTH, UI_BTN_BORDER2_CLR, x, y, w, h, false);
+            p, UI_BTN_BORDER2_WIDTH, UI_BTN_BORDER2_CLR, xo, yo, w, h, false);
 
         self.draw_border(
-            p, 0.0, UI_BTN_BG_CLR, x, y, w, h, true);
+            p, 0.0, UI_BTN_BG_CLR, xo, yo, w, h, true);
 
-        // divider
-        p.path_stroke(
-            UI_BTN_BORDER2_WIDTH,
-            UI_BTN_BORDER2_CLR,
-            &mut [
-                (x,     y + (h / 2.0).round()),
-                (x + w, y + (h / 2.0).round()),
-            ].iter().copied(),
-            false);
+        self.draw_divider(p, UI_BTN_BORDER2_WIDTH, UI_BTN_BORDER2_CLR, x, y);
     }
 }

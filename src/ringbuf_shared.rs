@@ -16,6 +16,13 @@ impl<T> RingBuf<T> {
         }
     }
 
+    pub fn clone(&self) -> Self {
+        Self {
+            prod: self.prod.clone(),
+            cons: self.cons.clone(),
+        }
+    }
+
     pub fn push(&self, item: T) {
         if let Ok(ref mut prod) = self.prod.try_lock() {
             prod.push(item).is_ok();

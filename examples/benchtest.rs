@@ -266,6 +266,41 @@ impl Test {
 }
 
 fn main() {
+
+
+    let ta = std::time::Instant::now();
+    let mut res = 0.0;
+    for i in 0..100000000 {
+        res += (((i % 1000) as f64 * std::f64::consts::PI) / 1000.0).sin().fract().abs();
+    }
+    println!("fract Elapsed: {:?} ({})", std::time::Instant::now().duration_since(ta), res);
+
+    let ta = std::time::Instant::now();
+    let mut res = 0.0;
+    for i in 0..100000000 {
+        res += ((((i % 1000) as f64 * std::f64::consts::PI) / 1000.0).sin() + 1.0) * 0.5;
+    }
+    println!("plusmul Elapsed: {:?} ({})", std::time::Instant::now().duration_since(ta), res);
+
+    let ta = std::time::Instant::now();
+    let mut res = 0.0;
+    for i in 0..100000000 {
+        res += ((((i % 1000) as f64 * std::f64::consts::PI) / 1000.0).sin() + 1.0) / 2.0;
+    }
+    println!("plusdiv Elapsed: {:?} ({})", std::time::Instant::now().duration_since(ta), res);
+
+    let ta = std::time::Instant::now();
+    let mut res = 0.0;
+    for i in 0..100000000 {
+        let sig = (((i % 1000) as f64 * std::f64::consts::PI) / 1000.0).sin();
+        if i % 4 == 0 {
+            res += sig;
+        } else {
+            res += (sig + 1.0) * 0.5;
+        }
+    }
+    println!("branch Elapsed: {:?} ({})", std::time::Instant::now().duration_since(ta), res);
+
     let mut t1 = Test { mode: TestMode::A, fun: Box::new(|i: i64, out: &mut f64| *out = i as f64), ft: Box::new(A) };
     let mut t2 = Test { mode: TestMode::B, fun: Box::new(|i: i64, out: &mut f64| *out = i as f64), ft: Box::new(A) };
     let mut t3 = Test { mode: TestMode::C, fun: Box::new(|i: i64, out: &mut f64| *out = i as f64), ft: Box::new(A) };

@@ -1,9 +1,24 @@
-# Kickmess - A Kick Drum Synthesizer
+# Kickmess / Megamess - A (Kick Drum) Synthesizer Plugin
 
 Kickmess is a port of the easy to use and good sounding _Kicker_ plugin from
 LMMS to a reusable audio plugin format on Linux (VST currently). The DSP code
-has been ported and also changed, that means an accurate
-reimplementation of _Kicker_ is out of scope.
+has been ported, changed a bit and extended with some other functionality.
+
+An extended version of Kickmess, with more oscillators and other functionality,
+is available as `Megamess` plugin. It's built from the same code base, but with
+a larger DSP core and extended GUI. It's useful for many kinds of percussion
+synthesis, for synthesizing bass sounds and other fx sounds.
+
+More features and changes might be added and before Version 1.0 is released I
+will not guarantee that your presets will sound the same. After Version 1.0
+significant changes will come with a change in the major version number.
+
+Currently this crate generates a VST (Version 2.4) plugin. Eventually this will
+be changed to LV2, once rust-lv2 does not require the _inPlaceBroken_ feature
+anymore.
+
+Support for more platforms (MacOS) is currently out of scope, but depending on
+the amount of code I might maintain contributions.
 
 <a href="http://m8geil.de/data/git/kickmess/res/screenshot1.png">
 <img align="left" width="811" height="556" src="http://m8geil.de/data/git/kickmess/res/screenshot1.png">
@@ -29,20 +44,29 @@ Support for more platforms (MacOS) is currently out of scope.
 
 ## State of Development
 
-This project is still (2021-01-08) under development and considered
-useable for what it is. There are features missing, which might come
-in future. And until version 1.0 is released I can't guarantee that your
-presets will all sound the same.
+This project is still (2021-01-08) under development but is considered useable
+for what it is, but don't be surprised if there are still show stopper bugs.
+There are features missing, which might come in future. And until version 1.0
+is released I can't guarantee that your presets will all sound the same.
 
 Make sure to follow [Weird Constructors Mastodon
 account](https://mastodon.online/web/accounts/150371) or the releases of this
 project to be notified once I release a beta or stable release.
 
-## Building & Installing
+## Building & Installing Kickmess:
 
     cargo build --release
 
     cp target/release/libkickmessvst.so ~/.vst/
+
+## Building & Installing Megamess:
+
+The Megamess plugin does not have it's own project or crate yet and
+is just the Kickmess code base with it's own feature enabled:
+
+    cargo build --all-features --release
+
+    cp target/release/libkickmessvst.so ~/.vst/libmegamess.so
 
 ## Running the development GUI example
 
@@ -51,13 +75,17 @@ in the background:
 
     cargo run --release --example gui
 
+For Megamess:
+
+    cargo run --release --example gui
+
 ## TODO / Features
 
-* A few presets to document a few sweet spots
+* A few presets
 * Less blurry text (needs improvements in femtovg library/crate)
-* Modulation (AHDSR envelope, LFO)
-* A second oscillator with sawtooth/square waveforms
-* A high/low/band pass filter(s) with resonance
+* Modulation (3 AHDSR envelopes, 3 LFOs) like in LMMS
+* DONE: A high/low/band pass filter(s) with resonance
+* DONE (in Megamess): A second oscillator with sawtooth/square waveforms
 
 ## Known Bugs
 
@@ -67,11 +95,13 @@ in the background:
 
 | OS | CPU | GPU | WM | Host | State | Date Tested |
 |----|-----|-----|----|------|-------|-------------|
-| Ubuntu 18.04 GNU/Linux | AMD Ryzen | NVidia (propr. drivers) | Gnome/Default  | Carla 2.2.0        | ok                    | 2021-01-06 |
-| Ubuntu 18.04 GNU/Linux | AMD Ryzen | NVidia (propr. drivers) | Gnome/Default  | Ardour 6.3         | ok                    |            |
-| Win 10                 | Intel     | NVidia                  | Win 10         | Renoise 3.3        | ok                    | 2021-01-06 |
-| Win 10                 | Intel     | NVidia                  | Win 10         | Zrythm Alpha 7.1.1 | ok, clicks on looping | 2021-01-06 |
-| Win 10                 | Intel     | NVidia                  | Win 10         | Ardour 6.5         | ok                    | 2021-01-06 |
+| Ubuntu 18.04 GNU/Linux | AMD Ryzen | NVidia (propr. drivers) | Gnome/Default  | Carla 2.2.0        | ok                        | 2021-01-06 |
+| Ubuntu 18.04 GNU/Linux | AMD Ryzen | NVidia (propr. drivers) | Gnome/Default  | Ardour 6.3         | ok                        |            |
+| Ubuntu 18.04 GNU/Linux | AMD Ryzen | NVidia (propr. drivers) | Gnome/Default  | Reaper             | crash, shader compilation | 2021-01-26 |
+| Win 10                 | Intel     | NVidia                  | Win 10         | Renoise 3.3        | ok                        | 2021-01-06 |
+| Win 10                 | Intel     | NVidia                  | Win 10         | Zrythm Alpha 7.1.1 | ok, clicks on looping     | 2021-01-06 |
+| Win 10                 | Intel     | NVidia                  | Win 10         | Ardour 6.5         | ok                        | 2021-01-06 |
+| ?                      | ?         | NVidia (propr. drivers) | ?              | Ardour ?           | sluggish Ardour UI        | 2021-01-26 |
 
 ## Support Development
 

@@ -1,1 +1,1 @@
-./_build.sh && carla ~/kickmess.carxp
+./_build.sh && carla ~/megamess.carxp

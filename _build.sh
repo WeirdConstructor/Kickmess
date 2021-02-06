@@ -1,1 +1,1 @@
-cargo build --release && cp -v target/release/libkickmessvst.so ~/.vst/
+cargo build --all-features --release && cp -v target/release/libkickmessvst.so ~/.vst/

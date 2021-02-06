@@ -76,6 +76,20 @@ impl UIElement for SegmentedKnob {
                     true,
                     value);
             },
+            HLStyle::Inactive => {
+                self.draw_oct_arc(
+                    p, x + xo, y + yo,
+                    UI_MG_KNOB_STROKE * 1.1,
+                    UI_INACTIVE_CLR,
+                    false,
+                    1.0);
+                self.draw_oct_arc(
+                    p, x + xo, y + yo,
+                    UI_MG_KNOB_STROKE,
+                    UI_INACTIVE2_CLR,
+                    true,
+                    value);
+            },
             HLStyle::None => {
                 self.draw_oct_arc(
                     p, x + xo, y + yo,
@@ -223,7 +237,7 @@ impl SegmentedKnob {
     }
 
     pub fn get_label_rect(&self) -> (f64, f64, f64, f64) {
-        let width = self.radius * 2.5;
+        let width = self.radius * 2.75;
         ((self.sbottom.0 - width * 0.5).round(),
          (self.sbottom.1 + UI_BG_KNOB_STROKE).round(),
          width.round(),
@@ -247,22 +261,23 @@ impl SegmentedKnob {
     pub fn draw_value_label(&self, p: &mut dyn Painter, x: f64, y: f64, highlight: HLStyle, s: &str) {
         let r = self.get_value_rect();
 
-        let (font_size, color) =
+        let color =
             match highlight {
-                HLStyle::Hover(_subtype) => {
-                    (self.font_size_data + 1.0, UI_TXT_KNOB_HOVER_CLR)
-                },
-                HLStyle::ModTarget => {
-                    (self.font_size_data + 1.0, UI_TXT_KNOB_HLIGHT_CLR)
-                },
-                _ => {
-                    (self.font_size_data, UI_TXT_KNOB_CLR)
-                },
+                HLStyle::Hover(_subtype) => { UI_TXT_KNOB_HOVER_CLR },
+                HLStyle::Inactive        => { UI_INACTIVE_CLR },
+                HLStyle::ModTarget       => { UI_TXT_KNOB_HLIGHT_CLR },
+                _                        => { UI_TXT_KNOB_CLR },
             };
 
         let some_right_padding = 6.0;
+        let light_font_offs    = 4.0;
 
-        p.label(font_size, 1, color, x + r.0, y + r.1, r.2 - some_right_padding, r.3, s);
+        p.label(
+            self.font_size_data, 0, color,
+            x + r.0 + light_font_offs,
+            y + r.1,
+            r.2 - some_right_padding,
+            r.3, s);
     }
 
     pub fn draw_oct_arc(&self, p: &mut dyn Painter, x: f64, y: f64, line_w: f64, color: (f64, f64, f64), with_dot: bool, value: f64) {

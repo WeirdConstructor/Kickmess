@@ -85,6 +85,8 @@ pub struct GUIWindowHandler {
     ui:         WValuePlugUI,
     scale:      f32,
     size:       (f64, f64),
+    focused:    bool,
+    counter:    usize,
 }
 
 struct MyPainter<'a> {
@@ -149,6 +151,7 @@ impl<'a> Painter for MyPainter<'a> {
     fn path_stroke(&mut self, width: f64, color: (f64, f64, f64), segments: &mut dyn std::iter::Iterator<Item = (f64, f64)>, closed: bool) {
         let mut p = femtovg::Path::new();
         let mut paint = color_paint(color);
+        paint.set_line_join(femtovg::LineJoin::Round);
         paint.set_line_width(width as f32);
 
         let mut first = true;
@@ -263,6 +266,15 @@ impl WindowHandler for GUIWindowHandler {
                     },
                 }
             },
+            Event::Window(WindowEvent::WillClose) => {
+                self.ui.handle_ui_event(UIEvent::WindowClose);
+            },
+            Event::Window(WindowEvent::Focused) => {
+                self.focused = true;
+            },
+            Event::Window(WindowEvent::Unfocused) => {
+                self.focused = false;
+            },
             Event::Window(WindowEvent::Resized(info)) => {
                 let size = info.logical_size();
 
@@ -293,6 +305,17 @@ impl WindowHandler for GUIWindowHandler {
     }
 
     fn on_frame(&mut self) {
+        self.counter += 1;
+        if self.counter % 500 == 0 {
+//            println!("REDRAW.....");
+            self.counter = 0;
+        }
+
+        // some hosts only stop calling idle(), so we stop the UI redraw here:
+        if !self.ui.window_is_active() {
+            return;
+        }
+
         self.ui.pre_frame();
         let redraw = self.ui.needs_redraw();
 
@@ -322,7 +345,6 @@ impl WindowHandler for GUIWindowHandler {
             self.canvas.restore();
             self.ftm_redraw.end_measure();
         }
-
 
         let img_paint =
             femtovg::Paint::image(
@@ -360,6 +382,7 @@ unsafe impl raw_window_handle::HasRawWindowHandle for StupidWindowHandleHolder {
 }
 
 pub fn open_window(title: &str, window_width: i32, window_height: i32, parent: Option<*mut ::std::ffi::c_void>, controller: std::sync::Arc<dyn UIController>) {
+    println!("*** OPEN WINDOW ***");
     let options =
         WindowOpenOptions {
             title:  title.to_string(),
@@ -384,7 +407,7 @@ pub fn open_window(title: &str, window_width: i32, window_height: i32, parent: O
                     srgb:          true,
                     double_buffer: true,
                     vsync:         true,
-                }).unwrap();
+                }).expect("GL context to be creatable");
         context.make_current();
         gl::load_with(|symbol| context.get_proc_address(symbol) as *const _);
 
@@ -418,6 +441,8 @@ pub fn open_window(title: &str, window_width: i32, window_height: i32, parent: O
             ftm:        FrameTimeMeasurement::new("img"),
             ftm_redraw: FrameTimeMeasurement::new("redraw"),
             scale:      1.0,
+            focused:    false,
+            counter:    0,
         }
     };
 

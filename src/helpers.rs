@@ -173,8 +173,16 @@ pub fn f_fold_distort(gain: f32, threshold: f32, i: f32) -> f32 {
     }
 }
 
-pub fn p2range(x: f32, a: f32, b: f32) -> f32 {
+pub fn lerp(x: f32, a: f32, b: f32) -> f32 {
     (a * (1.0 - x)) + (b * x)
+}
+
+pub fn lerp64(x: f64, a: f64, b: f64) -> f64 {
+    (a * (1.0 - x)) + (b * x)
+}
+
+pub fn p2range(x: f32, a: f32, b: f32) -> f32 {
+    lerp(x, a, b)
 }
 
 pub fn p2range_exp(x: f32, a: f32, b: f32) -> f32 {
@@ -182,12 +190,22 @@ pub fn p2range_exp(x: f32, a: f32, b: f32) -> f32 {
     (a * (1.0 - x)) + (b * x)
 }
 
+pub fn p2range_exp4(x: f32, a: f32, b: f32) -> f32 {
+    let x = x * x * x * x;
+    (a * (1.0 - x)) + (b * x)
+}
+
+
 pub fn range2p(v: f32, a: f32, b: f32) -> f32 {
     ((v - a) / (b - a)).abs()
 }
 
 pub fn range2p_exp(v: f32, a: f32, b: f32) -> f32 {
     (((v - a) / (b - a)).abs()).sqrt()
+}
+
+pub fn range2p_exp4(v: f32, a: f32, b: f32) -> f32 {
+    (((v - a) / (b - a)).abs()).sqrt().sqrt()
 }
 
 // gain: 24.0 - -90.0   default = 0.0
@@ -199,6 +217,55 @@ pub fn gain2coef(gain: f32) -> f32 {
     }
 }
 
+// quickerTanh / quickerTanh64 credits to mopo synthesis library:
+// Under GPLv3 or any later.
+// Little IO <littleioaudio@gmail.com>
+// Matt Tytel <matthewtytel@gmail.com>
+pub fn quickerTanh64(v: f64) -> f64 {
+    let square = v * v;
+    v / (1.0 + square / (3.0 + square / 5.0))
+}
+
+pub fn quickerTanh(v: f32) -> f32 {
+    let square = v * v;
+    v / (1.0 + square / (3.0 + square / 5.0))
+}
+
+// quickTanh / quickTanh64 credits to mopo synthesis library:
+// Under GPLv3 or any later.
+// Little IO <littleioaudio@gmail.com>
+// Matt Tytel <matthewtytel@gmail.com>
+pub fn quickTanh64(v: f64) -> f64 {
+    let abs_v = v.abs();
+    let square = v * v;
+    let num =
+        v * (2.45550750702956
+             + 2.45550750702956 * abs_v
+             + square * (0.893229853513558
+                         + 0.821226666969744 * abs_v));
+    let den =
+        2.44506634652299
+        + (2.44506634652299 + square)
+          * (v + 0.814642734961073 * v * abs_v).abs();
+
+    num / den
+}
+
+pub fn quickTanh(v: f32) -> f32 {
+    let abs_v = v.abs();
+    let square = v * v;
+    let num =
+        v * (2.45550750702956
+             + 2.45550750702956 * abs_v
+             + square * (0.893229853513558
+                         + 0.821226666969744 * abs_v));
+    let den =
+        2.44506634652299
+        + (2.44506634652299 + square)
+          * (v + 0.814642734961073 * v * abs_v).abs();
+
+    num / den
+}
 
 #[cfg(test)]
 mod tests {

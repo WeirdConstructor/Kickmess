@@ -1,19 +1,25 @@
 [package]
 name        = "kickmessvst"
-version     = "0.2.2-beta1"
+version     = "0.2.2"
 authors     = ["Weird Constructor <weirdconstructor@gmail.com>"]
 edition     = "2018"
 license     = "AGPL-3.0-or-later"
 description = "Kickmess - Port of LMMS Kicker Plugin"
+
+[features]
+mega = []
 
 [lib]
 name       = "kickmessvst"
 crate-type = ["cdylib", "lib"]
 
 [dependencies]
-vst                = { git = "https://github.com/WeirdConstructor/vst-rs", branch = "host_begin_end_edit" }
+vst                = { git = "https://github.com/RustAudio/vst-rs.git" }
+#vst                = { git = "https://github.com/WeirdConstructor/vst-rs", branch = "host_begin_end_edit" }
+#vst                = { path = "/home/weictr/devel/other/vst-rs/" }
 femtovg            = { git = "https://github.com/femtovg/femtovg", rev = "9c5de268cd1f85d9e32d20c8a37341709c92bdb5" }
 raw-gl-context     = { git = "https://github.com/glowcoil/raw-gl-context" }
+#raw-gl-context     = { path = "/home/weictr/devel/other/raw-gl-context" }
 baseview           = { git = "https://github.com/WeirdConstructor/baseview.git", branch = "fix_resize_problems" }
 #baseview           = { git = "https://github.com/RustAudio/baseview.git", rev = "36e4474c8aeb88" }
 #baseview           = { path = "/home/weictr/devel/other/baseview" }
