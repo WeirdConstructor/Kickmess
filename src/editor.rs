@@ -572,7 +572,7 @@ fn new_env1_graph(pos: UIPos) -> UIInput {
 
                 match env.next(0, &env_par) {
                     EnvPos::Running(_, v) => {
-                        println!("{:6.3} : {:6.3}", x, v);
+                        //d// println!("{:6.3} : {:6.3}", x, v);
                         last_x = x;
                         out.push((x as f64, v as f64));
                     },
