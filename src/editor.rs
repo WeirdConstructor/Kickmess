@@ -546,29 +546,37 @@ fn new_env1_graph(pos: UIPos) -> UIInput {
             use crate::env::generic::Env;
 
             let mut env = Env::new();
-            env.set_sample_rate(80.0);
+            env.set_sample_rate(200.0);
             let env_par = (
                 0.0,
-                (src.param_value_denorm(pid::e1_attack) as f32, 1.0),
-                (src.param_value_denorm(pid::e1_decay) as f32,
+                ((src.param_value(pid::e1_attack).powf(2.0) * 250.0) as f32, 1.0),
+                ((src.param_value(pid::e1_decay).powf(2.0) * 250.0) as f32,
                  src.param_value_denorm(pid::e1_sustain) as f32),
                 src.param_value_denorm(pid::e1_sustain) as f32,
-                (src.param_value_denorm(pid::e1_release) as f32, 0.0)
+                ((src.param_value(pid::e1_release).powf(2.0) * 250.0) as f32, 0.0)
             );
+            //d// let env_par = (
+            //d//     0.0,
+            //d//     (src.param_value_denorm(pid::e1_attack) as f32, 1.0),
+            //d//     (src.param_value_denorm(pid::e1_decay) as f32,
+            //d//      src.param_value_denorm(pid::e1_sustain) as f32),
+            //d//     src.param_value_denorm(pid::e1_sustain) as f32,
+            //d//     (src.param_value_denorm(pid::e1_release) as f32, 0.0)
+            //d// );
 
-            println!("ENV PAR: {:?}", env_par);
+            //d// println!("ENV PAR: {:?}", env_par);
 
             env.trigger(0);
 
-            let samples = 100;
+            let samples = 200;
 
-            let mut release : i32 = 70;
+            let mut release : i32 = 150;
             let mut last_x = 1.0;
             for x in 0..samples {
                 let x = x as f32 / (samples as f32);
 
-                release -= 1;
                 if release == 0 { env.release(0); }
+                release -= 1;
 
                 match env.next(0, &env_par) {
                     EnvPos::Running(_, v) => {
@@ -698,23 +706,26 @@ fn new_lfo1_section(pos: UIPos) -> UIInput {
 #[cfg(feature="mega")]
 fn new_env1_section(pos: UIPos) -> UIInput {
     UIInput::container_border(pos, 1.0, "Env 1", vec![vec![
-        UIInput::knob(
-            pid::e1_attack,
-            String::from("Attack"),
-            UIPos::center(2, 12).middle()),
-        UIInput::knob(
-            pid::e1_decay,
-            String::from("Decay"),
-            UIPos::center(2, 12).middle()),
-        UIInput::knob(
-            pid::e1_sustain,
-            String::from("Sustain"),
-            UIPos::center(2, 12).middle()),
-        UIInput::knob(
-            pid::e1_release,
-            String::from("Release"),
-            UIPos::center(2, 12).middle()),
-        new_env1_graph(UIPos::center(4, 12)),
+        new_env1_graph(UIPos::center(12, 6)),
+    ], vec![
+        UIInput::container(UIPos::center(12, 6), 1.0, "", vec![vec![
+            UIInput::knob(
+                pid::e1_attack,
+                String::from("Attack ms"),
+                UIPos::center(3, 12).middle()),
+            UIInput::knob(
+                pid::e1_decay,
+                String::from("Decay ms"),
+                UIPos::center(3, 12).middle()),
+            UIInput::knob(
+                pid::e1_sustain,
+                String::from("Sustain"),
+                UIPos::center(3, 12).middle()),
+            UIInput::knob(
+                pid::e1_release,
+                String::from("Release ms"),
+                UIPos::center(3, 12).middle()),
+        ]]),
     ]])
 }
 

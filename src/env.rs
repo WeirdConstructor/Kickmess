@@ -164,6 +164,8 @@ pub mod generic {
         phase:   f32,
         /// Samples per millisecond
         srate_ms:       f32,
+        /// Special epsilon, to make math more exact for low sample rates...
+        epsilon:        f32,
 
         /// Stores, whether we already signalled that the loop just started.
         is_start:       bool,
@@ -199,6 +201,7 @@ pub mod generic {
             Self {
                 phase:          0.0,
                 srate_ms:       0.0,
+                epsilon:        0.0,
                 is_start:       false,
                 last_value:     0.0,
                 phase_value:    0.0,
@@ -208,6 +211,7 @@ pub mod generic {
 
         pub fn set_sample_rate(&mut self, sr: f32) {
             self.srate_ms = sr / 1000.0;
+            self.epsilon  = self.srate_ms * 0.01;
         }
 
         #[inline]
@@ -311,7 +315,7 @@ pub mod generic {
 
                         //d// println!("PHASE inc={:6.3} x={:6.3} v={:6.3} => phase={:6.3} (d={})", inc, x, value, self.phase, self.phase - 1.0);
 
-                        if (self.phase - 1.0) > std::f32::EPSILON {
+                        if (self.phase - 1.0) > self.epsilon {
                             //d// println!("phase reached");
 
                             let (time, next_value, prev_phase_value, next_idx) =
@@ -430,7 +434,7 @@ mod tests {
         let per_row = 5;
         let mut row_cnt = 0;
         for i in 0..v.len() {
-            eprint!("[{:4.2} {:6.4}] ", v[i].0, v[i].1);
+            eprint!("[{:4.3} {:6.4}] ", v[i].0, v[i].1);
 
             row_cnt += 1;
             if row_cnt >= per_row {
@@ -774,7 +778,7 @@ mod tests {
 
         assert_eq!(out.len(), 3);
 
-        // Decay ~50ms
+        // Decay ~20ms
         assert_float_tpl_eq!(out[0], (0.00, 0.0));
         assert_float_tpl_eq!(out[1], (0.01, 0.5));
         assert_float_tpl_eq!(out[2], (0.02, 1.0));
@@ -793,7 +797,7 @@ mod tests {
 
         assert_eq!(out.len(), 21);
 
-        // Decay ~50ms
+        // Decay
         assert_float_tpl_eq!(out[0],  (0.00, 0.0));
         assert_float_tpl_eq!(out[1],  (0.01, 0.05));
         assert_float_tpl_eq!(out[2],  (0.02, 0.10));
@@ -815,5 +819,40 @@ mod tests {
         assert_float_tpl_eq!(out[18], (0.18, 0.90));
         assert_float_tpl_eq!(out[19], (0.19, 0.95));
         assert_float_tpl_eq!(out[20], (0.20, 1.00));
+    }
+
+    #[test]
+    fn check_a3n() {
+        use super::generic::*;
+
+        let mut env = Env::new();
+        let env_par =
+            (0.0, (88.80401, 1.0), (0.0, 0.0), 0.0, (0.0, 0.0));
+
+        let out = gen_env_samples(&mut env, &env_par, 200.0, 200, 150);
+        debug_print_float_vec(&out[..]);
+
+        assert_eq!(out.len(), 19);
+
+        // Decay
+        assert_float_tpl_eq!(out[0],  (0.000, 0.0000));
+        assert_float_tpl_eq!(out[1],  (0.005, 0.0556));
+        assert_float_tpl_eq!(out[2],  (0.010, 0.1111));
+        assert_float_tpl_eq!(out[3],  (0.015, 0.1667));
+        assert_float_tpl_eq!(out[4],  (0.020, 0.2222));
+        assert_float_tpl_eq!(out[5],  (0.025, 0.2778));
+        assert_float_tpl_eq!(out[6],  (0.030, 0.3333));
+        assert_float_tpl_eq!(out[7],  (0.035, 0.3889));
+        assert_float_tpl_eq!(out[8],  (0.040, 0.4444));
+        assert_float_tpl_eq!(out[9],  (0.045, 0.5000));
+        assert_float_tpl_eq!(out[10], (0.050, 0.5556));
+        assert_float_tpl_eq!(out[11], (0.055, 0.6111));
+        assert_float_tpl_eq!(out[12], (0.060, 0.6667));
+        assert_float_tpl_eq!(out[13], (0.065, 0.7222));
+        assert_float_tpl_eq!(out[14], (0.070, 0.7778));
+        assert_float_tpl_eq!(out[15], (0.075, 0.8333));
+        assert_float_tpl_eq!(out[16], (0.080, 0.8889));
+        assert_float_tpl_eq!(out[17], (0.085, 0.9444));
+        assert_float_tpl_eq!(out[18], (0.090, 1.0000));
     }
 }
