@@ -445,7 +445,10 @@ mod tests {
         eprintln!("");
     }
 
-    fn gen_env_samples<P: generic::EnvParams>(env: &mut generic::Env, env_par: &P, srate: f32, samples: usize, mut release: usize) -> Vec<(f32, f32)> {
+    fn gen_env_samples<P: generic::EnvParams>(env: &mut generic::Env,
+            env_par: &P, srate: f32, samples: usize, mut release: usize)
+    -> Vec<(f32, f32)> {
+
         use super::generic::*;
 
         env.set_sample_rate(srate);
@@ -456,12 +459,15 @@ mod tests {
         for x in 0..(samples + 1) {
             let x = x as f32 / (samples as f32);
 
-            if release == 0 { env.release(0); }
-            release -= 1;
+            if release == 0 { env.release(0); release = 99999; }
+            else { release -= 1; }
 
             match env.next(0, env_par) {
                 EnvPos::Running(_, v) => {
                     out.push((x, v));
+                },
+                EnvPos::End => {
+                    break;
                 },
                 _ => {},
             }
