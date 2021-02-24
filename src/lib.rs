@@ -24,6 +24,11 @@ pub use proc::ParamSet;
 use op_kickmess::*;
 use helpers::note_to_freq;
 use log::Log;
+use core::arch::x86_64::{
+    _MM_FLUSH_ZERO_ON,
+    _MM_SET_FLUSH_ZERO_MODE,
+    _MM_GET_FLUSH_ZERO_MODE
+};
 
 #[macro_use]
 extern crate vst;
@@ -123,6 +128,11 @@ impl Plugin for Kickmess {
             crate::log::global_set_log(&mut self.log);
         }
 
+        let prev_ftz = unsafe { _MM_GET_FLUSH_ZERO_MODE() };
+        unsafe {
+            _MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_ON);
+        }
+
         for os in out_buf.iter_mut() { *os = 0.0; }
 
 //        let tiflag = {
@@ -196,6 +206,10 @@ impl Plugin for Kickmess {
             if remaining == 0 {
                 break;
             }
+        }
+
+        unsafe {
+            _MM_SET_FLUSH_ZERO_MODE(prev_ftz);
         }
     }
 

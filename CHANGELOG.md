@@ -6,6 +6,8 @@
 * Feature: Added an LFO.
 * Feature: Added an additional envelope.
 * Feature: Added modulation module.
+* Change: Set Flush-to-Zero mode on, to prevent degradation of
+floats in the filter.
 
 0.2.2 (2021-02-06)
 ==================
