@@ -136,8 +136,6 @@ impl MoogFilter {
         self.b4 = self.b4 - self.b4 * self.b4 * self.b4 * 0.166667;
         // clamp to keep feedback run-aways in check!
         self.b4 = self.b4.max(-1.5).min(1.5);
-        // prevent denormalization: (TODO test if fpmath=sse is default and set the SSE register)
-        self.b4 += 1e-15;
         self.b0 = input;
 
 //        if input.abs() > 0.99 {
