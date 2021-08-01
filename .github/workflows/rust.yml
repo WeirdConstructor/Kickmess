@@ -22,7 +22,7 @@ jobs:
     - name: Install dependencies 
       run: |
           sudo apt-get update
-          sudo apt-get install xorg xorg-dev gcc libxcb-icccm4 x11-xcb libxcb-dri2-0 libxcb-dri2-0-dev -y
+          sudo apt-get install xorg xorg-dev gcc libxcb-icccm4 libx11-xcb1 libx11-xcb-dev libxcb-dri2-0 libxcb-dri2-0-dev -y
     
     - name: Enable caching
       uses: Swatinem/rust-cache@v1.3.0
