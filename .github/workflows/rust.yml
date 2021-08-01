@@ -27,7 +27,7 @@ jobs:
         command: clippy
     
     - name: Build
-      run: cargo build --verbose
+      run: cargo build --all-features --release --verbose
       
     - name: Run tests
       run: cargo test --verbose
@@ -36,6 +36,6 @@ jobs:
       uses: actions/upload-artifact@v2.2.4
       with:
         name: linux
-        path: target/release/quickdash
+        path: target/release/libkickmessvst.so
       
       
