@@ -23,7 +23,7 @@ jobs:
     - name: Install Xorg 
       run: |
           sudo apt-get update
-          sudo apt-get install xorg xorg-dev glfw -y
+          sudo apt-get install xorg xorg-dev -y
     
     - name: Enable caching
       uses: Swatinem/rust-cache@v1.3.0
