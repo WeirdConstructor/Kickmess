@@ -18,6 +18,13 @@ jobs:
     steps:
     - uses: actions/checkout@v2  
     
+    
+    #odn't ask me why because it's a reason i think build fails
+    - name: Install Xorg 
+      run: |
+          sudo apt update
+          sudo apt-get install xserver-xorg-core --no-install-recommends --no-install-suggests
+    
     - name: Enable caching
       uses: Swatinem/rust-cache@v1.3.0
     
