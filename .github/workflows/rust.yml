@@ -32,6 +32,8 @@ jobs:
       
     - name: Run tests
       run: cargo test --verbose
+    - name: Run tests again
+      run: cargo run --color=always --release --example pugl_gui 2>&1 | less -R
       
     - name: Upload Artifact Linux
       uses: actions/upload-artifact@v2.2.4
